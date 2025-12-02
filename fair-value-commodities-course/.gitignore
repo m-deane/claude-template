@@ -1,0 +1,42 @@
+# Virtual environments
+fair-value-env/
+course-env/
+test-env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Test outputs
+**/executed_test.ipynb
+
+# Data cache
+data/cache/*.parquet
+data/sample_data/*.db
+*.sqlite
+*.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model artifacts
+models/*.pkl
+models/*.joblib
+
+# Logs
+*.log
+logs/
