@@ -425,3 +425,67 @@ The `reference/` directory contains R tidymodels source code for reference:
 - `parsnip-main/`: R parsnip package (not in current directory listing but referenced)
 
 These are for understanding design patterns, not for copying code directly.
+
+---
+
+## tidy-signal: Commodities Signal Detection Extension
+
+### Overview
+
+`tidy-signal` is a planned extension to py-tidymodels for commodities convergence trading. It applies the tidyverse "grammar of verbs" philosophy to testing divergence between forward curve fair values and fundamental model predictions.
+
+**Status:** Research Complete | **Implementation:** After py-parsnip stable
+
+### Core Concept
+
+Track the same settlement contract through time (a "cohort"), observing how divergence between forward price and fundamental value evolves as settlement approaches. When divergence is statistically significant and mean-reverting, generate entry/exit signals.
+
+### Key Features
+
+1. **Tidyverse-style verb API:** `align()`, `detect()`, `calibrate()`, `converge()`, `time_entry()`, `backtest()`
+2. **Native vintage data support:** `VintageDataFrame` wrapper for xarray, prevents lookahead bias
+3. **Multi-dimensional data:** vintage_date × observation_date × tenor × contract
+4. **Three-DataFrame outputs:** Consistent with py-parsnip (outputs, coefficients, stats)
+5. **Convergence dynamics:** OU process fitting, half-life estimation, optimal entry/exit
+6. **py-parsnip integration:** Uses `ModelFit` for fundamental model predictions
+
+### Data Structures
+
+- `SignalSpec`: Immutable frozen dataclass (extends parsnip ModelSpec pattern)
+- `SignalFit`: Calibrated signal with convergence parameters
+- `SignalBlueprint`: Alignment metadata for consistent transformations
+- `VintageDataFrame`: xarray wrapper for multi-dimensional vintage data
+
+### Statistical Methods (Priority Order)
+
+1. Cointegration (Johansen, Engle-Granger) - pairs selection
+2. Stationarity (ADF + KPSS) - mean reversion validation
+3. Walk-forward analysis - out-of-sample validation
+4. Ornstein-Uhlenbeck process - convergence modeling
+5. Information Coefficient - signal validation
+6. Structural breaks - regime change detection
+
+### Integration Example
+
+```python
+from py_parsnip import prophet_reg
+import tidy_signal as ts
+
+# Train fundamental model using py-parsnip
+model = prophet_reg().fit(data, formula="price ~ inventory + demand + date")
+
+# Create signal workflow
+signal = (ts.align(forwards, model.predict(features))
+          .detect(signal_type='divergence')
+          .calibrate(convergence_model='ou_process')
+          .backtest(transaction_costs=0.002))
+
+outputs, coefficients, stats = signal.extract_outputs()
+```
+
+### Key Documentation
+
+- `.claude_plans/tidy_signal_scoping_document.md` - Comprehensive specification
+- `.claude_plans/tidy_signal_research_summary.md` - Prior art research
+- `.claude_plans/tidy_signal_mvp_specification.md` - MVP scope
+- `.claude_plans/tidy_signal_feasibility_study.md` - Viability assessment

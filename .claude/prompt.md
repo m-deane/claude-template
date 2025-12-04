@@ -1636,25 +1636,56 @@ outputs, coefficients, stats = signal.extract_outputs()
 ```python
 @dataclass(frozen=True)
 class SignalSpec:
-    signal_type: str              # "divergence", "ratio", "spread"
-    forward_source: Dict[str, Any]
-    fundamental_model: ModelFit   # From py-parsnip
+    """Immutable signal specification following parsnip pattern"""
+    signal_type: str                    # "divergence", "ratio", "spread"
+    forward_source: Dict[str, Any]      # Forward curve data config
+    fundamental_model: ModelFit         # From py-parsnip
+    alignment_rules: Dict[str, Any]     # Vintage/tenor alignment rules
     convergence_model: str = "ou_process"
     standardize: bool = True
     args: Dict[str, Any] = field(default_factory=dict)
+
+    def set_args(self, **kwargs) -> 'SignalSpec':
+        """Return new spec with updated args (immutable)"""
+        new_args = {**self.args, **kwargs}
+        return dataclasses.replace(self, args=new_args)
 ```
 
 **SignalFit (Calibrated Results):**
 ```python
 @dataclass
 class SignalFit:
+    """Container for fitted signal results"""
     spec: SignalSpec
+    calibration_data: Dict[str, Any]      # Calibration period data
     convergence_params: Dict[str, float]  # half_life, lambda, mu, sigma
     entry_rules: Dict[str, Any]
     exit_rules: Dict[str, Any]
+    blueprint: SignalBlueprint            # Alignment metadata for prediction
+    evaluation_data: Optional[Dict[str, Any]] = None
+
+    def predict(self, new_data, **kwargs):
+        """Generate signals on new data using blueprint alignment"""
+        engine = get_engine(self.spec.signal_type, self.spec.convergence_model)
+        return engine.predict(self, new_data, **kwargs)
 
     def extract_outputs(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Return three-DataFrame standardized output"""
+        return self.outputs_df, self.parameters_df, self.metrics_df
+```
+
+**SignalBlueprint (Alignment Metadata):**
+```python
+@dataclass
+class SignalBlueprint:
+    """Stores alignment metadata for consistent transformations"""
+    forward_columns: List[str]              # Columns from forward curve
+    fundamental_columns: List[str]          # Columns from fundamental model
+    alignment_key: str = 'observation_date' # Primary join key
+    vintage_handling: str = 'latest'        # 'as_of', 'latest', 'exact'
+    missing_data_strategy: str = 'ffill'    # 'ffill', 'bfill', 'interpolate', 'drop'
+    max_staleness_days: int = 5             # Max days to forward-fill
+    standardization_params: Dict[str, float] = field(default_factory=dict)
 ```
 
 ### Three-DataFrame Output (Consistent with py-parsnip)

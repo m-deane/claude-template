@@ -133,6 +133,238 @@ class VintageDataFrame:
         return self.ds.sel(contract=settlement_date)
 ```
 
+### 2.4 xarray Alignment Behavior Specifications
+
+**The `align()` Verb - Complete Specification:**
+
+```python
+import xarray as xr
+import pandas as pd
+from typing import Literal, Optional, Union
+
+def align(
+    forward_data: Union[xr.Dataset, 'VintageDataFrame'],
+    fundamental_data: Union[pd.DataFrame, xr.DataArray],
+    by: str = 'observation_date',
+    how: Literal['inner', 'outer', 'left', 'right'] = 'inner',
+    vintage_mode: Literal['as_of', 'latest', 'exact'] = 'latest',
+    vintage_date: Optional[str] = None,
+    tolerance: Optional[str] = None,
+    missing_strategy: Literal['ffill', 'bfill', 'interpolate', 'drop'] = 'ffill',
+    max_gap: Optional[int] = 5
+) -> 'AlignedSignalData':
+    """
+    Align forward curve data with fundamental model predictions.
+
+    Parameters
+    ----------
+    forward_data : VintageDataFrame or xr.Dataset
+        Forward curve data with dimensions [vintage_date, observation_date, tenor, contract]
+    fundamental_data : pd.DataFrame or xr.DataArray
+        Fundamental model predictions (output from py-parsnip ModelFit.predict())
+    by : str, default 'observation_date'
+        Primary alignment key (coordinate name to join on)
+    how : {'inner', 'outer', 'left', 'right'}, default 'inner'
+        Join type:
+        - 'inner': Keep only dates present in both datasets
+        - 'outer': Keep all dates from both, fill missing with NaN
+        - 'left': Keep all dates from forward_data
+        - 'right': Keep all dates from fundamental_data
+    vintage_mode : {'as_of', 'latest', 'exact'}, default 'latest'
+        How to select vintage:
+        - 'as_of': Use data available as of vintage_date (forward-fill)
+        - 'latest': Use most recent vintage
+        - 'exact': Require exact vintage_date match
+    vintage_date : str, optional
+        Required if vintage_mode='as_of' or 'exact'. ISO format date string.
+    tolerance : str, optional
+        Maximum time difference for inexact matching, e.g., '1D' for 1 day.
+        If None, requires exact match on `by` coordinate.
+    missing_strategy : {'ffill', 'bfill', 'interpolate', 'drop'}, default 'ffill'
+        How to handle missing values after alignment:
+        - 'ffill': Forward-fill up to max_gap
+        - 'bfill': Backward-fill up to max_gap
+        - 'interpolate': Linear interpolation
+        - 'drop': Remove rows with any NaN
+    max_gap : int, optional, default 5
+        Maximum number of consecutive missing values to fill.
+        If gap > max_gap, values remain NaN.
+
+    Returns
+    -------
+    AlignedSignalData
+        Container with aligned forward and fundamental data,
+        plus SignalBlueprint for future alignment operations.
+
+    Raises
+    ------
+    SignalAlignmentError
+        If alignment fails due to incompatible data or no overlapping dates.
+
+    Examples
+    --------
+    >>> # Basic alignment using latest vintage
+    >>> aligned = align(forwards, model.predict(features))
+
+    >>> # Point-in-time alignment for backtesting
+    >>> aligned = align(
+    ...     forwards,
+    ...     fundamentals,
+    ...     vintage_mode='as_of',
+    ...     vintage_date='2024-01-15',
+    ...     how='inner'
+    ... )
+
+    >>> # Alignment with tolerance for date mismatches
+    >>> aligned = align(
+    ...     forwards,
+    ...     fundamentals,
+    ...     tolerance='1D',  # Allow 1-day mismatch
+    ...     missing_strategy='interpolate'
+    ... )
+    """
+    # Implementation details below...
+```
+
+**Coordinate Handling Edge Cases:**
+
+| Scenario | Behavior | Configuration |
+|----------|----------|---------------|
+| **Date not in vintage_coords** | Forward-fill from nearest prior date | `vintage_mode='as_of'` |
+| **Date not found (exact mode)** | Raise `SignalAlignmentError` | `vintage_mode='exact'` |
+| **No overlapping dates** | Raise `SignalAlignmentError` | Any `how` mode |
+| **Different date frequencies** | Resample to coarser frequency | Automatic |
+| **NaT (missing timestamps)** | Drop rows with NaT before alignment | Automatic |
+| **Duplicate timestamps** | Keep last value (warn) | Automatic |
+
+**Coordinate dtype Handling:**
+
+```python
+# Automatic dtype harmonization
+DATETIME_DTYPES = {'datetime64[ns]', 'datetime64[us]', 'datetime64[ms]'}
+STRING_DTYPES = {'object', 'str', 'string'}
+
+def harmonize_coordinates(coord1, coord2, coord_name: str):
+    """
+    Harmonize coordinate dtypes between two datasets.
+
+    Rules:
+    1. datetime types: Convert both to datetime64[ns]
+    2. string types: Convert both to str
+    3. numeric types: Use higher precision
+    4. Incompatible: Raise SignalAlignmentError
+    """
+    dtype1 = str(coord1.dtype)
+    dtype2 = str(coord2.dtype)
+
+    if dtype1 in DATETIME_DTYPES or dtype2 in DATETIME_DTYPES:
+        # Convert both to datetime64[ns]
+        coord1 = pd.to_datetime(coord1).values
+        coord2 = pd.to_datetime(coord2).values
+    elif dtype1 in STRING_DTYPES or dtype2 in STRING_DTYPES:
+        # Convert both to string
+        coord1 = coord1.astype(str)
+        coord2 = coord2.astype(str)
+    elif not np.issubdtype(coord1.dtype, np.number) or not np.issubdtype(coord2.dtype, np.number):
+        raise SignalAlignmentError(
+            f"Incompatible dtypes for {coord_name}: {dtype1} vs {dtype2}"
+        )
+
+    return coord1, coord2
+```
+
+**Multi-Index Alignment (vintage_date × observation_date pairs):**
+
+```python
+def align_multi_index(forward_ds, fundamental_df, vintage_date):
+    """
+    Align when fundamental data has different values per vintage.
+
+    This handles the case where fundamental model predictions
+    are themselves vintage-dependent (e.g., model retrained weekly).
+    """
+    # Create multi-index from forward data
+    forward_flat = forward_ds.sel(vintage_date=vintage_date, method='ffill')
+
+    # If fundamental_df has vintage column, filter it
+    if 'vintage_date' in fundamental_df.columns:
+        fundamental_filtered = fundamental_df[
+            fundamental_df['vintage_date'] <= vintage_date
+        ].sort_values('vintage_date').groupby('observation_date').last()
+    else:
+        fundamental_filtered = fundamental_df.set_index('observation_date')
+
+    # Align on observation_date
+    common_dates = forward_flat.coords['observation_date'].values
+    common_dates = np.intersect1d(
+        common_dates,
+        fundamental_filtered.index.values
+    )
+
+    if len(common_dates) == 0:
+        raise SignalAlignmentError("No overlapping observation dates")
+
+    return forward_flat.sel(observation_date=common_dates), \
+           fundamental_filtered.loc[common_dates]
+```
+
+**Ragged-Edge Handling:**
+
+```python
+def handle_ragged_edge(
+    data: xr.Dataset,
+    max_staleness: int = 5,
+    warn_stale: bool = True
+) -> xr.Dataset:
+    """
+    Handle ragged-edge data (different publication lags by variable).
+
+    Parameters
+    ----------
+    data : xr.Dataset
+        Dataset potentially with ragged edge (different last valid dates per variable)
+    max_staleness : int
+        Maximum days a variable can be stale before flagging
+    warn_stale : bool
+        Whether to emit warning for stale data
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with staleness flags added
+    """
+    last_valid = {}
+    staleness = {}
+
+    for var in data.data_vars:
+        # Find last non-NaN observation per variable
+        valid_mask = ~np.isnan(data[var].values)
+        if valid_mask.any():
+            last_valid_idx = np.where(valid_mask.any(axis=tuple(range(1, valid_mask.ndim))))[0][-1]
+            last_valid[var] = data.coords['observation_date'].values[last_valid_idx]
+
+            # Calculate staleness
+            current_date = data.coords['observation_date'].values[-1]
+            staleness[var] = (pd.Timestamp(current_date) -
+                              pd.Timestamp(last_valid[var])).days
+
+    # Add staleness as metadata
+    data.attrs['last_valid_dates'] = last_valid
+    data.attrs['staleness_days'] = staleness
+
+    # Warn if any variable exceeds max_staleness
+    if warn_stale:
+        stale_vars = [v for v, s in staleness.items() if s > max_staleness]
+        if stale_vars:
+            import warnings
+            warnings.warn(
+                f"Variables exceed {max_staleness}-day staleness: {stale_vars}. "
+                f"Staleness: {dict((v, staleness[v]) for v in stale_vars)}"
+            )
+
+    return data
+```
+
 ---
 
 ## 3. Verb Grammar Design
@@ -245,7 +477,157 @@ class SignalFit:
         return self.outputs_df, self.parameters_df, self.metrics_df
 ```
 
-### 4.3 Three-DataFrame Output Pattern
+### 4.3 SignalBlueprint (Alignment Metadata)
+
+```python
+from dataclasses import dataclass, field
+from typing import Dict, List, Any, Optional
+import pandas as pd
+
+@dataclass
+class SignalBlueprint:
+    """
+    Stores alignment metadata ensuring consistent transformations
+    between calibration and prediction phases.
+
+    Extends py-hardhat Blueprint pattern for multi-dimensional signal data.
+    """
+    # Core alignment rules
+    forward_columns: List[str]              # Columns from forward curve data
+    fundamental_columns: List[str]          # Columns from fundamental model output
+    alignment_key: str                      # Primary join key ('observation_date')
+    vintage_handling: str                   # 'as_of', 'latest', 'exact'
+
+    # Coordinate specifications
+    vintage_coords: Optional[pd.DatetimeIndex] = None   # Valid vintage dates
+    observation_coords: Optional[pd.DatetimeIndex] = None  # Valid observation dates
+    tenor_coords: Optional[List[str]] = None            # Valid tenors ['1M', '3M', '6M']
+    contract_coords: Optional[List[str]] = None         # Valid contract identifiers
+
+    # Data type enforcement
+    column_dtypes: Dict[str, str] = field(default_factory=dict)  # {'price': 'float64'}
+
+    # Alignment behavior
+    missing_data_strategy: str = 'ffill'    # 'ffill', 'bfill', 'interpolate', 'drop'
+    max_staleness_days: int = 5             # Maximum days to forward-fill
+    coordinate_tolerance: Optional[str] = None  # e.g., '1D' for 1-day tolerance
+
+    # Calibration metadata (filled during calibrate())
+    calibration_vintage: Optional[str] = None
+    calibration_date_range: Optional[tuple] = None
+    standardization_params: Dict[str, float] = field(default_factory=dict)  # mean, std
+
+    def validate_new_data(self, new_data) -> bool:
+        """
+        Validate new data conforms to blueprint specifications.
+
+        Returns True if valid, raises SignalAlignmentError if not.
+        """
+        # Check required columns exist
+        required = set(self.forward_columns + self.fundamental_columns)
+        actual = set(new_data.columns) if hasattr(new_data, 'columns') else set(new_data.data_vars)
+
+        missing = required - actual
+        if missing:
+            raise SignalAlignmentError(f"Missing columns: {missing}")
+
+        # Check dtype compatibility
+        for col, expected_dtype in self.column_dtypes.items():
+            if col in new_data:
+                actual_dtype = str(new_data[col].dtype)
+                if not self._dtypes_compatible(actual_dtype, expected_dtype):
+                    raise SignalAlignmentError(
+                        f"Column {col}: expected {expected_dtype}, got {actual_dtype}"
+                    )
+
+        # Check coordinate coverage
+        if self.contract_coords:
+            new_contracts = set(new_data.coords.get('contract', []))
+            unknown = new_contracts - set(self.contract_coords)
+            if unknown:
+                raise SignalAlignmentError(f"Unknown contracts: {unknown}")
+
+        return True
+
+    def apply_alignment(self, forward_data, fundamental_data) -> 'AlignedSignalData':
+        """
+        Apply blueprint rules to align forward and fundamental data.
+
+        This is the 'forge' equivalent for signal data.
+        """
+        # Apply vintage selection
+        if self.vintage_handling == 'as_of':
+            forward_aligned = forward_data.sel(
+                vintage_date=self.calibration_vintage,
+                method='ffill'
+            )
+        elif self.vintage_handling == 'latest':
+            forward_aligned = forward_data.isel(vintage_date=-1)
+        else:  # 'exact'
+            forward_aligned = forward_data.sel(vintage_date=self.calibration_vintage)
+
+        # Align on observation_date
+        aligned = xr.align(
+            forward_aligned,
+            fundamental_data,
+            join='inner',
+            exclude=['vintage_date']
+        )
+
+        # Apply missing data strategy
+        if self.missing_data_strategy == 'ffill':
+            aligned = [ds.ffill(dim='observation_date', limit=self.max_staleness_days)
+                       for ds in aligned]
+
+        return AlignedSignalData(
+            forward=aligned[0],
+            fundamental=aligned[1],
+            blueprint=self
+        )
+
+    def _dtypes_compatible(self, actual: str, expected: str) -> bool:
+        """Check if dtypes are compatible (e.g., float32 compatible with float64)"""
+        float_types = {'float16', 'float32', 'float64', 'float'}
+        int_types = {'int8', 'int16', 'int32', 'int64', 'int'}
+
+        if actual in float_types and expected in float_types:
+            return True
+        if actual in int_types and expected in int_types:
+            return True
+        return actual == expected
+
+
+class SignalAlignmentError(Exception):
+    """Raised when data alignment fails validation."""
+    pass
+
+
+@dataclass
+class AlignedSignalData:
+    """Container for aligned forward and fundamental data."""
+    forward: xr.DataArray
+    fundamental: xr.DataArray
+    blueprint: SignalBlueprint
+
+    def compute_divergence(self, standardize: bool = True) -> xr.DataArray:
+        """Compute divergence between forward and fundamental."""
+        divergence = self.forward - self.fundamental
+
+        if standardize and self.blueprint.standardization_params:
+            mean = self.blueprint.standardization_params.get('mean', 0)
+            std = self.blueprint.standardization_params.get('std', 1)
+            divergence = (divergence - mean) / std
+
+        return divergence
+```
+
+**SignalBlueprint Purpose:**
+- Stores alignment metadata from calibration phase
+- Ensures consistent transformations when predicting on new data
+- Validates new data conforms to expected schema
+- Extends py-hardhat `Blueprint` pattern for multi-dimensional xarray data
+
+### 4.4 Three-DataFrame Output Pattern
 
 **1. Outputs DataFrame (Observation-Level):**
 | Column | Type | Description |
@@ -316,7 +698,296 @@ Where:
 - **Expected convergence:** E[D_t] = μ + (D_0 - μ)e^(-λt)
 - **Variance:** Var[D_t] = (σ²/2λ)(1 - e^(-2λt))
 
-### 5.2 Entry/Exit Optimization
+### 5.2 OU Process MLE Implementation Guide
+
+**Method 1: Exact Discrete MLE (Recommended)**
+
+The continuous OU process discretizes to an AR(1) process:
+```
+D_t = a + b * D_{t-1} + ε_t,  where ε_t ~ N(0, σ_ε²)
+```
+
+Parameter mapping:
+- `b = exp(-λ * Δt)` where Δt is observation interval (typically 1 day)
+- `a = μ * (1 - b)`
+- `σ_ε² = (σ² / 2λ) * (1 - exp(-2λΔt))`
+
+```python
+import numpy as np
+from scipy import optimize
+from scipy import stats
+
+def fit_ou_process_mle(divergence_series: np.ndarray, dt: float = 1.0) -> dict:
+    """
+    Fit Ornstein-Uhlenbeck process via Maximum Likelihood Estimation.
+
+    Parameters
+    ----------
+    divergence_series : np.ndarray
+        Time series of divergence values (forward - fundamental)
+    dt : float
+        Time step between observations (default=1.0 for daily data)
+
+    Returns
+    -------
+    dict with keys:
+        lambda_: Mean reversion speed
+        mu: Long-run mean
+        sigma: Volatility
+        half_life: Days for 50% decay
+        std_errors: Dict of parameter standard errors
+        log_likelihood: Maximized log-likelihood
+        aic: Akaike Information Criterion
+        bic: Bayesian Information Criterion
+    """
+    D = divergence_series
+    n = len(D)
+
+    # Remove NaN values
+    D = D[~np.isnan(D)]
+    n = len(D)
+
+    if n < 10:
+        raise ValueError("Need at least 10 observations to fit OU process")
+
+    # Prepare lagged values
+    D_prev = D[:-1]  # D_{t-1}
+    D_curr = D[1:]   # D_t
+
+    def neg_log_likelihood(params):
+        """Negative log-likelihood for OU process."""
+        lambda_, mu, sigma = params
+
+        # Ensure positive parameters
+        if lambda_ <= 0 or sigma <= 0:
+            return np.inf
+
+        # AR(1) parameters from OU parameters
+        b = np.exp(-lambda_ * dt)
+        a = mu * (1 - b)
+        sigma_eps_sq = (sigma**2 / (2 * lambda_)) * (1 - np.exp(-2 * lambda_ * dt))
+
+        if sigma_eps_sq <= 0:
+            return np.inf
+
+        # Predicted values and residuals
+        D_pred = a + b * D_prev
+        residuals = D_curr - D_pred
+
+        # Log-likelihood (Gaussian)
+        n_obs = len(residuals)
+        log_lik = -0.5 * n_obs * np.log(2 * np.pi * sigma_eps_sq)
+        log_lik -= 0.5 * np.sum(residuals**2) / sigma_eps_sq
+
+        return -log_lik  # Negative for minimization
+
+    # Initial parameter estimates via OLS
+    X = np.column_stack([np.ones(len(D_prev)), D_prev])
+    y = D_curr
+    beta_ols = np.linalg.lstsq(X, y, rcond=None)[0]
+    a_init, b_init = beta_ols
+
+    # Convert OLS to OU initial guesses
+    if 0 < b_init < 1:
+        lambda_init = -np.log(b_init) / dt
+        mu_init = a_init / (1 - b_init)
+    else:
+        lambda_init = 0.1
+        mu_init = np.mean(D)
+
+    residuals_init = y - X @ beta_ols
+    sigma_init = np.std(residuals_init) * np.sqrt(2 * lambda_init)
+
+    # Bounds: lambda > 0, sigma > 0, mu unbounded
+    bounds = [(1e-6, 10), (None, None), (1e-6, None)]
+    initial_params = [lambda_init, mu_init, sigma_init]
+
+    # Optimize
+    result = optimize.minimize(
+        neg_log_likelihood,
+        initial_params,
+        method='L-BFGS-B',
+        bounds=bounds,
+        options={'maxiter': 1000}
+    )
+
+    lambda_opt, mu_opt, sigma_opt = result.x
+    log_lik = -result.fun
+
+    # Calculate half-life
+    half_life = np.log(2) / lambda_opt
+
+    # Standard errors via Hessian inverse
+    try:
+        hessian = _numerical_hessian(neg_log_likelihood, result.x)
+        cov_matrix = np.linalg.inv(hessian)
+        std_errors = {
+            'lambda': np.sqrt(cov_matrix[0, 0]),
+            'mu': np.sqrt(cov_matrix[1, 1]),
+            'sigma': np.sqrt(cov_matrix[2, 2])
+        }
+    except:
+        std_errors = {'lambda': np.nan, 'mu': np.nan, 'sigma': np.nan}
+
+    # Information criteria
+    k = 3  # Number of parameters
+    aic = 2 * k - 2 * log_lik
+    bic = k * np.log(n) - 2 * log_lik
+
+    return {
+        'lambda_': lambda_opt,
+        'mu': mu_opt,
+        'sigma': sigma_opt,
+        'half_life': half_life,
+        'std_errors': std_errors,
+        'log_likelihood': log_lik,
+        'aic': aic,
+        'bic': bic,
+        'converged': result.success,
+        'n_observations': n
+    }
+
+
+def _numerical_hessian(func, x, eps=1e-5):
+    """Compute numerical Hessian matrix."""
+    n = len(x)
+    hessian = np.zeros((n, n))
+
+    for i in range(n):
+        for j in range(n):
+            x_pp = x.copy()
+            x_pm = x.copy()
+            x_mp = x.copy()
+            x_mm = x.copy()
+
+            x_pp[i] += eps
+            x_pp[j] += eps
+            x_pm[i] += eps
+            x_pm[j] -= eps
+            x_mp[i] -= eps
+            x_mp[j] += eps
+            x_mm[i] -= eps
+            x_mm[j] -= eps
+
+            hessian[i, j] = (func(x_pp) - func(x_pm) - func(x_mp) + func(x_mm)) / (4 * eps**2)
+
+    return hessian
+```
+
+**Method 2: Kalman Filter State-Space (Alternative)**
+
+For more complex scenarios (e.g., missing data, time-varying parameters):
+
+```python
+from statsmodels.tsa.statespace.mlemodel import MLEModel
+
+class OUProcess(MLEModel):
+    """
+    State-space representation of Ornstein-Uhlenbeck process.
+
+    State equation: D_t = μ + e^(-λΔt)(D_{t-1} - μ) + ε_t
+    """
+    def __init__(self, endog, dt=1.0):
+        super().__init__(endog, k_states=1)
+        self.dt = dt
+        self['design'] = np.array([[1.0]])
+        self['selection'] = np.array([[1.0]])
+
+    @property
+    def param_names(self):
+        return ['lambda', 'mu', 'sigma']
+
+    @property
+    def start_params(self):
+        return np.array([0.1, np.mean(self.endog), np.std(self.endog)])
+
+    def transform_params(self, unconstrained):
+        """Ensure positive lambda and sigma."""
+        return np.array([
+            np.exp(unconstrained[0]),   # lambda > 0
+            unconstrained[1],            # mu unbounded
+            np.exp(unconstrained[2])    # sigma > 0
+        ])
+
+    def untransform_params(self, constrained):
+        return np.array([
+            np.log(constrained[0]),
+            constrained[1],
+            np.log(constrained[2])
+        ])
+
+    def update(self, params, **kwargs):
+        lambda_, mu, sigma = params
+
+        # State transition
+        phi = np.exp(-lambda_ * self.dt)
+        self['transition', 0, 0] = phi
+
+        # State intercept (μ * (1 - φ))
+        self['state_intercept', 0, 0] = mu * (1 - phi)
+
+        # State covariance
+        state_var = (sigma**2 / (2 * lambda_)) * (1 - np.exp(-2 * lambda_ * self.dt))
+        self['state_cov', 0, 0] = state_var
+
+
+# Usage:
+# model = OUProcess(divergence_series)
+# results = model.fit()
+# lambda_, mu, sigma = results.params
+```
+
+**Diagnostic Checks for OU Fit:**
+
+```python
+def diagnose_ou_fit(divergence_series: np.ndarray, ou_params: dict) -> dict:
+    """
+    Diagnostic checks for OU process fit quality.
+
+    Returns dict of diagnostic results.
+    """
+    lambda_ = ou_params['lambda_']
+    mu = ou_params['mu']
+    sigma = ou_params['sigma']
+
+    # 1. Compute residuals
+    D = divergence_series
+    D_prev = D[:-1]
+    D_curr = D[1:]
+    b = np.exp(-lambda_)
+    a = mu * (1 - b)
+    predicted = a + b * D_prev
+    residuals = D_curr - predicted
+
+    # 2. Normality test (Jarque-Bera)
+    jb_stat, jb_pvalue = stats.jarque_bera(residuals)
+
+    # 3. Autocorrelation test (Ljung-Box)
+    from statsmodels.stats.diagnostic import acorr_ljungbox
+    lb_result = acorr_ljungbox(residuals, lags=[10], return_df=True)
+    lb_pvalue = lb_result['lb_pvalue'].values[0]
+
+    # 4. Half-life reasonableness
+    half_life = np.log(2) / lambda_
+    half_life_reasonable = 1 < half_life < 252  # Between 1 day and 1 year
+
+    # 5. Mean reversion strength
+    mean_reversion_strong = lambda_ > 0.01  # Decays meaningfully
+
+    return {
+        'residuals_normal': jb_pvalue > 0.05,
+        'jb_pvalue': jb_pvalue,
+        'residuals_uncorrelated': lb_pvalue > 0.05,
+        'lb_pvalue': lb_pvalue,
+        'half_life_reasonable': half_life_reasonable,
+        'half_life_days': half_life,
+        'mean_reversion_strong': mean_reversion_strong,
+        'residual_std': np.std(residuals),
+        'r_squared': 1 - np.var(residuals) / np.var(D_curr)
+    }
+```
+
+### 5.3 Entry/Exit Optimization
 
 ```python
 def optimize_entry_exit(divergence_series, half_life, volatility):
