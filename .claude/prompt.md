@@ -1529,3 +1529,187 @@ Before we start building this out, I want to do comprehensive planning:
 - Profile code for bottlenecks before optimizing
 
 We will review the plan together before beginning implementation.
+
+---
+
+## tidy-signal: Commodities Signal Detection Extension
+
+### Overview
+
+`tidy-signal` extends the py-tidymodels ecosystem to commodities convergence trading. It applies the tidyverse "grammar of verbs" philosophy to testing divergence between forward curve fair values and fundamental model predictions.
+
+**Status:** Research Complete | **Verdict:** HIGHLY VIABLE
+
+### Core Concept: Cohort-Based Convergence Analysis
+
+**Problem:** Commodities traders need to:
+1. Detect divergence between forward prices and fundamental fair values
+2. Track how divergence evolves as contracts approach settlement
+3. Determine optimal entry/exit timing based on convergence dynamics
+4. Validate statistical significance without lookahead bias
+
+**Solution:** Track the same settlement contract through time (a "cohort"), observing divergence evolution:
+```
+Settlement: Jun-2025, Observed from Jan-2025
+
+Jan 1:  Days=150, Divergence=+$4.00  ← Entry signal (2σ)
+Feb 1:  Days=120, Divergence=+$3.50
+Mar 1:  Days=90,  Divergence=+$2.80
+Apr 1:  Days=60,  Divergence=+$1.50  ← Exit signal (convergence)
+May 1:  Days=30,  Divergence=+$0.50
+Jun 1:  Days=0,   Divergence=$0.00   ← Full convergence at settlement
+```
+
+### Multi-Dimensional Data Structure
+
+tidy-signal handles four dimensions via xarray:
+- **vintage_date**: When data was available (prevents lookahead bias)
+- **observation_date**: When event occurred
+- **tenor**: Time to settlement (1M, 3M, 6M, etc.)
+- **contract**: Specific contract identifier
+
+```python
+class VintageDataFrame:
+    """Multi-dimensional data with vintage support"""
+
+    def as_of(self, vintage_date):
+        """Filter to data available as of vintage_date"""
+
+    def to_cohort(self, settlement_date):
+        """Extract single cohort tracking through time"""
+```
+
+### Verb Grammar
+
+**Data Preparation:**
+- `align()` - Match vintages and tenors across data sources
+- `slice()` - Extract specific vintage/tenor combinations
+
+**Signal Construction:**
+- `detect()` - Compute divergence between forward and fundamental
+- `decompose()` - Break spread into trend, seasonal, residual
+
+**Calibration:**
+- `calibrate()` - Fit convergence model (OU process, ECM)
+- `diagnose()` - Run statistical validity tests
+
+**Evaluation:**
+- `evaluate()` - Score signal strength and confidence
+- `converge()` - Analyze convergence dynamics (half-life, velocity)
+
+**Trading Rules:**
+- `time_entry()` - Determine optimal entry timing
+- `time_exit()` - Determine optimal exit timing
+- `backtest()` - Historical performance evaluation
+
+**Monitoring:**
+- `monitor()` - Track relationship stability
+- `compare()` - Compare signals across models/tenors
+- `trace()` - Generate full audit trail
+
+### Integration with py-tidymodels
+
+```python
+from py_parsnip import prophet_reg
+import tidy_signal as ts
+
+# Train fundamental model using py-parsnip
+model = prophet_reg().fit(data, formula="price ~ inventory + demand + date")
+
+# Create signal workflow
+signal = (ts.align(forwards, model.predict(features))
+          .detect(signal_type='divergence', standardize=True)
+          .calibrate(convergence_model='ou_process')
+          .diagnose(tests=['stationarity', 'cointegration'])
+          .converge(analysis_type=['half_life', 'optimal_window'])
+          .time_entry(entry_threshold=2.0, min_tenor=60)
+          .time_exit(take_profit=0.85, stop_loss=1.8)
+          .backtest(transaction_costs=0.002))
+
+# Extract standardized outputs (same pattern as py-parsnip)
+outputs, coefficients, stats = signal.extract_outputs()
+```
+
+### Data Structures (Following py-parsnip Patterns)
+
+**SignalSpec (Immutable Specification):**
+```python
+@dataclass(frozen=True)
+class SignalSpec:
+    signal_type: str              # "divergence", "ratio", "spread"
+    forward_source: Dict[str, Any]
+    fundamental_model: ModelFit   # From py-parsnip
+    convergence_model: str = "ou_process"
+    standardize: bool = True
+    args: Dict[str, Any] = field(default_factory=dict)
+```
+
+**SignalFit (Calibrated Results):**
+```python
+@dataclass
+class SignalFit:
+    spec: SignalSpec
+    convergence_params: Dict[str, float]  # half_life, lambda, mu, sigma
+    entry_rules: Dict[str, Any]
+    exit_rules: Dict[str, Any]
+
+    def extract_outputs(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Return three-DataFrame standardized output"""
+```
+
+### Three-DataFrame Output (Consistent with py-parsnip)
+
+**outputs DataFrame (observation-level):**
+- date, contract, days_to_settlement
+- forward_value, fundamental_value, divergence
+- signal_strength, entry_signal, exit_signal
+- convergence_velocity, confidence, p_value
+
+**coefficients DataFrame (parameters):**
+- mean_reversion_speed (λ), long_run_mean (μ), volatility (σ)
+- half_life, hedge_ratio, feature_importances
+
+**stats DataFrame (signal-level metrics):**
+- sharpe_ratio, hit_rate, information_coefficient
+- max_drawdown, profit_factor, avg_holding_period
+
+### Statistical Methods (Priority Order)
+
+1. **Cointegration (Johansen, Engle-Granger)** - Pairs selection
+2. **Stationarity (ADF + KPSS)** - Mean reversion validation
+3. **Walk-Forward Analysis** - Out-of-sample validation
+4. **Ornstein-Uhlenbeck Process** - Convergence modeling
+5. **Information Coefficient** - Signal validation
+6. **Structural Breaks** - Regime change detection
+
+### Key Documentation
+
+- `.claude_plans/tidy_signal_scoping_document.md` - Comprehensive specification
+- `.claude_plans/tidy_signal_research_summary.md` - Prior art research
+- `.claude_plans/tidy_signal_mvp_specification.md` - MVP scope
+- `.claude_plans/tidy_signal_feasibility_study.md` - Viability assessment
+- `.claude_plans/tidy_signal_prior_art_table.md` - Comparison tables
+
+### Dependencies
+
+```
+# Core
+pandas>=2.0.0
+numpy>=1.24.0
+xarray>=2023.0.0
+
+# Statistical
+statsmodels>=0.14.0
+arch>=5.3.0
+
+# py-tidymodels ecosystem
+py-hardhat>=0.1.0
+py-parsnip>=0.1.0
+```
+
+### Implementation Priority
+
+tidy-signal should be implemented AFTER py-parsnip and py-hardhat are stable, as it depends on:
+1. `ModelFit` from py-parsnip for fundamental model predictions
+2. `Blueprint` pattern from py-hardhat for data alignment
+3. Three-DataFrame output pattern for consistency

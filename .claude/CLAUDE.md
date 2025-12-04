@@ -210,7 +210,55 @@ Generic responses not tailored to project context
 - User feedback collection
 - System health verification
 
-## CUSTOM PROJECT INSTRUCTIONS - [Add your specific project requirements, unique constraints, business logic, or special considerations here]
+## CUSTOM PROJECT INSTRUCTIONS
+
+### tidy-signal: Commodities Signal Detection Library
+
+**Status:** Research Complete, Ready for Implementation
+
+**Overview:**
+`tidy-signal` is a Python library applying R tidyverse/tidymodels "grammar of verbs" to commodities convergence trading. It tests divergence between forward curve fair values and fundamental model predictions.
+
+**Core Concept - Cohort-Based Convergence Analysis:**
+Track the same settlement contract through time, observing how divergence between forward price and fundamental value evolves as settlement approaches.
+
+**Key Features:**
+1. **Tidyverse-style verb API:** `align()`, `detect()`, `calibrate()`, `converge()`, `time_entry()`, `backtest()`
+2. **Native vintage data support:** `VintageDataFrame` wrapper for xarray, prevents lookahead bias
+3. **Multi-dimensional data:** vintage_date × observation_date × tenor × contract
+4. **Three-DataFrame outputs:** outputs, coefficients, stats (broom pattern)
+5. **py-tidymodels integration:** Uses `ModelFit` from py-parsnip for fundamental models
+6. **Convergence dynamics:** OU process fitting, half-life estimation, optimal entry/exit
+
+**Data Structures:**
+- `SignalSpec`: Immutable frozen dataclass (extends parsnip pattern)
+- `SignalFit`: Calibrated signal with convergence parameters
+- `VintageDataFrame`: xarray wrapper for multi-dimensional vintage data
+
+**Statistical Methods (Priority Order):**
+1. Cointegration (Johansen, Engle-Granger) - pairs selection
+2. Stationarity (ADF + KPSS) - mean reversion validation
+3. Walk-forward analysis - out-of-sample validation
+4. Ornstein-Uhlenbeck process - convergence modeling
+5. Information Coefficient - signal validation
+
+**Key Documentation:**
+- `.claude_plans/tidy_signal_scoping_document.md` - Comprehensive specification
+- `.claude_plans/tidy_signal_research_summary.md` - Prior art research
+- `.claude_plans/tidy_signal_mvp_specification.md` - MVP scope
+- `.claude_plans/tidy_signal_feasibility_study.md` - Viability assessment
+
+**Integration with py-tidymodels:**
+```python
+# Fundamental model from py-parsnip
+model = prophet_reg().fit(data, formula="price ~ inventory + demand + date")
+
+# Use in tidy-signal workflow
+signal = (align(forwards, model.predict(features))
+          .detect(signal_type='divergence')
+          .calibrate(model='ou_process')
+          .backtest(transaction_costs=0.002))
+```
 
 ---
 
