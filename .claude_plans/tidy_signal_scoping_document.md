@@ -1,6 +1,6 @@
 # tidy-signal: Comprehensive Research Scoping Document
 
-**Version:** 1.0 | **Date:** December 4, 2025 | **Status:** Research Complete
+**Version:** 1.1 | **Date:** December 5, 2025 | **Status:** Research Complete
 
 ---
 
@@ -1355,33 +1355,64 @@ Result: +$3.70/bbl profit (92.5% of initial divergence captured)
 
 ## 12. Implementation Roadmap
 
-### Phase 1: Core Infrastructure (Weeks 1-2)
+### MVP Phase (Weeks 1-12): Verb API Only
+
+**Key Principle:** The verb API is sufficient for MVP. Recipes, Workflows, and Workflowsets are post-MVP patterns that share the same underlying data structures.
+
+#### Phase 1: Core Infrastructure (Weeks 1-2)
 - [ ] SignalSpec, SignalFit, SignalBlueprint dataclasses
 - [ ] VintageDataFrame xarray wrapper
 - [ ] Registry pattern for signal engines
 - [ ] `align()`, `slice()`, `detect()` verbs
 - [ ] Unit tests for core components
 
-### Phase 2: Statistical Arbitrage (Weeks 3-4)
+#### Phase 2: Statistical Arbitrage (Weeks 3-4)
 - [ ] `calibrate()` with OU process, ECM
 - [ ] `diagnose()` with stationarity, cointegration tests
 - [ ] `converge()` with half-life, velocity analysis
 - [ ] Cointegration detection (Johansen, Engle-Granger)
 - [ ] Integration tests for calibration pipeline
 
-### Phase 3: Validation Framework (Weeks 5-6)
+#### Phase 3: Validation Framework (Weeks 5-6)
 - [ ] `evaluate()` with IC, Sharpe, hit rate
 - [ ] `backtest()` with transaction costs
 - [ ] `time_entry()`, `time_exit()` optimization
 - [ ] Walk-forward analysis implementation
 - [ ] Structural break detection
 
-### Phase 4: Commodities Features (Weeks 7-8)
+#### Phase 4: Commodities Features (Weeks 7-8)
 - [ ] Spread types (calendar, crack, crush)
 - [ ] Seasonality handling (Fourier, STL)
 - [ ] `monitor()`, `compare()`, `trace()` verbs
 - [ ] Documentation and examples
 - [ ] Tutorial notebooks
+
+#### Phase 5: Polish & Integration (Weeks 9-12)
+- [ ] py-parsnip integration testing
+- [ ] Performance optimization
+- [ ] Comprehensive documentation
+- [ ] User feedback incorporation
+- [ ] v1.0 release
+
+### Post-MVP Phases: Recipes, Workflows, Workflowsets
+
+#### Phase 6: Recipes (Post-MVP)
+- [ ] SignalRecipe class for reproducible preprocessing
+- [ ] Step-based preprocessing pipeline
+- [ ] Recipe serialization (save/load)
+- [ ] Vintage-aware preprocessing steps
+
+#### Phase 7: Workflows (Post-MVP)
+- [ ] SignalWorkflow class bundling recipe + signal
+- [ ] Production versioning support
+- [ ] Workflow serialization
+- [ ] Audit trail integration
+
+#### Phase 8: Workflowsets (Post-MVP)
+- [ ] WorkflowSet class for systematic comparison
+- [ ] Grid-based workflow generation
+- [ ] Parallel execution support
+- [ ] Aggregated metrics and ranking
 
 ---
 
@@ -1446,6 +1477,278 @@ py-parsnip>=0.1.0
 
 ---
 
+## 16. Pattern Architecture: When Each Pattern Earns Its Place
+
+### 16.1 Pattern Hierarchy Overview
+
+The tidy-signal library follows a layered pattern architecture where each layer adds capabilities on top of the previous:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     WORKFLOWSETS (Post-MVP)                      │
+│         Systematic comparison across choices (horizons,          │
+│              preprocessing variants, model versions)             │
+├─────────────────────────────────────────────────────────────────┤
+│                      WORKFLOWS (Post-MVP)                        │
+│         Bundle recipe + signal for production versioning         │
+├─────────────────────────────────────────────────────────────────┤
+│                       RECIPES (Post-MVP)                         │
+│              Reproducible preprocessing pipelines                │
+├─────────────────────────────────────────────────────────────────┤
+│                    VERB API (MVP - Core Layer)                   │
+│           align() → detect() → calibrate() → backtest()         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Critical Insight:** The verb API and higher-level patterns share the same data structures. They're different interfaces to the same underlying machinery.
+
+### 16.2 When Each Pattern Earns Its Place
+
+| Pattern | Use When | Skip When | Key Question |
+|---------|----------|-----------|--------------|
+| **Verb API** | EDA, prototyping, one-off analysis | Never - always available | "What does this signal look like?" |
+| **Recipes** | Need reproducible preprocessing, save/load pipelines | Simple alignment, no multi-step preprocessing | "Can I reproduce this preprocessing exactly?" |
+| **Workflows** | Production deployment, version control, audit trails | Research/exploration phase | "Can I version and deploy this?" |
+| **Workflowsets** | Comparing across horizons, preprocessing variants, model versions | Single configuration analysis | "Which configuration is best?" |
+
+### 16.3 Workflowsets: The Killer Use Case
+
+**Problem:** "At which horizon (days-to-settlement) is my divergence signal strongest?"
+
+**Without Workflowsets (Tedious):**
+```python
+# Manual loop - error-prone, verbose, hard to maintain
+results = []
+for horizon in [30, 60, 90, 120, 150, 180]:
+    signal = (align(forwards, fundamentals)
+              .detect(signal_type='divergence')
+              .calibrate(model='ou_process', min_tenor=horizon)
+              .backtest(transaction_costs=0.002))
+    results.append({
+        'horizon': horizon,
+        'sharpe': signal.stats['sharpe_ratio'],
+        'half_life': signal.coefficients['half_life']
+    })
+comparison = pd.DataFrame(results)
+```
+
+**With Workflowsets (One Call):**
+```python
+from tidy_signal import workflowset, workflow, recipe
+
+# Define preprocessing recipe
+preprocessing = (recipe()
+    .step_align(by='observation_date', vintage_mode='as_of')
+    .step_detect(signal_type='divergence', standardize=True))
+
+# Define base workflow
+base_workflow = workflow(preprocessing, calibrate_spec)
+
+# Create workflowset with horizon grid
+horizon_comparison = (workflowset(base_workflow)
+    .cross(min_tenor=[30, 60, 90, 120, 150, 180])
+    .fit_all(forwards, fundamentals)
+    .rank_by('sharpe_ratio'))
+
+# One-line comparison
+horizon_comparison.summary()
+#    min_tenor  sharpe_ratio  half_life  hit_rate  rank
+# 0         90          1.85       22.3      0.68     1
+# 1         60          1.72       18.1      0.65     2
+# 2        120          1.68       28.4      0.64     3
+# ...
+```
+
+### 16.4 Other Workflowset Use Cases
+
+#### Preprocessing Sensitivity Analysis
+```python
+# Compare different alignment strategies
+preprocessing_comparison = (workflowset(base_workflow)
+    .cross(
+        vintage_mode=['as_of', 'latest'],
+        missing_strategy=['ffill', 'interpolate', 'drop']
+    )
+    .fit_all(data)
+    .rank_by('information_coefficient'))
+```
+
+#### Vintage Lag Sensitivity
+```python
+# How stale can data be before signal degrades?
+staleness_comparison = (workflowset(base_workflow)
+    .cross(max_staleness_days=[1, 3, 5, 7, 14])
+    .fit_all(data)
+    .rank_by('sharpe_ratio'))
+```
+
+#### Model Version Comparison
+```python
+# Compare fundamental models
+from py_parsnip import prophet_reg, arima_reg, linear_reg
+
+model_comparison = (workflowset()
+    .add_workflow('prophet', workflow(recipe, prophet_signal))
+    .add_workflow('arima', workflow(recipe, arima_signal))
+    .add_workflow('linear', workflow(recipe, linear_signal))
+    .fit_all(data)
+    .rank_by('out_of_sample_ic'))
+```
+
+#### Full Cross-Product Comparison
+```python
+# The real power: systematic grid search
+full_comparison = (workflowset(base_workflow)
+    .cross(
+        min_tenor=[60, 90, 120],
+        entry_threshold=[1.5, 2.0, 2.5],
+        convergence_model=['ou_process', 'ecm']
+    )
+    .fit_all(data)  # Runs 3 × 3 × 2 = 18 configurations
+    .rank_by('sharpe_ratio'))
+```
+
+### 16.5 Recipe Pattern: Vintage-Aware Preprocessing
+
+Recipes solve the problem of reproducible, serializable preprocessing:
+
+```python
+from tidy_signal import recipe
+
+# Define preprocessing steps
+signal_recipe = (recipe()
+    # Step 1: Align forward curves with fundamentals
+    .step_align(
+        by='observation_date',
+        vintage_mode='as_of',
+        tolerance='1D'
+    )
+    # Step 2: Handle missing data
+    .step_fill_missing(
+        strategy='ffill',
+        max_gap=5
+    )
+    # Step 3: Compute divergence
+    .step_detect(
+        signal_type='divergence',
+        standardize=True
+    )
+    # Step 4: Add rolling statistics
+    .step_rolling(
+        window=20,
+        statistics=['mean', 'std', 'zscore']
+    ))
+
+# Prep (fit) the recipe on training data
+prepped_recipe = signal_recipe.prep(train_forwards, train_fundamentals)
+
+# Bake (apply) to new data - guaranteed consistent transformation
+test_aligned = prepped_recipe.bake(test_forwards, test_fundamentals)
+
+# Save for production
+prepped_recipe.save('signal_recipe_v1.pkl')
+
+# Load in production
+loaded_recipe = recipe.load('signal_recipe_v1.pkl')
+```
+
+**Key Recipe Benefits:**
+1. **Reproducibility:** Same transformation every time
+2. **Serialization:** Save/load for production deployment
+3. **Audit trail:** Document preprocessing decisions
+4. **Prevent leakage:** Fit on train, apply to test
+
+### 16.6 Workflow Pattern: Production Versioning
+
+Workflows bundle recipe + signal specification for deployment:
+
+```python
+from tidy_signal import workflow
+
+# Bundle preprocessing + signal
+production_workflow = workflow(
+    recipe=signal_recipe,
+    signal_spec=mean_reversion_signal(
+        engine='ou_process',
+        entry_threshold=2.0
+    ),
+    metadata={
+        'version': '1.2.0',
+        'author': 'quant_team',
+        'description': 'Crack spread mean reversion signal'
+    }
+)
+
+# Fit entire workflow
+fitted_workflow = production_workflow.fit(train_data)
+
+# Deploy
+fitted_workflow.save('crack_spread_signal_v1.2.0.pkl')
+
+# In production: load and predict
+deployed = workflow.load('crack_spread_signal_v1.2.0.pkl')
+signals = deployed.predict(live_data)
+```
+
+**Key Workflow Benefits:**
+1. **Version control:** Track signal versions over time
+2. **Reproducibility:** Identical preprocessing + modeling
+3. **Deployment:** Single artifact for production
+4. **Audit:** Full lineage from data to signal
+
+### 16.7 Architectural Principle: Shared Data Structures
+
+```
+                    ┌──────────────────┐
+                    │   SignalSpec     │◄──── Immutable specification
+                    │   SignalFit      │◄──── Fitted results
+                    │   SignalBlueprint│◄──── Alignment metadata
+                    └────────┬─────────┘
+                             │
+           ┌─────────────────┼─────────────────┐
+           │                 │                 │
+           ▼                 ▼                 ▼
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │   Verb API   │  │   Recipes    │  │  Workflows   │
+    │              │  │              │  │              │
+    │ align()      │  │ step_align() │  │ workflow()   │
+    │ detect()     │  │ step_detect()│  │ .fit()       │
+    │ calibrate()  │  │ .prep()      │  │ .predict()   │
+    │ backtest()   │  │ .bake()      │  │ .save()      │
+    └──────────────┘  └──────────────┘  └──────────────┘
+           │                 │                 │
+           └─────────────────┼─────────────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │   Workflowsets   │
+                    │                  │
+                    │ .cross()         │
+                    │ .fit_all()       │
+                    │ .rank_by()       │
+                    └──────────────────┘
+```
+
+**Key Insight:** All patterns use the same underlying SignalSpec, SignalFit, and SignalBlueprint. The patterns are just different interfaces:
+
+- **Verb API:** Direct function calls, maximum flexibility
+- **Recipes:** Sequential preprocessing steps, reproducible
+- **Workflows:** Bundled recipe + signal, deployable
+- **Workflowsets:** Multiple workflows, comparable
+
+### 16.8 MVP Decision: Verb API First
+
+For MVP (Phases 1-5), focus exclusively on the Verb API because:
+
+1. **Immediate value:** Users can start analyzing signals immediately
+2. **Lower complexity:** No abstraction layers to debug
+3. **Faster iteration:** Direct feedback on API design
+4. **Foundation building:** Data structures stabilize before adding patterns
+
+**Post-MVP (Phases 6-8):** Add Recipes → Workflows → Workflowsets in order, each building on the previous layer.
+
+---
+
 ## Conclusion
 
 `tidy-signal` addresses a clear gap in the Python ecosystem for commodities convergence trading. By combining:
@@ -1461,6 +1764,10 @@ The library provides unique value for quantitative researchers and commodity tra
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** December 4, 2025
+**Document Version:** 1.1
+**Last Updated:** December 5, 2025
 **Status:** Research Complete, Ready for Implementation
+
+**Changelog:**
+- v1.1 (Dec 5, 2025): Added Pattern Architecture section (Section 16) with Workflowsets, Recipes, Workflows documentation; Updated implementation roadmap with MVP vs Post-MVP phases
+- v1.0 (Dec 4, 2025): Initial comprehensive scoping document

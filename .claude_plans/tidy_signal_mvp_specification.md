@@ -631,25 +631,81 @@ fit.metrics_df
 
 ---
 
-## 11. Post-MVP Roadmap
+## 11. Post-MVP Roadmap: Pattern Architecture
 
-### Phase 5: Workflow Composition (Future)
-- Multi-signal combination strategies
-- Pipeline optimization
-- Production deployment tools
-- Real-time signal generation
+### Pattern Hierarchy (Verb API → Recipes → Workflows → Workflowsets)
 
-### Phase 6: Machine Learning Integration (Future)
+The MVP focuses exclusively on the **Verb API**. Post-MVP phases add higher-level patterns that share the same underlying data structures:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     WORKFLOWSETS (Phase 7)                       │
+│         Systematic comparison across choices (horizons,          │
+│              preprocessing variants, model versions)             │
+├─────────────────────────────────────────────────────────────────┤
+│                      WORKFLOWS (Phase 6)                         │
+│         Bundle recipe + signal for production versioning         │
+├─────────────────────────────────────────────────────────────────┤
+│                       RECIPES (Phase 5)                          │
+│              Reproducible preprocessing pipelines                │
+├─────────────────────────────────────────────────────────────────┤
+│                    VERB API (MVP - Phases 1-4)                   │
+│           align() → detect() → calibrate() → backtest()         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 5: Recipes (Post-MVP)
+- SignalRecipe class for reproducible preprocessing
+- Step-based pipeline: `step_align()`, `step_detect()`, `step_fill_missing()`
+- `prep()` to fit recipe on training data
+- `bake()` to apply recipe to new data
+- Recipe serialization (save/load for production)
+- Vintage-aware preprocessing steps
+
+### Phase 6: Workflows (Post-MVP)
+- SignalWorkflow class bundling recipe + signal specification
+- Production versioning with metadata (version, author, description)
+- Workflow serialization for deployment
+- Audit trail integration
+- `workflow.fit()` → `workflow.predict()` → `workflow.save()`
+
+### Phase 7: Workflowsets (Post-MVP)
+- WorkflowSet class for systematic comparison
+- `cross()` method for grid-based parameter variation
+- Killer use case: "At which horizon is signal strongest?"
+- Use cases:
+  - Horizon comparison (min_tenor=[30, 60, 90, 120])
+  - Preprocessing sensitivity (vintage_mode=['as_of', 'latest'])
+  - Model version comparison (prophet vs arima vs linear)
+  - Full cross-product analysis
+- `fit_all()` for parallel execution
+- `rank_by()` for metric-based ranking
+- Aggregated metrics and comparison tables
+
+### Phase 8: Machine Learning Integration (Future)
 - Scikit-learn pipeline integration
 - Feature engineering for ML signals
 - Neural network signal engines
 - AutoML for signal optimization
 
-### Phase 7: Visualization & Dashboards (Future)
+### Phase 9: Visualization & Dashboards (Future)
 - Interactive Plotly dashboards
 - Real-time signal monitoring
 - Performance attribution analysis
 - Risk dashboard
+
+### Key Architectural Principle
+
+All patterns share the same underlying data structures:
+- **SignalSpec:** Immutable signal specification
+- **SignalFit:** Fitted results container
+- **SignalBlueprint:** Alignment metadata
+
+The patterns are different interfaces to the same machinery:
+- **Verb API:** Direct function calls, maximum flexibility (EDA, prototyping)
+- **Recipes:** Sequential preprocessing steps, reproducible (production preprocessing)
+- **Workflows:** Bundled recipe + signal, deployable (version control, deployment)
+- **Workflowsets:** Multiple workflows, comparable (systematic comparison)
 
 ---
 
