@@ -1,0 +1,2010 @@
+{
+  "search_summary": {
+    "platforms_searched": ["github", "pypi", "quantopian_docs", "alphalens_ml4trading", "stackoverflow"],
+    "repositories_analyzed": 3,
+    "docs_reviewed": 5,
+    "research_date": "2025-12-17"
+  },
+  "library_overview": {
+    "name": "Alphalens",
+    "description": "Python library for performance analysis of predictive (alpha) stock factors",
+    "original_author": "Quantopian Inc.",
+    "license": "Apache-2.0",
+    "current_status": "Original repository archived; actively maintained forks available"
+  },
+  "version_and_installation": {
+    "original_package": {
+      "name": "alphalens",
+      "latest_version": "0.4.0",
+      "last_updated": "2020-04-27",
+      "pypi_url": "https://pypi.org/project/alphalens/",
+      "install_command": "pip install alphalens",
+      "conda_install": "conda install -c conda-forge alphalens",
+      "dev_install": "pip install git+https://github.com/quantopian/alphalens",
+      "status": "No longer maintained"
+    },
+    "actively_maintained_fork": {
+      "name": "alphalens-reloaded",
+      "latest_version": "0.4.6",
+      "last_updated": "2025-06-02",
+      "pypi_url": "https://pypi.org/project/alphalens-reloaded/",
+      "install_command": "pip install alphalens-reloaded",
+      "maintainer": "Stefan Jansen",
+      "documentation": "https://alphalens.ml4trading.io/",
+      "python_support": ">=3.10 (supports 3.10, 3.11, 3.12, 3.13)",
+      "github": "https://github.com/stefan-jansen/alphalens-reloaded",
+      "status": "Actively maintained with 615+ commits"
+    },
+    "chinese_fork": {
+      "name": "alphalens-cn",
+      "latest_version": "0.4.6",
+      "last_updated": "2024-12-06",
+      "python_support": ">=3.8 (supports 3.8-3.11)"
+    },
+    "cloudquant_fork": {
+      "name": "alphalens (cloudQuant)",
+      "github": "https://github.com/cloudQuant/alphalens",
+      "python_support": "3.8-3.13",
+      "features": ["Enhanced functionality", "Improved visualizations", "Cross-platform CI/CD"]
+    }
+  },
+  "dependencies": {
+    "required": [
+      "matplotlib",
+      "numpy",
+      "pandas",
+      "scipy",
+      "seaborn",
+      "statsmodels"
+    ],
+    "compatibility_notes": {
+      "numpy_2.0": "Requires pandas>=2.2.2 when using numpy>=2.0"
+    },
+    "integrations": {
+      "zipline": "Backtesting library integration",
+      "pyfolio": "Portfolio performance and risk analysis integration"
+    }
+  },
+  "module_structure": {
+    "package_name": "alphalens",
+    "modules": [
+      "alphalens.utils",
+      "alphalens.tears",
+      "alphalens.performance",
+      "alphalens.plotting"
+    ],
+    "exports": [
+      "performance",
+      "plotting",
+      "tears",
+      "utils"
+    ],
+    "version_info": "alphalens.__version__"
+  },
+  "repositories": [
+    {
+      "citation": "[1] Quantopian. \"Alphalens: Performance analysis of predictive (alpha) stock factors.\" GitHub, Apache-2.0 License. https://github.com/quantopian/alphalens",
+      "platform": "github",
+      "stats": {
+        "stars": 4000,
+        "forks": 1300,
+        "contributors": 18,
+        "dependent_projects": 745,
+        "last_updated": "2020 (archived)"
+      },
+      "key_features": [
+        "Returns analysis across factor quantiles",
+        "Information Coefficient (IC) analysis",
+        "Turnover analysis",
+        "Grouped/sector analysis",
+        "Integration with Zipline and Pyfolio",
+        "Comprehensive tear sheets"
+      ],
+      "architecture": "Four-module structure (utils, tears, performance, plotting)",
+      "code_quality": {
+        "testing": "comprehensive",
+        "documentation": "excellent",
+        "maintenance": "archived"
+      }
+    },
+    {
+      "citation": "[2] Stefan Jansen. \"Alphalens-Reloaded: Performance analysis of predictive (alpha) stock factors.\" GitHub, 2025. https://github.com/stefan-jansen/alphalens-reloaded",
+      "platform": "github",
+      "stats": {
+        "commits": 615,
+        "last_updated": "2025-06-02",
+        "contributors": "Multiple"
+      },
+      "key_features": [
+        "All original Alphalens features",
+        "Updated dependency management",
+        "Python 3.10-3.13 support",
+        "Active CI/CD with GitHub Actions",
+        "Coverage tracking"
+      ],
+      "code_quality": {
+        "testing": "comprehensive",
+        "documentation": "excellent",
+        "maintenance": "active"
+      }
+    },
+    {
+      "citation": "[3] cloudQuant. \"Alphalens: Enhanced performance analysis of predictive (alpha) factors.\" GitHub. https://github.com/cloudQuant/alphalens",
+      "platform": "github",
+      "key_features": [
+        "Enhanced functionality vs original",
+        "Better visualization capabilities",
+        "Cross-platform support (Windows, Linux, macOS)",
+        "Python 3.8-3.13 support"
+      ],
+      "code_quality": {
+        "testing": "comprehensive",
+        "documentation": "good",
+        "maintenance": "active"
+      }
+    }
+  ],
+  "modules": {
+    "alphalens.utils": {
+      "description": "Data preparation and utility functions for factor analysis",
+      "public_functions": [
+        {
+          "name": "get_clean_factor_and_forward_returns",
+          "signature": "get_clean_factor_and_forward_returns(factor, prices, groupby=None, binning_by_group=False, quantiles=5, bins=None, periods=(1, 5, 10), filter_zscore=20, groupby_labels=None, max_loss=0.35, zero_aware=False, cumulative_returns=True)",
+          "description": "Primary data pipeline function. Formats factor data, forward return data, and group mappings into a DataFrame suitable for Alphalens analysis.",
+          "parameters": {
+            "factor": {
+              "type": "pd.Series (MultiIndex)",
+              "description": "MultiIndex Series indexed by timestamp (level 0) and asset (level 1), containing alpha factor values"
+            },
+            "prices": {
+              "type": "pd.DataFrame",
+              "description": "DataFrame with date index and asset columns containing pricing data"
+            },
+            "groupby": {
+              "type": "pd.Series or dict, optional",
+              "default": "None",
+              "description": "Optional group assignments (e.g., sector information) for grouped analysis"
+            },
+            "binning_by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, perform separate quantile bucketing per group"
+            },
+            "quantiles": {
+              "type": "int or sequence",
+              "default": "5",
+              "description": "Integer for equal-sized quantiles or sequence of quantile thresholds"
+            },
+            "bins": {
+              "type": "int or sequence, optional",
+              "default": "None",
+              "description": "Integer for equal-width bins or sequence of bin edges. Alternative to quantiles"
+            },
+            "periods": {
+              "type": "tuple",
+              "default": "(1, 5, 10)",
+              "description": "Tuple of forward return horizons in trading days"
+            },
+            "filter_zscore": {
+              "type": "float",
+              "default": "20",
+              "description": "Outlier filtering threshold in standard deviations"
+            },
+            "groupby_labels": {
+              "type": "dict, optional",
+              "default": "None",
+              "description": "Dictionary mapping group IDs to human-readable labels"
+            },
+            "max_loss": {
+              "type": "float",
+              "default": "0.35",
+              "description": "Maximum allowed data loss percentage (0.0 to 1.0). Raises MaxLossExceededError if exceeded"
+            },
+            "zero_aware": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, perform zero-aware binning"
+            },
+            "cumulative_returns": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, compute cumulative forward returns"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame (MultiIndex)",
+            "description": "MultiIndex DataFrame indexed by (date, asset) with columns: factor values, forward returns for each period, factor quantile/bin assignment, and optional group membership"
+          },
+          "raises": [
+            "MaxLossExceededError: When data loss exceeds max_loss threshold",
+            "NonMatchingTimezoneError: When timezone mismatches occur"
+          ],
+          "example": "factor_data = alphalens.utils.get_clean_factor_and_forward_returns(factor=my_factor, prices=pricing_data, quantiles=5, periods=(1, 5, 10), groupby=sector_map)"
+        },
+        {
+          "name": "get_clean_factor",
+          "signature": "get_clean_factor(factor, forward_returns, groupby=None, binning_by_group=False, quantiles=5, bins=None, groupby_labels=None, max_loss=0.35, zero_aware=False)",
+          "description": "Formats factor data when forward returns are already computed. Use this if you've pre-calculated forward returns.",
+          "returns": {
+            "type": "pd.DataFrame (MultiIndex)",
+            "description": "Same structure as get_clean_factor_and_forward_returns output"
+          }
+        },
+        {
+          "name": "compute_forward_returns",
+          "signature": "compute_forward_returns(factor, prices, periods=(1, 5, 10), filter_zscore=None, cumulative_returns=True)",
+          "description": "Calculates N-period forward returns for each asset at each timestamp",
+          "returns": {
+            "type": "pd.DataFrame (MultiIndex)",
+            "description": "DataFrame with forward return columns for each specified period"
+          }
+        },
+        {
+          "name": "demean_forward_returns",
+          "signature": "demean_forward_returns(factor_data, grouper=None)",
+          "description": "Converts returns to group-relative or universe-relative basis by subtracting mean returns",
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame with normalized returns (same shape as input)"
+          }
+        },
+        {
+          "name": "quantize_factor",
+          "signature": "quantize_factor(*args, **kwargs)",
+          "description": "Assigns factor values to quantile buckets"
+        },
+        {
+          "name": "rate_of_return",
+          "signature": "rate_of_return(period_ret, base_period)",
+          "description": "Annualizes or standardizes returns to target frequency",
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "Annualized returns"
+          }
+        },
+        {
+          "name": "std_conversion",
+          "signature": "std_conversion(period_std, base_period)",
+          "description": "Converts volatility to standardized period basis",
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "Standardized volatility"
+          }
+        },
+        {
+          "name": "timedelta_to_string",
+          "signature": "timedelta_to_string(timedelta)",
+          "description": "Converts pd.Timedelta to string format (e.g., '1D', '5D')",
+          "returns": {
+            "type": "str"
+          }
+        },
+        {
+          "name": "timedelta_strings_to_integers",
+          "signature": "timedelta_strings_to_integers(sequence)",
+          "description": "Converts list of timedelta strings to integers",
+          "returns": {
+            "type": "list",
+            "description": "Example: ['1D', '5D'] -> [1, 5]"
+          }
+        },
+        {
+          "name": "get_forward_returns_columns",
+          "signature": "get_forward_returns_columns(columns, require_exact_day_multiple=False)",
+          "description": "Identifies forward return columns in DataFrames",
+          "returns": {
+            "type": "list",
+            "description": "List of column names that represent forward returns"
+          }
+        },
+        {
+          "name": "print_table",
+          "signature": "print_table(table, name=None, fmt=None)",
+          "description": "Pretty-prints DataFrames/Series (HTML in Jupyter, text in console)",
+          "parameters": {
+            "table": {
+              "type": "pd.DataFrame or pd.Series",
+              "description": "Data to display"
+            },
+            "name": {
+              "type": "str, optional",
+              "description": "Optional table name/header"
+            },
+            "fmt": {
+              "type": "str, optional",
+              "description": "Format string for values"
+            }
+          }
+        },
+        {
+          "name": "infer_trading_calendar",
+          "signature": "infer_trading_calendar(factor_idx, prices_idx)",
+          "description": "Detects trading calendar from data index frequency",
+          "returns": {
+            "type": "pd.DateOffset"
+          }
+        },
+        {
+          "name": "add_custom_calendar_timedelta",
+          "signature": "add_custom_calendar_timedelta(input, timedelta, freq)",
+          "description": "Adds periods respecting custom trading calendars",
+          "returns": {
+            "type": "pd.DatetimeIndex or pd.Timestamp"
+          }
+        },
+        {
+          "name": "diff_custom_calendar_timedeltas",
+          "signature": "diff_custom_calendar_timedeltas(start, end, freq)",
+          "description": "Calculates period differences on custom calendars",
+          "returns": {
+            "type": "pd.Timedelta"
+          }
+        },
+        {
+          "name": "backshift_returns_series",
+          "signature": "backshift_returns_series(series, N)",
+          "description": "Shifts multi-indexed return series backward N observations"
+        },
+        {
+          "name": "rethrow",
+          "signature": "rethrow(exception, additional_message)",
+          "description": "Re-raises exceptions with supplementary context"
+        },
+        {
+          "name": "non_unique_bin_edges_error",
+          "signature": "non_unique_bin_edges_error(func)",
+          "description": "Decorator providing informative quantile binning errors"
+        }
+      ],
+      "exceptions": [
+        {
+          "name": "MaxLossExceededError",
+          "description": "Raised when data loss exceeds the max_loss threshold during data preparation"
+        },
+        {
+          "name": "NonMatchingTimezoneError",
+          "description": "Raised when timezone mismatches are detected between factor and price data"
+        }
+      ]
+    },
+    "alphalens.tears": {
+      "description": "Tear sheet generation module providing comprehensive factor analysis visualizations and reports",
+      "classes": [
+        {
+          "name": "GridFigure",
+          "signature": "GridFigure(rows, cols)",
+          "description": "Helper class for grid-based plotting operations",
+          "methods": [
+            {
+              "name": "close",
+              "signature": "close()",
+              "description": "Closes the figure"
+            },
+            {
+              "name": "next_cell",
+              "signature": "next_cell()",
+              "description": "Advances to the next cell in the grid"
+            },
+            {
+              "name": "next_row",
+              "signature": "next_row()",
+              "description": "Advances to the next row in the grid"
+            }
+          ]
+        }
+      ],
+      "public_functions": [
+        {
+          "name": "create_full_tear_sheet",
+          "signature": "create_full_tear_sheet(factor_data, long_short=True, group_neutral=False, by_group=False)",
+          "description": "Creates a comprehensive tear sheet combining returns analysis, information coefficient analysis, and turnover analysis. This is the primary function for complete factor evaluation.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns. MultiIndex DataFrame indexed by (date, asset) with columns: factor values, forward returns, quantiles, and optional groups"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, compute long-short portfolio by demeaning returns and factor values across the universe"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, perform group-level demeaning. Each group weights equally in cumulative returns"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, display separate graphs for each group"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays comprehensive visualizations including returns by quantile, IC analysis, turnover metrics, and summary statistics"
+          }
+        },
+        {
+          "name": "create_returns_tear_sheet",
+          "signature": "create_returns_tear_sheet(factor_data, long_short=True, group_neutral=False, by_group=False)",
+          "description": "Creates a tear sheet focused on returns analysis across factor quantiles. Shows mean returns by quantile, cumulative returns, and return distributions.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "Display by group flag"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays returns-focused visualizations"
+          }
+        },
+        {
+          "name": "create_information_tear_sheet",
+          "signature": "create_information_tear_sheet(factor_data, group_neutral=False, by_group=False)",
+          "description": "Creates a tear sheet evaluating factor predictiveness through Information Coefficient (IC) analysis. Shows IC time series, distributions, and group breakdowns.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral adjustment flag"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "Display by group flag"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays IC-focused visualizations including time series, histograms, Q-Q plots, and heatmaps"
+          }
+        },
+        {
+          "name": "create_turnover_tear_sheet",
+          "signature": "create_turnover_tear_sheet(factor_data, turnover_periods=None)",
+          "description": "Creates a tear sheet examining portfolio rebalancing frequency and position changes. Analyzes factor stability through rank autocorrelation and quantile turnover.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "turnover_periods": {
+              "type": "list or tuple, optional",
+              "default": "None",
+              "description": "Custom periods for turnover analysis. If None, uses periods from factor_data"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays turnover metrics and factor autocorrelation plots"
+          }
+        },
+        {
+          "name": "create_summary_tear_sheet",
+          "signature": "create_summary_tear_sheet(factor_data, long_short=True, group_neutral=False)",
+          "description": "Creates a condensed summary tear sheet with key metrics from returns, information, and turnover analysis.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays compact summary with key performance indicators"
+          }
+        },
+        {
+          "name": "create_event_returns_tear_sheet",
+          "signature": "create_event_returns_tear_sheet(factor_data, returns, avgretplot=(5, 15), long_short=True, group_neutral=False, std_bar=True, by_group=False)",
+          "description": "Creates a tear sheet displaying average cumulative returns within event windows (before/after event dates).",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Event-aligned factor data"
+            },
+            "returns": {
+              "type": "pd.DataFrame",
+              "description": "Returns data for event analysis"
+            },
+            "avgretplot": {
+              "type": "tuple",
+              "default": "(5, 15)",
+              "description": "Tuple of (periods_before, periods_after) for averaging window"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            },
+            "std_bar": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, display standard error bars"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "Display by group flag"
+            }
+          }
+        },
+        {
+          "name": "create_event_study_tear_sheet",
+          "signature": "create_event_study_tear_sheet(factor_data, returns, avgretplot=(5, 15), rate_of_ret=True, n_bars=50)",
+          "description": "Creates a tear sheet for analyzing specific events with optional event-window return visualization.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Event study factor data"
+            },
+            "returns": {
+              "type": "pd.DataFrame",
+              "description": "Returns data"
+            },
+            "avgretplot": {
+              "type": "tuple",
+              "default": "(5, 15)",
+              "description": "Window specification for event returns"
+            },
+            "rate_of_ret": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, compute rate of return"
+            },
+            "n_bars": {
+              "type": "int",
+              "default": "50",
+              "description": "Number of bars for event distribution histogram"
+            }
+          }
+        }
+      ]
+    },
+    "alphalens.performance": {
+      "description": "Computational functions for factor analytics and portfolio metrics. Handles all quantitative calculations for factor evaluation.",
+      "public_functions": [
+        {
+          "name": "factor_information_coefficient",
+          "signature": "factor_information_coefficient(factor_data, group_adjust=False, by_group=False)",
+          "description": "Computes the Spearman Rank Correlation based Information Coefficient (IC) between factor values and N-period forward returns for each period. IC measures the predictive power of the factor.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, demean forward returns by group before computing IC"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, compute period-wise IC separately for each group"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame with Spearman rank correlation coefficients. Index: dates, Columns: forward return periods"
+          },
+          "interpretation": "IC > 0.03 with IR > 0.5 generally indicates strong predictive ability. IC measures monotonic relationship between factor ranks and future returns."
+        },
+        {
+          "name": "mean_information_coefficient",
+          "signature": "mean_information_coefficient(factor_data, group_adjust=False, by_group=False, by_time=None)",
+          "description": "Computes mean IC grouped by time periods or groups. Answers: 'What is the mean IC for each month?' or 'What is the mean IC for each group?'",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group adjustment flag"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "Compute by group flag"
+            },
+            "by_time": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Time grouping period (e.g., 'M' for monthly, 'W' for weekly)"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame of aggregated IC statistics grouped by specified dimension"
+          }
+        },
+        {
+          "name": "mean_return_by_quantile",
+          "signature": "mean_return_by_quantile(factor_data, by_date=False, by_group=False, demeaned=True, group_adjust=False)",
+          "description": "Computes mean returns for factor quantiles across forward return periods. Core function for evaluating if higher factor values lead to higher returns.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "by_date": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, compute returns separately for each date"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, compute returns separately for each group"
+            },
+            "demeaned": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, demean returns across universe"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, demean returns by group"
+            }
+          },
+          "returns": {
+            "type": "tuple",
+            "description": "(mean_returns_df, std_error_df) - Two DataFrames with mean returns and standard errors by quantile"
+          }
+        },
+        {
+          "name": "compute_mean_returns_spread",
+          "signature": "compute_mean_returns_spread(mean_returns, upper_quant, lower_quant, std_err=None)",
+          "description": "Computes the difference between mean returns of two quantiles (typically top vs bottom for long-short analysis). Optionally includes standard error.",
+          "parameters": {
+            "mean_returns": {
+              "type": "pd.DataFrame",
+              "description": "Mean returns by quantile (from mean_return_by_quantile)"
+            },
+            "upper_quant": {
+              "type": "int",
+              "description": "Upper quantile number"
+            },
+            "lower_quant": {
+              "type": "int",
+              "description": "Lower quantile number"
+            },
+            "std_err": {
+              "type": "pd.DataFrame, optional",
+              "default": "None",
+              "description": "Standard errors corresponding to mean_returns"
+            }
+          },
+          "returns": {
+            "type": "tuple",
+            "description": "(spread_series, std_error_series or None) - Long-short return spread and optional standard error"
+          }
+        },
+        {
+          "name": "factor_returns",
+          "signature": "factor_returns(factor_data, demeaned=True, group_adjust=False, equal_weight=False, by_asset=False)",
+          "description": "Computes period-wise returns for portfolio weighted by factor values. Generates the actual returns time series for a factor-based strategy.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "demeaned": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, demean factor values (creates long-short portfolio)"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, demean within groups (group-neutral portfolio)"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, use equal weights instead of factor-value weights"
+            },
+            "by_asset": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, return per-asset returns instead of portfolio returns"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame of period-wise portfolio returns, one column per forward return period"
+          }
+        },
+        {
+          "name": "factor_weights",
+          "signature": "factor_weights(factor_data, demeaned=True, group_adjust=False, equal_weight=False)",
+          "description": "Computes asset weights by normalizing factor values. Divides by sum of absolute values to achieve gross leverage of 1.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "demeaned": {
+              "type": "bool",
+              "default": "True",
+              "description": "If True, demean factor values"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, demean within groups"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, use equal weights"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Series with normalized asset weights (sums to 1 in absolute value)"
+          }
+        },
+        {
+          "name": "factor_alpha_beta",
+          "signature": "factor_alpha_beta(factor_data, returns=None, demeaned=True, group_adjust=False, equal_weight=False)",
+          "description": "Computes alpha (excess returns), alpha t-stat (significance), and beta (market exposure) through regression analysis.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "returns": {
+              "type": "pd.DataFrame, optional",
+              "default": "None",
+              "description": "Benchmark returns for regression. If None, uses equal-weight portfolio"
+            },
+            "demeaned": {
+              "type": "bool",
+              "default": "True",
+              "description": "Demean factor values flag"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group adjustment flag"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "Equal weighting flag"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Series containing ['alpha', 'beta', 't-stat'] - Regression-based performance attribution"
+          }
+        },
+        {
+          "name": "factor_rank_autocorrelation",
+          "signature": "factor_rank_autocorrelation(factor_data, period=1)",
+          "description": "Computes autocorrelation of mean factor ranks across time periods. Measures factor stability and predicts turnover. Low autocorrelation implies high turnover.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "period": {
+              "type": "int",
+              "default": "1",
+              "description": "Number of periods for autocorrelation lag"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Series of rolling autocorrelations indexed by date"
+          },
+          "interpretation": "High autocorrelation (>0.7) indicates stable factor rankings. Low autocorrelation (<0.3) indicates high turnover and transaction costs."
+        },
+        {
+          "name": "quantile_turnover",
+          "signature": "quantile_turnover(quantile_factor, quantile, period=1)",
+          "description": "Computes the proportion of names in a factor quantile that were not in that quantile in the previous period. Measures portfolio rebalancing frequency.",
+          "parameters": {
+            "quantile_factor": {
+              "type": "pd.Series (MultiIndex)",
+              "description": "Factor data with quantile assignments"
+            },
+            "quantile": {
+              "type": "int",
+              "description": "Quantile number to analyze (e.g., 1 for bottom, 5 for top)"
+            },
+            "period": {
+              "type": "int",
+              "default": "1",
+              "description": "Periods between turnover measurements"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Series of turnover percentages (0.0 to 1.0) indexed by date"
+          },
+          "interpretation": "Turnover of 0.5 means 50% of positions changed. High turnover increases transaction costs."
+        },
+        {
+          "name": "cumulative_returns",
+          "signature": "cumulative_returns(returns)",
+          "description": "Computes cumulative returns from simple daily returns. Converts period returns into growth trajectory.",
+          "parameters": {
+            "returns": {
+              "type": "pd.Series",
+              "description": "Series of period returns"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Cumulative return series (growth of $1)"
+          }
+        },
+        {
+          "name": "factor_cumulative_returns",
+          "signature": "factor_cumulative_returns(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+          "description": "Simulates portfolio using the factor and returns cumulative returns over time. Complete backtest simulation.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Forward return period to use for simulation (e.g., '1D', '5D')"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "Equal weighting flag"
+            },
+            "quantiles": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific quantiles to include (None = all quantiles)"
+            },
+            "groups": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific groups to include (None = all groups)"
+            }
+          },
+          "returns": {
+            "type": "pd.Series",
+            "description": "Cumulative return series indexed by date"
+          }
+        },
+        {
+          "name": "factor_positions",
+          "signature": "factor_positions(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+          "description": "Simulates portfolio and returns asset positions as percentage of total portfolio. Shows allocation evolution over time.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Forward return period to use"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "Equal weighting flag"
+            },
+            "quantiles": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific quantiles to include"
+            },
+            "groups": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific groups to include"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame with datetime index and asset columns showing position percentages"
+          }
+        },
+        {
+          "name": "positions",
+          "signature": "positions(weights, period, freq=None)",
+          "description": "Builds net position values time series showing portfolio percentage invested in each position.",
+          "parameters": {
+            "weights": {
+              "type": "pd.Series",
+              "description": "Asset weights"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Holding period"
+            },
+            "freq": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Rebalancing frequency"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "Position time series"
+          }
+        },
+        {
+          "name": "average_cumulative_return_by_quantile",
+          "signature": "average_cumulative_return_by_quantile(factor_data, returns, periods_before=10, periods_after=15, demeaned=True, group_adjust=False, by_group=False)",
+          "description": "Computes average cumulative returns by quantile in event windows. Used for event study analysis.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "returns": {
+              "type": "pd.DataFrame",
+              "description": "Returns data for event analysis"
+            },
+            "periods_before": {
+              "type": "int",
+              "default": "10",
+              "description": "Number of periods before event to include"
+            },
+            "periods_after": {
+              "type": "int",
+              "default": "15",
+              "description": "Number of periods after event to include"
+            },
+            "demeaned": {
+              "type": "bool",
+              "default": "True",
+              "description": "Demean returns flag"
+            },
+            "group_adjust": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group adjustment flag"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "Compute by group flag"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame with mean/std returns indexed by quantile and event time period"
+          }
+        },
+        {
+          "name": "common_start_returns",
+          "signature": "common_start_returns(factor, returns, before, after, cumulative=False, mean_by_date=False, demean_by=None)",
+          "description": "Extracts event-aligned return windows. For each (date, asset) in factor, builds a return series from 'before' to 'after' periods.",
+          "parameters": {
+            "factor": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Factor data marking events"
+            },
+            "returns": {
+              "type": "pd.DataFrame",
+              "description": "Returns data"
+            },
+            "before": {
+              "type": "int",
+              "description": "Periods before event"
+            },
+            "after": {
+              "type": "int",
+              "description": "Periods after event"
+            },
+            "cumulative": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, compute cumulative returns"
+            },
+            "mean_by_date": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, average across events on same date"
+            },
+            "demean_by": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Grouping for demeaning"
+            }
+          },
+          "returns": {
+            "type": "pd.DataFrame",
+            "description": "DataFrame with aligned return series (index: -before to after)"
+          }
+        },
+        {
+          "name": "create_pyfolio_input",
+          "signature": "create_pyfolio_input(factor_data, period, capital=None, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None, benchmark_period='1D')",
+          "description": "Simulates portfolio and formats output for Pyfolio integration. Provides returns, positions, and benchmark series.",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Forward return period to use"
+            },
+            "capital": {
+              "type": "float, optional",
+              "default": "None",
+              "description": "Starting capital for position sizing"
+            },
+            "long_short": {
+              "type": "bool",
+              "default": "True",
+              "description": "Long-short portfolio flag"
+            },
+            "group_neutral": {
+              "type": "bool",
+              "default": "False",
+              "description": "Group-neutral portfolio flag"
+            },
+            "equal_weight": {
+              "type": "bool",
+              "default": "False",
+              "description": "Equal weighting flag"
+            },
+            "quantiles": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific quantiles to include"
+            },
+            "groups": {
+              "type": "list, optional",
+              "default": "None",
+              "description": "Specific groups to include"
+            },
+            "benchmark_period": {
+              "type": "str",
+              "default": "'1D'",
+              "description": "Benchmark return period"
+            }
+          },
+          "returns": {
+            "type": "tuple",
+            "description": "(returns_series, positions_df, benchmark_series) - Formatted for Pyfolio analysis"
+          }
+        }
+      ]
+    },
+    "alphalens.plotting": {
+      "description": "Visualization functions for factor analysis. All plotting functions return matplotlib Axes objects and can be customized.",
+      "decorators": [
+        {
+          "name": "customize",
+          "signature": "@customize",
+          "description": "Decorator that applies consistent plotting context and axis styling to plot functions"
+        }
+      ],
+      "context_functions": [
+        {
+          "name": "axes_style",
+          "signature": "axes_style(style='darkgrid', rc=None)",
+          "description": "Creates Alphalens default axes style context, calling seaborn.axes_style() with custom settings",
+          "parameters": {
+            "style": {
+              "type": "str",
+              "default": "'darkgrid'",
+              "description": "Seaborn style name"
+            },
+            "rc": {
+              "type": "dict, optional",
+              "default": "None",
+              "description": "Additional rc parameters"
+            }
+          }
+        },
+        {
+          "name": "plotting_context",
+          "signature": "plotting_context(context='notebook', font_scale=1.5, rc=None)",
+          "description": "Creates Alphalens default plotting context with larger fonts for readability",
+          "parameters": {
+            "context": {
+              "type": "str",
+              "default": "'notebook'",
+              "description": "Seaborn context name"
+            },
+            "font_scale": {
+              "type": "float",
+              "default": "1.5",
+              "description": "Font size scaling factor"
+            },
+            "rc": {
+              "type": "dict, optional",
+              "default": "None",
+              "description": "Additional rc parameters"
+            }
+          }
+        }
+      ],
+      "public_functions": [
+        {
+          "name": "plot_ic_ts",
+          "signature": "plot_ic_ts(ic, ax=None)",
+          "description": "Plots Information Coefficient time series with rolling mean overlay. Shows IC evolution and moving average for trend identification.",
+          "parameters": {
+            "ic": {
+              "type": "pd.DataFrame",
+              "description": "IC data from factor_information_coefficient(), indexed by date with IC values per forward return period"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on. If None, creates new figure"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes",
+            "description": "The axes that were plotted on"
+          }
+        },
+        {
+          "name": "plot_ic_hist",
+          "signature": "plot_ic_hist(ic, ax=None)",
+          "description": "Plots histogram of Information Coefficient distribution. Useful for assessing IC consistency and normality.",
+          "parameters": {
+            "ic": {
+              "type": "pd.DataFrame",
+              "description": "IC data from factor_information_coefficient()"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_ic_qq",
+          "signature": "plot_ic_qq(ic, theoretical_dist=scipy.stats.norm, ax=None)",
+          "description": "Plots Q-Q plot of IC against theoretical distribution. Tests if IC follows expected distribution (typically normal).",
+          "parameters": {
+            "ic": {
+              "type": "pd.DataFrame",
+              "description": "IC data from factor_information_coefficient()"
+            },
+            "theoretical_dist": {
+              "type": "scipy.stats distribution",
+              "default": "scipy.stats.norm",
+              "description": "Theoretical distribution for comparison"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_ic_by_group",
+          "signature": "plot_ic_by_group(ic_group, ax=None)",
+          "description": "Plots IC comparison across groups (e.g., sectors). Shows which groups the factor predicts best.",
+          "parameters": {
+            "ic_group": {
+              "type": "pd.DataFrame",
+              "description": "IC data grouped by category"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_monthly_ic_heatmap",
+          "signature": "plot_monthly_ic_heatmap(mean_monthly_ic, ax=None)",
+          "description": "Plots heatmap of monthly IC values. Reveals seasonal patterns and time-varying factor effectiveness.",
+          "parameters": {
+            "mean_monthly_ic": {
+              "type": "pd.DataFrame",
+              "description": "Mean IC by month (from mean_information_coefficient with by_time='M')"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_quantile_returns_bar",
+          "signature": "plot_quantile_returns_bar(mean_ret_by_q, by_group=False, ylim_percentiles=None, ax=None)",
+          "description": "Plots mean returns by factor quantile as bar chart. Core visualization for evaluating monotonic return relationship.",
+          "parameters": {
+            "mean_ret_by_q": {
+              "type": "pd.DataFrame",
+              "description": "Mean returns by quantile from mean_return_by_quantile()"
+            },
+            "by_group": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, show separate bars by group"
+            },
+            "ylim_percentiles": {
+              "type": "tuple, optional",
+              "default": "None",
+              "description": "Tuple of (lower, upper) percentiles for y-axis limits"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          },
+          "interpretation": "Expect monotonic increase from Q1 to Q5 for predictive factors. Spread between Q1 and Q5 indicates long-short profitability."
+        },
+        {
+          "name": "plot_quantile_returns_violin",
+          "signature": "plot_quantile_returns_violin(return_by_q, ylim_percentiles=None, ax=None)",
+          "description": "Plots return distribution by quantile using violin plots. Shows full distribution, not just means.",
+          "parameters": {
+            "return_by_q": {
+              "type": "pd.DataFrame",
+              "description": "Returns data grouped by quantile"
+            },
+            "ylim_percentiles": {
+              "type": "tuple, optional",
+              "default": "None",
+              "description": "Y-axis limit percentiles"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_cumulative_returns",
+          "signature": "plot_cumulative_returns(factor_returns, period, freq=None, title=None, ax=None)",
+          "description": "Plots cumulative returns of factor-based strategy. Shows growth of $1 over time.",
+          "parameters": {
+            "factor_returns": {
+              "type": "pd.DataFrame",
+              "description": "Factor returns from factor_returns()"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Period to plot (e.g., '1D', '5D')"
+            },
+            "freq": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Frequency for date formatting"
+            },
+            "title": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Plot title"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_cumulative_returns_by_quantile",
+          "signature": "plot_cumulative_returns_by_quantile(quantile_returns, period, freq=None, ax=None)",
+          "description": "Plots cumulative returns separately for each quantile. Visualizes performance spread across factor rankings.",
+          "parameters": {
+            "quantile_returns": {
+              "type": "pd.DataFrame",
+              "description": "Returns by quantile"
+            },
+            "period": {
+              "type": "str or pd.Timedelta",
+              "description": "Period to plot"
+            },
+            "freq": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Frequency for date formatting"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_quantile_average_cumulative_return",
+          "signature": "plot_quantile_average_cumulative_return(avg_cumulative_returns, by_quantile=False, std_bar=False, title=None, ax=None)",
+          "description": "Plots average cumulative returns in event windows. Used for event study analysis showing returns before/after events.",
+          "parameters": {
+            "avg_cumulative_returns": {
+              "type": "pd.DataFrame",
+              "description": "Average cumulative returns from average_cumulative_return_by_quantile()"
+            },
+            "by_quantile": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, plot separate lines per quantile"
+            },
+            "std_bar": {
+              "type": "bool",
+              "default": "False",
+              "description": "If True, show standard error bars"
+            },
+            "title": {
+              "type": "str, optional",
+              "default": "None",
+              "description": "Plot title"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_mean_quantile_returns_spread_time_series",
+          "signature": "plot_mean_quantile_returns_spread_time_series(mean_returns_spread, std_err=None, bandwidth=1, ax=None)",
+          "description": "Plots long-short return spread (top quantile - bottom quantile) over time with confidence bands. Key metric for strategy profitability.",
+          "parameters": {
+            "mean_returns_spread": {
+              "type": "pd.Series",
+              "description": "Return spread from compute_mean_returns_spread()"
+            },
+            "std_err": {
+              "type": "pd.Series, optional",
+              "default": "None",
+              "description": "Standard errors for confidence bands"
+            },
+            "bandwidth": {
+              "type": "float",
+              "default": "1",
+              "description": "Number of standard errors for confidence band width"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_factor_rank_auto_correlation",
+          "signature": "plot_factor_rank_auto_correlation(factor_autocorrelation, period=1, ax=None)",
+          "description": "Plots factor rank autocorrelation over time. Indicates factor stability and turnover expectations.",
+          "parameters": {
+            "factor_autocorrelation": {
+              "type": "pd.Series",
+              "description": "Autocorrelation data from factor_rank_autocorrelation()"
+            },
+            "period": {
+              "type": "int",
+              "default": "1",
+              "description": "Autocorrelation period"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_top_bottom_quantile_turnover",
+          "signature": "plot_top_bottom_quantile_turnover(quantile_turnover, period=1, ax=None)",
+          "description": "Plots turnover for top and bottom quantiles. Critical for estimating transaction costs in long-short strategies.",
+          "parameters": {
+            "quantile_turnover": {
+              "type": "pd.DataFrame",
+              "description": "Turnover data from quantile_turnover()"
+            },
+            "period": {
+              "type": "int",
+              "default": "1",
+              "description": "Turnover measurement period"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          },
+          "interpretation": "High turnover (>50%) indicates frequent rebalancing and high transaction costs. Aim for <30% for practical implementation."
+        },
+        {
+          "name": "plot_events_distribution",
+          "signature": "plot_events_distribution(events, num_bars=50, ax=None)",
+          "description": "Plots histogram of event timing distribution. Shows when events occur throughout the analysis period.",
+          "parameters": {
+            "events": {
+              "type": "pd.Series or pd.DataFrame",
+              "description": "Event timestamps"
+            },
+            "num_bars": {
+              "type": "int",
+              "default": "50",
+              "description": "Number of histogram bins"
+            },
+            "ax": {
+              "type": "matplotlib.Axes, optional",
+              "default": "None",
+              "description": "Axes to plot on"
+            }
+          },
+          "returns": {
+            "type": "matplotlib.Axes"
+          }
+        },
+        {
+          "name": "plot_information_table",
+          "signature": "plot_information_table(ic_data)",
+          "description": "Displays tabular summary of IC statistics including mean, std, IR (Information Ratio).",
+          "parameters": {
+            "ic_data": {
+              "type": "pd.DataFrame",
+              "description": "IC data from factor_information_coefficient()"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays formatted table"
+          }
+        },
+        {
+          "name": "plot_returns_table",
+          "signature": "plot_returns_table(alpha_beta, mean_ret_quantile, mean_ret_spread_quantile)",
+          "description": "Displays formatted table of return metrics including alpha, beta, and quantile returns.",
+          "parameters": {
+            "alpha_beta": {
+              "type": "pd.Series",
+              "description": "Alpha/beta data from factor_alpha_beta()"
+            },
+            "mean_ret_quantile": {
+              "type": "pd.DataFrame",
+              "description": "Mean returns by quantile"
+            },
+            "mean_ret_spread_quantile": {
+              "type": "pd.DataFrame",
+              "description": "Long-short spread returns"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays formatted table"
+          }
+        },
+        {
+          "name": "plot_quantile_statistics_table",
+          "signature": "plot_quantile_statistics_table(factor_data)",
+          "description": "Displays table of descriptive statistics for each quantile (count, mean, std, etc.).",
+          "parameters": {
+            "factor_data": {
+              "type": "pd.DataFrame (MultiIndex)",
+              "description": "Output from get_clean_factor_and_forward_returns"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays formatted table"
+          }
+        },
+        {
+          "name": "plot_turnover_table",
+          "signature": "plot_turnover_table(autocorrelation_data, quantile_turnover)",
+          "description": "Displays table of turnover and stability metrics.",
+          "parameters": {
+            "autocorrelation_data": {
+              "type": "pd.Series",
+              "description": "Autocorrelation from factor_rank_autocorrelation()"
+            },
+            "quantile_turnover": {
+              "type": "pd.DataFrame",
+              "description": "Turnover from quantile_turnover()"
+            }
+          },
+          "returns": {
+            "type": "None",
+            "description": "Displays formatted table"
+          }
+        }
+      ]
+    }
+  },
+  "core_concepts": {
+    "factor_analysis": {
+      "definition": "Systematic evaluation of whether a quantitative signal (factor) has predictive power for future asset returns",
+      "purpose": "Determine if a factor can be profitably traded before implementing in production",
+      "workflow": [
+        "1. Define factor (signal/alpha) as time series of asset rankings",
+        "2. Prepare data using get_clean_factor_and_forward_returns()",
+        "3. Analyze returns, IC, turnover via tear sheets",
+        "4. Evaluate if factor meets profitability and implementability criteria"
+      ]
+    },
+    "quantiles": {
+      "definition": "Factor values are ranked and divided into equal-sized groups (typically 5 or 10 quantiles)",
+      "purpose": "Convert continuous factor values into discrete buckets for portfolio construction and analysis",
+      "interpretation": {
+        "quantile_1": "Bottom-ranked assets (lowest factor values)",
+        "quantile_5": "Top-ranked assets (highest factor values)",
+        "monotonic_relationship": "Ideal: Q5 returns > Q4 > Q3 > Q2 > Q1 (higher factor = higher returns)"
+      },
+      "long_short_strategy": "Long top quantile (Q5), short bottom quantile (Q1), profit from spread",
+      "binning_options": {
+        "quantiles": "Equal-sized buckets (each has ~same number of assets)",
+        "bins": "Equal-width buckets (each covers same factor value range)",
+        "binning_by_group": "Separate quantile ranking within each group (e.g., per sector)"
+      }
+    },
+    "information_coefficient": {
+      "name": "Information Coefficient (IC)",
+      "definition": "Spearman rank correlation between factor values and subsequent forward returns",
+      "formula": "IC = spearman_correlation(factor_ranks, forward_return_ranks)",
+      "range": "-1 to +1",
+      "interpretation": {
+        "positive_ic": "Higher factor values predict higher returns (good for long strategies)",
+        "negative_ic": "Higher factor values predict lower returns (good for short strategies)",
+        "zero_ic": "No predictive relationship",
+        "strong_factor": "IC > 0.03 or IC < -0.03",
+        "excellent_factor": "IC > 0.05 or IC < -0.05"
+      },
+      "information_ratio": {
+        "name": "IR",
+        "formula": "IR = mean(IC) / std(IC)",
+        "interpretation": "Sharpe ratio equivalent for IC. IR > 0.5 considered good, IR > 1.0 excellent",
+        "purpose": "Measures consistency of predictive power, accounting for IC volatility"
+      },
+      "time_series_analysis": {
+        "ic_ts_plot": "Shows IC over time to identify regime changes",
+        "ic_histogram": "Shows IC distribution and consistency",
+        "monthly_heatmap": "Reveals seasonal patterns in factor effectiveness"
+      },
+      "advantages": [
+        "Robust to outliers (uses ranks, not raw values)",
+        "Comparable across different factors and markets",
+        "Direct measure of monotonic predictive relationship"
+      ]
+    },
+    "quantile_returns": {
+      "definition": "Mean forward returns for assets in each factor quantile",
+      "calculation": "For each quantile, compute average returns of all assets in that bucket",
+      "key_metrics": {
+        "mean_return_by_quantile": "Average return for Q1, Q2, Q3, Q4, Q5",
+        "return_spread": "Q5_return - Q1_return (long-short profitability)",
+        "monotonicity": "Whether returns increase consistently from Q1 to Q5"
+      },
+      "demeaning_modes": {
+        "none": "Raw returns (absolute performance)",
+        "long_short": "Universe-demeaned (long-short portfolio, removes market beta)",
+        "group_neutral": "Group-demeaned (sector-neutral, removes sector exposure)"
+      },
+      "cumulative_returns": "Growth of $1 invested using factor strategy over time",
+      "visualization": {
+        "bar_chart": "Mean returns by quantile",
+        "violin_plot": "Full return distribution by quantile",
+        "cumulative_plot": "Strategy performance over time"
+      }
+    },
+    "turnover": {
+      "definition": "Frequency of portfolio position changes due to factor reranking",
+      "importance": "High turnover leads to high transaction costs, reducing net profitability",
+      "metrics": {
+        "quantile_turnover": {
+          "definition": "Proportion of assets in a quantile that were not in that quantile in previous period",
+          "formula": "turnover = 1 - (assets_still_in_quantile / total_assets_in_quantile)",
+          "range": "0.0 (no turnover) to 1.0 (complete replacement)",
+          "interpretation": {
+            "low_turnover": "<0.2 (low trading costs, stable positions)",
+            "medium_turnover": "0.2-0.5 (moderate trading costs)",
+            "high_turnover": ">0.5 (high trading costs, may erode profits)"
+          }
+        },
+        "factor_rank_autocorrelation": {
+          "definition": "Correlation between current factor ranks and previous period ranks",
+          "range": "0 to 1",
+          "interpretation": {
+            "high_autocorrelation": ">0.7 (stable rankings, low turnover)",
+            "low_autocorrelation": "<0.3 (unstable rankings, high turnover)"
+          },
+          "relationship": "Low autocorrelation implies high turnover"
+        }
+      },
+      "transaction_cost_estimation": "annual_cost ≈ turnover × trades_per_year × cost_per_trade",
+      "practical_considerations": [
+        "Factors with IC=0.05 but turnover=0.8 may be unprofitable after costs",
+        "Factors with IC=0.03 and turnover=0.2 may be highly profitable",
+        "Consider holding period vs rebalancing frequency trade-off"
+      ]
+    },
+    "grouped_analysis": {
+      "definition": "Breaking down factor performance by categories (typically sectors/industries)",
+      "purpose": [
+        "Identify which groups the factor predicts best",
+        "Construct sector-neutral portfolios",
+        "Avoid sector concentration risk",
+        "Meet regulatory or mandate constraints"
+      ],
+      "group_neutral_portfolios": {
+        "construction": "Within each group, long top-ranked assets and short bottom-ranked",
+        "benefits": "Removes group (sector) exposure, isolates factor effect",
+        "use_case": "When you want factor returns independent of sector performance"
+      },
+      "analysis_outputs": {
+        "ic_by_group": "Shows which sectors have strongest predictive power",
+        "returns_by_group": "Sector-level performance breakdown",
+        "turnover_by_group": "Group-specific rebalancing frequency"
+      },
+      "groupby_parameter": "Pass sector/industry mapping as Series or dict to utils functions"
+    },
+    "forward_returns": {
+      "definition": "Returns measured from factor observation date to N periods in the future",
+      "purpose": "Align factor values with subsequent returns to measure predictive power",
+      "periods": {
+        "1D": "1-day forward return (high frequency trading)",
+        "5D": "5-day (1 week) forward return (short-term trading)",
+        "10D": "10-day (2 week) forward return",
+        "21D": "21-day (1 month) forward return (medium-term)",
+        "63D": "63-day (3 month) forward return (long-term)"
+      },
+      "calculation": "forward_return = (price[t+N] - price[t]) / price[t]",
+      "cumulative_vs_simple": {
+        "cumulative": "Compounds returns over holding period (default)",
+        "simple": "Period-over-period non-compounded returns"
+      },
+      "multiple_periods": "Analyze same factor across different holding periods to find optimal timeframe",
+      "lookback_bias_prevention": "Alphalens ensures factor at time t only uses returns from t+1 onward"
+    },
+    "data_structure": {
+      "factor_input": {
+        "type": "pd.Series with MultiIndex",
+        "index_levels": ["timestamp (level 0)", "asset (level 1)"],
+        "values": "Factor values (continuous, will be ranked)",
+        "example": "pd.Series([1.2, 0.8, ...], index=pd.MultiIndex.from_tuples([('2023-01-01', 'AAPL'), ('2023-01-01', 'MSFT'), ...]))"
+      },
+      "prices_input": {
+        "type": "pd.DataFrame",
+        "index": "Datetime (must overlap with factor dates)",
+        "columns": "Asset identifiers (must match factor assets)",
+        "values": "Prices (typically close prices)",
+        "requirement": "Must extend beyond last factor date by max(periods) to compute forward returns"
+      },
+      "factor_data_output": {
+        "type": "pd.DataFrame with MultiIndex",
+        "index_levels": ["date (level 0)", "asset (level 1)"],
+        "columns": [
+          "factor: Original factor values",
+          "factor_quantile: Quantile assignment (1, 2, 3, 4, 5)",
+          "[period]_period_return: Forward returns for each period (e.g., '1D', '5D')",
+          "group: Optional group membership (e.g., sector)"
+        ],
+        "description": "Standard format consumed by all tears and performance functions"
+      },
+      "max_loss_parameter": "Controls acceptable data loss during alignment. Default 0.35 means up to 35% of factor data can be dropped due to missing prices or NaNs"
+    },
+    "typical_workflow": {
+      "step_1_data_prep": {
+        "action": "Call get_clean_factor_and_forward_returns()",
+        "inputs": "factor (Series), prices (DataFrame), optional groups",
+        "output": "factor_data (aligned MultiIndex DataFrame)",
+        "parameters_to_consider": [
+          "quantiles: 5 or 10 (more quantiles = finer granularity)",
+          "periods: (1, 5, 10) or custom holding periods",
+          "binning_by_group: True for sector-relative ranking",
+          "max_loss: 0.35 default, lower if data quality is critical"
+        ]
+      },
+      "step_2_quick_analysis": {
+        "action": "Call create_summary_tear_sheet()",
+        "output": "Condensed summary with key metrics",
+        "decision": "If promising, proceed to full analysis"
+      },
+      "step_3_full_analysis": {
+        "action": "Call create_full_tear_sheet()",
+        "output": "Comprehensive visualizations and tables",
+        "components": [
+          "Returns analysis (quantile returns, cumulative performance)",
+          "IC analysis (time series, distribution, heatmaps)",
+          "Turnover analysis (autocorrelation, quantile turnover)"
+        ]
+      },
+      "step_4_detailed_drill_down": {
+        "optional_analyses": [
+          "create_returns_tear_sheet() for deeper returns analysis",
+          "create_information_tear_sheet() for detailed IC breakdown",
+          "create_turnover_tear_sheet() for transaction cost estimation",
+          "create_event_study_tear_sheet() for specific event analysis"
+        ]
+      },
+      "step_5_pyfolio_integration": {
+        "action": "Call create_pyfolio_input()",
+        "output": "Returns, positions, benchmark for Pyfolio",
+        "purpose": "Risk analysis, drawdowns, factor exposures via Pyfolio"
+      }
+    },
+    "factor_evaluation_criteria": {
+      "predictive_power": {
+        "metric": "Information Coefficient (IC)",
+        "good": "mean(|IC|) > 0.03, IR > 0.5",
+        "excellent": "mean(|IC|) > 0.05, IR > 1.0",
+        "check": "IC should be consistent over time (stable mean, low variance)"
+      },
+      "profitability": {
+        "metric": "Quantile return spread (Q5 - Q1)",
+        "good": "Consistent positive spread, statistically significant",
+        "check": "Spread should exceed transaction costs after adjusting for turnover"
+      },
+      "monotonicity": {
+        "metric": "Return progression Q1 < Q2 < Q3 < Q4 < Q5",
+        "good": "Clear monotonic relationship",
+        "acceptable": "Q5 >> Q1 even if middle quantiles not perfectly ordered"
+      },
+      "stability": {
+        "metric": "Factor rank autocorrelation",
+        "good": "Autocorrelation 0.5-0.8 (stable but not static)",
+        "too_high": ">0.95 (factor not incorporating new information)",
+        "too_low": "<0.2 (high turnover, likely unprofitable)"
+      },
+      "implementability": {
+        "metric": "Quantile turnover (especially Q1 and Q5)",
+        "good": "<0.3 for daily rebalancing",
+        "marginal": "0.3-0.5",
+        "poor": ">0.5 (transaction costs likely exceed profits)"
+      },
+      "group_robustness": {
+        "check": "Factor works across multiple groups, not just one sector",
+        "risk": "Factor concentrated in one sector = sector bet, not true alpha"
+      },
+      "time_consistency": {
+        "check": "IC and returns relatively stable across different time periods",
+        "risk": "Factor effective only in specific market regimes may not generalize"
+      }
+    }
+  },
+  "technical_insights": {
+    "common_patterns": [
+      "Most production factors use 5 quantiles for simplicity",
+      "1D, 5D, 21D periods are common for intraday, weekly, monthly strategies",
+      "Group-neutral construction common in institutional quant funds to control sector exposure",
+      "IC analysis preferred over raw return analysis as it's robust to outliers",
+      "Turnover analysis often reveals unprofitable factors with good IC"
+    ],
+    "best_practices": [
+      "Always run get_clean_factor_and_forward_returns first to validate data alignment",
+      "Check max_loss warnings - high data loss indicates data quality issues",
+      "Use create_summary_tear_sheet for quick factor screening",
+      "Compare multiple holding periods to find optimal trade frequency",
+      "Examine both IC and returns - high IC with low returns may indicate scale/capacity issues",
+      "Account for transaction costs using turnover metrics before declaring profitability",
+      "Use group_neutral=True to remove market/sector beta and isolate alpha",
+      "Look for IC>0.03 as minimum threshold for practical factors",
+      "Monitor IC consistency - volatile IC suggests regime-dependent factor",
+      "Cross-reference autocorrelation with turnover to predict implementation costs"
+    ],
+    "pitfalls": [
+      "Ignoring turnover - factor may be unprofitable after transaction costs",
+      "Not providing enough price history - need prices extending past last factor date by max(periods)",
+      "Timezone mismatches between factor and price data",
+      "Using too many quantiles with small universes (need sufficient assets per quantile)",
+      "Mistaking high IC for profitability - must check return magnitudes",
+      "Overfitting to specific time period - factor may not generalize",
+      "Not accounting for survivorship bias in data",
+      "Assuming factors work equally across all market conditions",
+      "Neglecting capacity constraints - IC-based metrics don't capture market impact"
+    ],
+    "emerging_trends": [
+      "Integration with modern ML pipelines (factor feature engineering)",
+      "Real-time factor monitoring vs batch analysis",
+      "Multi-factor portfolio construction (combining Alphalens outputs)",
+      "Alternative data factors (sentiment, satellite, web traffic)",
+      "Intraday factor analysis (sub-daily periods)",
+      "Factor decay analysis (how quickly IC degrades)",
+      "Transaction cost modeling improvements"
+    ]
+  },
+  "implementation_recommendations": [
+    {
+      "scenario": "Quick factor screening",
+      "recommended_solution": "Use create_summary_tear_sheet() with default parameters",
+      "rationale": "Fast, covers key metrics, identifies obviously bad factors quickly"
+    },
+    {
+      "scenario": "Production factor validation",
+      "recommended_solution": "Use create_full_tear_sheet() with group_neutral=True, analyze turnover carefully",
+      "rationale": "Comprehensive analysis, accounts for sector effects, validates implementability"
+    },
+    {
+      "scenario": "Research portfolio integration",
+      "recommended_solution": "Use create_pyfolio_input() to export to Pyfolio for risk analysis",
+      "rationale": "Pyfolio provides deeper risk metrics, drawdown analysis, factor exposures"
+    },
+    {
+      "scenario": "Sector-specific strategy",
+      "recommended_solution": "Use binning_by_group=True with by_group=True in tear sheets",
+      "rationale": "Enables within-sector ranking and separate analysis per sector"
+    },
+    {
+      "scenario": "High-frequency trading factor",
+      "recommended_solution": "Use periods=(1,) for 1-day returns, monitor turnover closely",
+      "rationale": "Short holding periods increase turnover - must verify profitability after costs"
+    },
+    {
+      "scenario": "Long-term investment factor",
+      "recommended_solution": "Use periods=(21, 63) for monthly/quarterly returns",
+      "rationale": "Longer periods reduce turnover, better for low-frequency strategies"
+    },
+    {
+      "scenario": "Event-driven strategy",
+      "recommended_solution": "Use create_event_study_tear_sheet() with custom event windows",
+      "rationale": "Specialized for analyzing returns around specific events (earnings, M&A, etc.)"
+    },
+    {
+      "scenario": "Factor with many outliers",
+      "recommended_solution": "Use lower filter_zscore (e.g., 3-5) in get_clean_factor_and_forward_returns",
+      "rationale": "Removes extreme outliers that may distort analysis"
+    },
+    {
+      "scenario": "Small universe (<50 assets)",
+      "recommended_solution": "Use quantiles=3 instead of default 5",
+      "rationale": "Ensures sufficient assets per quantile for meaningful statistics"
+    },
+    {
+      "scenario": "Large universe (>1000 assets)",
+      "recommended_solution": "Use quantiles=10 for finer granularity",
+      "rationale": "More quantiles provide better resolution with sufficient sample size"
+    }
+  ],
+  "community_insights": {
+    "popular_solutions": [
+      "Alphalens-reloaded is becoming the preferred fork due to active maintenance",
+      "Integration with Zipline (backtesting) and Pyfolio (risk analysis) is standard workflow",
+      "Jupyter notebooks are primary environment for factor research with Alphalens",
+      "Factor combination strategies often use Alphalens to evaluate individual factors before ensemble"
+    ],
+    "controversial_topics": [
+      "Whether IC is sufficient vs needing to analyze actual returns",
+      "Appropriate IC threshold for production factors (0.03 vs 0.05)",
+      "Value of group-neutral construction vs accepting sector bets",
+      "Transaction cost modeling accuracy using turnover metrics"
+    ],
+    "expert_opinions": [
+      "Stefan Jansen (maintainer of alphalens-reloaded): Active maintenance critical for modern Python compatibility",
+      "Quantopian community: IC>0.05 with IR>0.5 is 'really good', IC>0.03 is minimum viable",
+      "Practitioners emphasize turnover analysis often more important than IC for profitability",
+      "Combining multiple weak factors (IC 0.02-0.03) can yield stronger ensemble factor"
+    ]
+  },
+  "documentation_sources": [
+    {
+      "title": "Alphalens Official Documentation",
+      "url": "https://quantopian.github.io/alphalens/",
+      "description": "Original Quantopian documentation"
+    },
+    {
+      "title": "Alphalens-Reloaded Documentation",
+      "url": "https://alphalens.ml4trading.io/",
+      "description": "Updated documentation for actively maintained fork"
+    },
+    {
+      "title": "Quantopian API Reference",
+      "url": "https://www.quantopian.com/docs/api-reference/alphalens-api-reference",
+      "description": "Detailed API reference with examples"
+    },
+    {
+      "title": "GitHub - quantopian/alphalens",
+      "url": "https://github.com/quantopian/alphalens",
+      "description": "Original source code repository"
+    },
+    {
+      "title": "GitHub - stefan-jansen/alphalens-reloaded",
+      "url": "https://github.com/stefan-jansen/alphalens-reloaded",
+      "description": "Actively maintained fork"
+    },
+    {
+      "title": "PyPI - alphalens-reloaded",
+      "url": "https://pypi.org/project/alphalens-reloaded/",
+      "description": "Package distribution"
+    }
+  ]
+}

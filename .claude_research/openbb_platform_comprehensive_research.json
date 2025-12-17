@@ -1,0 +1,1814 @@
+{
+  "search_summary": {
+    "platforms_searched": ["github", "pypi", "docs.openbb.co", "algotrading101"],
+    "repositories_analyzed": 3,
+    "docs_reviewed": 15,
+    "search_date": "2025-12-17"
+  },
+  "library_overview": {
+    "name": "OpenBB Platform",
+    "description": "Open-source financial data platform for analysts, quants and AI agents. Provides 'connect once, consume everywhere' infrastructure layer that consolidates and exposes data to Python environments, OpenBB Workspace, Excel, MCP servers for AI agents, and REST APIs.",
+    "github_url": "https://github.com/OpenBB-finance/OpenBB",
+    "github_stars": 55600,
+    "license": "AGPLv3",
+    "official_docs": "https://docs.openbb.co/",
+    "pypi_url": "https://pypi.org/project/openbb/"
+  },
+  "current_version_and_installation": {
+    "latest_version": "4.5.0",
+    "release_date": "2025-10-08",
+    "python_version_requirements": {
+      "minimum": "3.9.21",
+      "maximum": "3.13",
+      "recommended": "3.10-3.13",
+      "deprecation_warning": "Python 3.9 triggers deprecation warning, will be discontinued fall 2025"
+    },
+    "installation_commands": {
+      "basic": "pip install openbb",
+      "with_all_extensions": "pip install openbb[all]",
+      "minimal_core_only": "pip install openbb-core && pip install openbb --no-deps",
+      "cli": "pip install openbb-cli",
+      "from_source": "git clone https://github.com/OpenBB-finance/OpenBB.git && python dev_install.py -e --cli"
+    },
+    "system_requirements": {
+      "processor": "Modern processor (5 years or less)",
+      "ram": "4GB minimum",
+      "os": "Windows, Linux, macOS",
+      "windows_requirements": "Microsoft Visual C++ 14.0 or greater",
+      "linux_requirements": "Rust and Cargo in PATH, libwebkit2gtk-4.0-dev for Debian-based systems"
+    },
+    "core_dependencies": [
+      "openbb-core",
+      "fastapi",
+      "uvicorn",
+      "pandas",
+      "plotly",
+      "poetry (for development)"
+    ]
+  },
+  "complete_module_inventory": {
+    "core_routers": [
+      {
+        "module": "obb.equity",
+        "description": "Equity/stock market data and analysis",
+        "sub_routers": [
+          "equity.price",
+          "equity.fundamental",
+          "equity.profile",
+          "equity.compare",
+          "equity.screener",
+          "equity.search",
+          "equity.news"
+        ]
+      },
+      {
+        "module": "obb.crypto",
+        "description": "Cryptocurrency market data",
+        "sub_routers": [
+          "crypto.price",
+          "crypto.discovery"
+        ]
+      },
+      {
+        "module": "obb.currency",
+        "description": "Forex/currency pair data",
+        "sub_routers": [
+          "currency.price",
+          "currency.search"
+        ]
+      },
+      {
+        "module": "obb.derivatives",
+        "description": "Derivatives market data",
+        "sub_routers": [
+          "derivatives.options",
+          "derivatives.futures"
+        ]
+      },
+      {
+        "module": "obb.economy",
+        "description": "Economic indicators and macroeconomic data",
+        "sub_routers": [
+          "economy.gdp",
+          "economy.cpi",
+          "economy.indicators",
+          "economy.fred_search",
+          "economy.fred_series"
+        ]
+      },
+      {
+        "module": "obb.etf",
+        "description": "Exchange-traded fund data",
+        "sub_routers": [
+          "etf.price",
+          "etf.search",
+          "etf.holdings"
+        ]
+      },
+      {
+        "module": "obb.fixedincome",
+        "description": "Fixed income and bond market data",
+        "sub_routers": [
+          "fixedincome.rates",
+          "fixedincome.corporate",
+          "fixedincome.spreads",
+          "fixedincome.government"
+        ]
+      },
+      {
+        "module": "obb.index",
+        "description": "Market index data",
+        "sub_routers": [
+          "index.search",
+          "index.constituents",
+          "index.price"
+        ]
+      },
+      {
+        "module": "obb.news",
+        "description": "Financial news and media",
+        "sub_routers": []
+      },
+      {
+        "module": "obb.regulators",
+        "description": "Regulatory filings and data",
+        "sub_routers": []
+      },
+      {
+        "module": "obb.commodity",
+        "description": "Commodity market data",
+        "sub_routers": []
+      },
+      {
+        "module": "obb.technical",
+        "description": "Technical analysis indicators",
+        "requires_extension": "openbb-technical",
+        "sub_routers": []
+      }
+    ],
+    "utility_routers": [
+      "obb.account",
+      "obb.user",
+      "obb.system",
+      "obb.coverage"
+    ]
+  },
+  "key_functions_detailed": {
+    "equity_price": {
+      "historical": {
+        "function": "obb.equity.price.historical()",
+        "description": "Get historical OHLCV price data for stocks",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "Start date for historical data"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "End date for historical data"
+          },
+          "provider": {
+            "type": "Literal['fmp', 'intrinio', 'polygon', 'tiingo', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "OBBject with DataFrame containing Open, High, Low, Close, Volume, Adj Close",
+        "example": "obb.equity.price.historical(symbol='AAPL', start_date='2020-01-01', provider='yfinance').to_dataframe()"
+      },
+      "quote": {
+        "function": "obb.equity.price.quote()",
+        "description": "Get the latest quote for a stock including price, volume, and other real-time data",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol, multiple items allowed"
+          },
+          "provider": {
+            "type": "Literal['cboe', 'fmp', 'intrinio', 'tmx', 'tradier', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Quote data with open, high, low, close, volume, previous close, change, change percent, 52-week high/low",
+        "example": "obb.equity.price.quote(symbol='AAPL', provider='fmp')"
+      },
+      "performance": {
+        "function": "obb.equity.price.performance()",
+        "description": "Price performance as a return over different time periods",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Performance metrics over various periods",
+        "example": "obb.equity.price.performance(symbol='AAPL')"
+      }
+    },
+    "equity_fundamental": {
+      "balance": {
+        "function": "obb.equity.fundamental.balance()",
+        "description": "Get balance sheet data for a company",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter']",
+            "required": false,
+            "default": "annual",
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "default": 5,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "Literal['fmp', 'intrinio', 'polygon', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Balance sheet with assets, liabilities, equity line items",
+        "example": "obb.equity.fundamental.balance('AAPL', period='quarter', provider='fmp', limit=4)"
+      },
+      "income": {
+        "function": "obb.equity.fundamental.income()",
+        "description": "Get income statement data for a company",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter']",
+            "required": false,
+            "default": "annual",
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "default": 5,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "Literal['fmp', 'intrinio', 'polygon', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Income statement with revenue, expenses, net income line items",
+        "example": "obb.equity.fundamental.income('AAPL', period='annual', provider='fmp')"
+      },
+      "cash": {
+        "function": "obb.equity.fundamental.cash()",
+        "description": "Get cash flow statement data for a company",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter']",
+            "required": false,
+            "default": "annual",
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "default": 5,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "Literal['fmp', 'intrinio', 'polygon', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Cash flow statement with operating, investing, financing activities",
+        "example": "obb.equity.fundamental.cash('LUV', provider='intrinio').to_df().transpose()"
+      },
+      "metrics": {
+        "function": "obb.equity.fundamental.metrics()",
+        "description": "Get key financial metrics for a company",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter', 'ttm']",
+            "required": false,
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": {
+          "description": "Key metrics including ratios and performance indicators",
+          "fields": [
+            "market_cap",
+            "pe_ratio",
+            "forward_pe",
+            "peg_ratio",
+            "price_to_book",
+            "price_to_sales",
+            "dividend_yield",
+            "earnings_yield",
+            "beta",
+            "quick_ratio",
+            "current_ratio",
+            "debt_to_equity",
+            "gross_margin",
+            "ebit_margin",
+            "profit_margin",
+            "roe (return on equity)",
+            "roa (return on assets)",
+            "roic (return on invested capital)",
+            "eps (basic)",
+            "eps_growth",
+            "revenue_growth",
+            "ebitda_growth",
+            "free_cash_flow_per_share",
+            "free_cash_flow_yield",
+            "altman_z_score"
+          ]
+        },
+        "example": "obb.equity.fundamental.metrics('AAPL', provider='fmp')"
+      },
+      "ratios": {
+        "function": "obb.equity.fundamental.ratios()",
+        "description": "Get financial ratios for a company over time",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter', 'ttm']",
+            "required": false,
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": {
+          "description": "Financial ratios including liquidity, profitability, efficiency, leverage ratios",
+          "fields": [
+            "current_ratio",
+            "quick_ratio",
+            "cash_ratio",
+            "days_of_sales_outstanding",
+            "days_of_inventory_outstanding",
+            "days_of_payables_outstanding",
+            "cash_conversion_cycle",
+            "inventory_turnover",
+            "asset_turnover",
+            "receivables_turnover",
+            "payables_turnover",
+            "gross_profit_margin",
+            "operating_profit_margin",
+            "net_profit_margin",
+            "return_on_assets",
+            "return_on_equity",
+            "return_on_invested_capital",
+            "debt_ratio",
+            "debt_to_equity",
+            "debt_to_assets",
+            "interest_coverage",
+            "cash_flow_coverage_ratio",
+            "cash_flow_to_debt_ratio",
+            "capital_expenditure_coverage_ratio",
+            "dividend_payout_ratio",
+            "price_to_earnings",
+            "price_to_book",
+            "price_to_sales",
+            "price_to_cash_flow",
+            "enterprise_value_multiple",
+            "price_to_free_cash_flow"
+          ]
+        },
+        "example": "obb.equity.fundamental.ratios('AAPL', period='annual')"
+      },
+      "dividends": {
+        "function": "obb.equity.fundamental.dividends()",
+        "description": "Get historical dividend data for a company",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "provider": {
+            "type": "Literal['fmp', 'intrinio', 'nasdaq', 'tmx', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Historical dividend payments with dates and amounts",
+        "example": "obb.equity.fundamental.dividends(symbol='AAPL', provider='intrinio')"
+      },
+      "reported_financials": {
+        "function": "obb.equity.fundamental.reported_financials()",
+        "description": "Get reported financial statements as filed",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "statement_type": {
+            "type": "Literal['balance', 'income', 'cash']",
+            "required": false,
+            "description": "Type of financial statement"
+          },
+          "period": {
+            "type": "Literal['annual', 'quarter']",
+            "required": false,
+            "description": "Period type"
+          },
+          "limit": {
+            "type": "int",
+            "required": false,
+            "description": "Number of periods to return"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "As-reported financial statement data",
+        "example": "obb.equity.fundamental.reported_financials(symbol='AAPL', statement_type='income', provider='intrinio')"
+      },
+      "all_fundamental_functions": [
+        "balance",
+        "balance_growth",
+        "cash",
+        "cash_growth",
+        "dividends",
+        "employee_count",
+        "filings",
+        "historical_attributes",
+        "historical_eps",
+        "historical_splits",
+        "income",
+        "income_growth",
+        "latest_attributes",
+        "management",
+        "management_compensation",
+        "metrics",
+        "multiples",
+        "overview",
+        "ratios",
+        "reported_financials",
+        "revenue_per_geography",
+        "revenue_per_segment",
+        "search_attributes",
+        "trailing_dividend_yield",
+        "transcript"
+      ]
+    },
+    "equity_profile": {
+      "profile": {
+        "function": "obb.equity.profile()",
+        "description": "Get company profile information",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "provider": {
+            "type": "Literal['finviz', 'fmp', 'intrinio', 'tmx', 'yfinance']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Company description, sector, industry, executives, website, address",
+        "example": "obb.equity.profile(symbol='AAPL', provider='fmp')"
+      }
+    },
+    "equity_compare": {
+      "company_facts": {
+        "function": "obb.equity.compare.company_facts()",
+        "description": "Compare reported company facts and fundamental data points across companies",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": false,
+            "description": "Stock ticker symbols, multiple items allowed"
+          },
+          "fact": {
+            "type": "str",
+            "required": true,
+            "description": "The fact/metric to compare (e.g., 'RevenueFromContractWithCustomerExcludingAssessedTax')"
+          },
+          "year": {
+            "type": "int",
+            "required": false,
+            "description": "Year to filter data"
+          },
+          "provider": {
+            "type": "Literal['sec']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Comparison of specified fact across companies",
+        "example": "obb.equity.compare.company_facts(provider='sec', symbol='NVDA,AAPL,AMZN,MSFT,GOOG', fact='RevenueFromContractWithCustomerExcludingAssessedTax', year=2024)"
+      }
+    },
+    "derivatives_options": {
+      "chains": {
+        "function": "obb.derivatives.options.chains()",
+        "description": "Get options chains data with Greeks and implied volatility",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Stock ticker symbol"
+          },
+          "date": {
+            "type": "str",
+            "required": false,
+            "description": "Expiration date filter"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": {
+          "description": "Options chain data model with comprehensive fields",
+          "fields": [
+            "contract_symbol",
+            "symbol",
+            "expiration",
+            "strike",
+            "option_type (call/put)",
+            "last_price",
+            "bid",
+            "ask",
+            "volume",
+            "open_interest",
+            "implied_volatility",
+            "delta",
+            "gamma",
+            "theta",
+            "vega",
+            "rho",
+            "phi (optional)",
+            "charm (optional)",
+            "vanna (optional)",
+            "vomma (optional)",
+            "last_trade_timestamp",
+            "orats_final_iv (updated hourly)",
+            "greeks_timestamp"
+          ]
+        },
+        "example": "obb.derivatives.options.chains('AAPL')"
+      },
+      "unusual": {
+        "function": "obb.derivatives.options.unusual()",
+        "description": "Get unusual options activity",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": false,
+            "description": "Stock ticker symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Unusual options activity data",
+        "example": "obb.derivatives.options.unusual()"
+      }
+    },
+    "derivatives_futures": {
+      "instruments": {
+        "function": "obb.derivatives.futures.instruments()",
+        "description": "Get reference data for available futures instruments",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": false,
+            "description": "Futures symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Futures instrument reference data",
+        "example": "obb.derivatives.futures.instruments()"
+      },
+      "historical": {
+        "function": "obb.derivatives.futures.historical()",
+        "description": "Get historical futures price data",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Futures symbol"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "description": "End date"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Historical futures OHLCV data",
+        "example": "obb.derivatives.futures.historical('ES')"
+      },
+      "curve": {
+        "function": "obb.derivatives.futures.curve()",
+        "description": "Get futures curve data",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "Futures symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Futures curve data showing term structure",
+        "example": "obb.derivatives.futures.curve('CL')"
+      }
+    },
+    "economy": {
+      "gdp": {
+        "function": "obb.economy.gdp.real()",
+        "description": "Get real GDP data by country",
+        "parameters": {
+          "country": {
+            "type": "str",
+            "required": false,
+            "description": "Country or countries, multiple items allowed"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "End date"
+          },
+          "provider": {
+            "type": "Literal['oecd', 'econdb', 'fred']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": {
+          "description": "Real GDP data with growth rates",
+          "fields": [
+            "country",
+            "date",
+            "value (real GDP)",
+            "growth_rate_qoq (quarter over quarter)",
+            "growth_rate_yoy (year over year)"
+          ]
+        },
+        "example": "obb.economy.gdp.real(country='united_states,germany,japan', provider='econdb')"
+      },
+      "cpi": {
+        "function": "obb.economy.cpi()",
+        "description": "Get Consumer Price Index data",
+        "parameters": {
+          "country": {
+            "type": "str",
+            "required": false,
+            "description": "Country or countries, multiple items allowed"
+          },
+          "transform": {
+            "type": "Literal['period', 'yoy', 'mom']",
+            "required": false,
+            "default": "yoy",
+            "description": "Transformation of CPI data - period (change since previous), yoy (year over year), mom (month over month)"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "format": "YYYY-MM-DD",
+            "description": "End date"
+          },
+          "provider": {
+            "type": "Literal['fred', 'oecd']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "CPI index values or rate of change (inflation)",
+        "example": "obb.economy.cpi(country='united_states', transform='yoy', provider='fred')"
+      },
+      "indicators": {
+        "function": "obb.economy.indicators()",
+        "description": "Get economic indicators by country and indicator type",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": false,
+            "description": "Indicator symbol (e.g., 'CPI', 'PCOCO')"
+          },
+          "country": {
+            "type": "str",
+            "required": false,
+            "description": "Country or countries, multiple items allowed"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "description": "End date"
+          },
+          "provider": {
+            "type": "Literal['econdb']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Economic indicator time series data",
+        "example": "obb.economy.indicators(symbol='CPI', country='united_states,jp', provider='econdb')"
+      },
+      "unemployment": {
+        "function": "obb.economy.unemployment()",
+        "description": "Get unemployment rate data",
+        "parameters": {
+          "country": {
+            "type": "str",
+            "required": false,
+            "description": "Country or countries"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "description": "End date"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Unemployment rate time series",
+        "example": "obb.economy.unemployment(country='united_states')"
+      },
+      "fred_search": {
+        "function": "obb.economy.fred_search()",
+        "description": "Search FRED database for series IDs",
+        "parameters": {
+          "query": {
+            "type": "str",
+            "required": true,
+            "description": "Search query"
+          },
+          "provider": {
+            "type": "Literal['fred']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "List of FRED series matching search query with series_id",
+        "example": "obb.economy.fred_search('treasury yield')"
+      },
+      "fred_series": {
+        "function": "obb.economy.fred_series()",
+        "description": "Get data for a specific FRED series",
+        "parameters": {
+          "series_id": {
+            "type": "str",
+            "required": true,
+            "description": "FRED series identifier"
+          },
+          "start_date": {
+            "type": "str",
+            "required": false,
+            "description": "Start date"
+          },
+          "end_date": {
+            "type": "str",
+            "required": false,
+            "description": "End date"
+          },
+          "provider": {
+            "type": "Literal['fred']",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "FRED series time series data",
+        "example": "obb.economy.fred_series('DGS10')"
+      }
+    },
+    "fixedincome": {
+      "government": {
+        "rates": {
+          "function": "obb.fixedincome.government.treasury_rates()",
+          "description": "Get US Treasury rates (constant maturity or inflation protected)",
+          "parameters": {
+            "start_date": {
+              "type": "str",
+              "required": false,
+              "description": "Start date"
+            },
+            "end_date": {
+              "type": "str",
+              "required": false,
+              "description": "End date"
+            },
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "Treasury yield curve data by maturity",
+          "example": "obb.fixedincome.government.treasury_rates()"
+        }
+      },
+      "corporate": {
+        "bonds": {
+          "function": "obb.fixedincome.corporate.bonds()",
+          "description": "Get corporate bond data",
+          "parameters": {
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "Corporate bond pricing and yield data",
+          "example": "obb.fixedincome.corporate.bonds()"
+        }
+      },
+      "spreads": {
+        "function": "obb.fixedincome.spreads()",
+        "description": "Get bond spread data",
+        "parameters": {
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Credit spreads and yield differentials",
+        "example": "obb.fixedincome.spreads()"
+      }
+    },
+    "crypto": {
+      "price": {
+        "historical": {
+          "function": "obb.crypto.price.historical()",
+          "description": "Get historical cryptocurrency price data",
+          "parameters": {
+            "symbol": {
+              "type": "str",
+              "required": true,
+              "description": "Crypto symbol (e.g., 'BTC', 'ETH')"
+            },
+            "start_date": {
+              "type": "str",
+              "required": false,
+              "description": "Start date"
+            },
+            "end_date": {
+              "type": "str",
+              "required": false,
+              "description": "End date"
+            },
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "Historical OHLCV data for cryptocurrency",
+          "example": "obb.crypto.price.historical('BTC')"
+        }
+      },
+      "discovery": {
+        "top_gainers": {
+          "function": "obb.crypto.discovery.top_gainers()",
+          "description": "Get top gaining cryptocurrencies",
+          "parameters": {
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "List of top gaining cryptos with performance metrics",
+          "example": "obb.crypto.discovery.top_gainers()"
+        },
+        "top_losers": {
+          "function": "obb.crypto.discovery.top_losers()",
+          "description": "Get top losing cryptocurrencies",
+          "parameters": {
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "List of top losing cryptos with performance metrics",
+          "example": "obb.crypto.discovery.top_losers()"
+        },
+        "trending": {
+          "function": "obb.crypto.discovery.trending()",
+          "description": "Get trending cryptocurrencies",
+          "parameters": {
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "List of trending cryptos",
+          "example": "obb.crypto.discovery.trending()"
+        },
+        "market_cap": {
+          "function": "obb.crypto.discovery.top_by_market_cap()",
+          "description": "Get top cryptocurrencies by market capitalization",
+          "parameters": {
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "List of top cryptos by market cap",
+          "example": "obb.crypto.discovery.top_by_market_cap()"
+        }
+      }
+    },
+    "currency": {
+      "search": {
+        "function": "obb.currency.search()",
+        "description": "Search for currency pairs",
+        "parameters": {
+          "query": {
+            "type": "str",
+            "required": false,
+            "description": "Search query"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "List of available currency pairs",
+        "example": "obb.currency.search()"
+      },
+      "price": {
+        "historical": {
+          "function": "obb.currency.price.historical()",
+          "description": "Get historical forex price data",
+          "parameters": {
+            "symbol": {
+              "type": "str",
+              "required": true,
+              "description": "Currency pair (e.g., 'EURUSD')"
+            },
+            "start_date": {
+              "type": "str",
+              "required": false,
+              "description": "Start date"
+            },
+            "end_date": {
+              "type": "str",
+              "required": false,
+              "description": "End date"
+            },
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "Historical OHLC data for currency pair",
+          "example": "obb.currency.price.historical('EURUSD')"
+        }
+      }
+    },
+    "etf": {
+      "search": {
+        "function": "obb.etf.search()",
+        "description": "Search for ETFs",
+        "parameters": {
+          "query": {
+            "type": "str",
+            "required": false,
+            "description": "Search query"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "List of ETFs matching search criteria",
+        "example": "obb.etf.search('technology')"
+      },
+      "price": {
+        "historical": {
+          "function": "obb.etf.price.historical()",
+          "description": "Get historical ETF price data",
+          "parameters": {
+            "symbol": {
+              "type": "str",
+              "required": true,
+              "description": "ETF ticker symbol"
+            },
+            "start_date": {
+              "type": "str",
+              "required": false,
+              "description": "Start date"
+            },
+            "end_date": {
+              "type": "str",
+              "required": false,
+              "description": "End date"
+            },
+            "provider": {
+              "type": "str",
+              "required": false,
+              "description": "Data provider to use"
+            }
+          },
+          "returns": "Historical OHLCV data for ETF",
+          "example": "obb.etf.price.historical('SPY')"
+        }
+      },
+      "holdings": {
+        "function": "obb.etf.holdings()",
+        "description": "Get ETF holdings/constituents",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "ETF ticker symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "List of holdings with weights",
+        "example": "obb.etf.holdings('SPY')"
+      },
+      "sectors": {
+        "function": "obb.etf.sectors()",
+        "description": "Get ETF sector weights",
+        "parameters": {
+          "symbol": {
+            "type": "str",
+            "required": true,
+            "description": "ETF ticker symbol"
+          },
+          "provider": {
+            "type": "str",
+            "required": false,
+            "description": "Data provider to use"
+          }
+        },
+        "returns": "Sector allocation and weights",
+        "example": "obb.etf.sectors('SPY')"
+      }
+    },
+    "technical": {
+      "note": "Requires installation of openbb-technical extension: pip install openbb-technical",
+      "rsi": {
+        "function": "obb.technical.rsi()",
+        "description": "Calculate Relative Strength Index",
+        "parameters": {
+          "data": {
+            "type": "DataFrame or OBBject",
+            "required": true,
+            "description": "OHLCV data"
+          },
+          "target": {
+            "type": "str",
+            "required": false,
+            "default": "close",
+            "description": "Column to calculate RSI on"
+          },
+          "length": {
+            "type": "int",
+            "required": false,
+            "default": 14,
+            "description": "RSI period"
+          }
+        },
+        "returns": "RSI values",
+        "example": "obb.technical.rsi(data=historical_data, target='adj_close', length=14)"
+      },
+      "macd": {
+        "function": "obb.technical.macd()",
+        "description": "Calculate Moving Average Convergence Divergence",
+        "parameters": {
+          "data": {
+            "type": "DataFrame or OBBject",
+            "required": true,
+            "description": "OHLCV data"
+          },
+          "target": {
+            "type": "str",
+            "required": false,
+            "default": "close",
+            "description": "Column to calculate MACD on"
+          },
+          "fast": {
+            "type": "int",
+            "required": false,
+            "default": 12,
+            "description": "Fast EMA period"
+          },
+          "slow": {
+            "type": "int",
+            "required": false,
+            "default": 26,
+            "description": "Slow EMA period"
+          },
+          "signal": {
+            "type": "int",
+            "required": false,
+            "default": 9,
+            "description": "Signal line period"
+          }
+        },
+        "returns": "MACD line, signal line, histogram",
+        "example": "obb.technical.macd(data=historical_data, fast=12, slow=26, signal=9)"
+      },
+      "sma": {
+        "function": "obb.technical.sma()",
+        "description": "Calculate Simple Moving Average",
+        "parameters": {
+          "data": {
+            "type": "DataFrame or OBBject",
+            "required": true,
+            "description": "OHLCV data"
+          },
+          "target": {
+            "type": "str",
+            "required": false,
+            "default": "close",
+            "description": "Column to calculate SMA on"
+          },
+          "length": {
+            "type": "int",
+            "required": false,
+            "default": 50,
+            "description": "SMA period"
+          }
+        },
+        "returns": "SMA values",
+        "example": "obb.technical.sma(data=historical_data, length=50)"
+      },
+      "ema": {
+        "function": "obb.technical.ema()",
+        "description": "Calculate Exponential Moving Average",
+        "parameters": {
+          "data": {
+            "type": "DataFrame or OBBject",
+            "required": true,
+            "description": "OHLCV data"
+          },
+          "target": {
+            "type": "str",
+            "required": false,
+            "default": "close",
+            "description": "Column to calculate EMA on"
+          },
+          "length": {
+            "type": "int",
+            "required": false,
+            "default": 50,
+            "description": "EMA period"
+          }
+        },
+        "returns": "EMA values",
+        "example": "obb.technical.ema(data=historical_data, length=20)"
+      },
+      "bbands": {
+        "function": "obb.technical.bbands()",
+        "description": "Calculate Bollinger Bands",
+        "parameters": {
+          "data": {
+            "type": "DataFrame or OBBject",
+            "required": true,
+            "description": "OHLCV data"
+          },
+          "target": {
+            "type": "str",
+            "required": false,
+            "default": "close",
+            "description": "Column to calculate Bollinger Bands on"
+          },
+          "length": {
+            "type": "int",
+            "required": false,
+            "default": 20,
+            "description": "Period for moving average"
+          },
+          "std": {
+            "type": "float",
+            "required": false,
+            "default": 2.0,
+            "description": "Number of standard deviations"
+          }
+        },
+        "returns": "Upper band, middle band, lower band",
+        "example": "obb.technical.bbands(data=historical_data, length=20, std=2)"
+      },
+      "all_technical_indicators": [
+        "ad (Accumulation/Distribution)",
+        "adosc (Accumulation/Distribution Oscillator)",
+        "adx (Average Directional Index)",
+        "aroon",
+        "atr (Average True Range)",
+        "bbands (Bollinger Bands)",
+        "cci (Commodity Channel Index)",
+        "cg (Center of Gravity)",
+        "clenow",
+        "cones",
+        "demark",
+        "donchian",
+        "ema (Exponential Moving Average)",
+        "fib (Fibonacci)",
+        "fisher (Fisher Transform)",
+        "hma (Hull Moving Average)",
+        "ichimoku",
+        "kc (Keltner Channel)",
+        "macd (Moving Average Convergence Divergence)",
+        "obv (On Balance Volume)",
+        "rsi (Relative Strength Index)",
+        "sma (Simple Moving Average)",
+        "stoch (Stochastic Oscillator)",
+        "vwap (Volume Weighted Average Price)",
+        "wma (Weighted Moving Average)",
+        "zlma (Zero Lag Moving Average)"
+      ]
+    }
+  },
+  "data_provider_configuration": {
+    "overview": "OpenBB uses a multi-provider architecture where each data source is a separate extension. Users can configure API keys for various providers and set provider priority.",
+    "configuration_methods": [
+      {
+        "method": "Configuration File",
+        "location": "~/.openbb_platform/user_settings.json",
+        "format": {
+          "credentials": {
+            "fmp_api_key": "YOUR_KEY",
+            "polygon_api_key": "YOUR_KEY",
+            "benzinga_api_key": "YOUR_KEY",
+            "fred_api_key": "YOUR_KEY",
+            "nasdaq_api_key": "YOUR_KEY",
+            "intrinio_api_key": "YOUR_KEY",
+            "alpha_vantage_api_key": "YOUR_KEY",
+            "biztoc_api_key": "YOUR_KEY",
+            "tradier_api_key": "YOUR_KEY",
+            "tradingeconomics_api_key": "YOUR_KEY",
+            "tiingo_token": "YOUR_KEY"
+          }
+        }
+      },
+      {
+        "method": "Python Session (Current Session Only)",
+        "example": "obb.user.credentials.intrinio_api_key = 'my_api_key'"
+      },
+      {
+        "method": "Python with Save",
+        "example": "from openbb import obb\nobb.user.credentials.fred_api_key = '<YOUR_KEY>'\nobb.account.save()"
+      },
+      {
+        "method": "OpenBB Hub (Cloud Sync)",
+        "description": "Login to OpenBB Hub, navigate to API Keys section, add keys, then login from Python",
+        "example": "from openbb import obb\nobb.account.login(pat='<YOUR_TOKEN>')"
+      }
+    ],
+    "available_providers": [
+      {
+        "name": "Yahoo Finance (yfinance)",
+        "extension": "openbb-yfinance",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["equity", "etf", "crypto", "forex"],
+        "limitations": "Limited historical data, rate limits"
+      },
+      {
+        "name": "Financial Modeling Prep (FMP)",
+        "extension": "openbb-fmp",
+        "api_key_required": true,
+        "cost": "Free tier available, paid tiers for more features",
+        "data_types": ["equity", "crypto", "forex", "commodities", "fundamentals"],
+        "features": "Comprehensive fundamental data, financial statements"
+      },
+      {
+        "name": "Polygon.io",
+        "extension": "openbb-polygon",
+        "api_key_required": true,
+        "cost": "Free tier available, paid tiers for real-time data",
+        "data_types": ["equity", "options", "crypto", "forex"],
+        "features": "High-quality market data, tick-level data on paid tiers"
+      },
+      {
+        "name": "FRED (Federal Reserve Economic Data)",
+        "extension": "openbb-fred",
+        "api_key_required": true,
+        "cost": "Free",
+        "data_types": ["economy", "rates"],
+        "features": "Comprehensive economic data from Federal Reserve"
+      },
+      {
+        "name": "Intrinio",
+        "extension": "openbb-intrinio",
+        "api_key_required": true,
+        "cost": "Paid (various tiers)",
+        "data_types": ["equity", "fundamentals", "options"],
+        "features": "Professional-grade financial data"
+      },
+      {
+        "name": "SEC",
+        "extension": "openbb-sec",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["filings", "fundamentals"],
+        "features": "Official SEC filings and financial data"
+      },
+      {
+        "name": "Tiingo",
+        "extension": "openbb-tiingo",
+        "api_key_required": true,
+        "cost": "Free tier available",
+        "data_types": ["equity", "crypto", "forex"],
+        "features": "Quality market data with good free tier"
+      },
+      {
+        "name": "Alpha Vantage",
+        "extension": "openbb-alphavantage",
+        "api_key_required": true,
+        "cost": "Free tier available",
+        "data_types": ["equity", "crypto", "forex", "technical"],
+        "features": "Good for beginners, rate-limited free tier"
+      },
+      {
+        "name": "OECD",
+        "extension": "openbb-oecd",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["economy"],
+        "features": "International economic statistics"
+      },
+      {
+        "name": "Benzinga",
+        "extension": "openbb-benzinga",
+        "api_key_required": true,
+        "cost": "Paid",
+        "data_types": ["news", "earnings"],
+        "features": "Real-time news and market-moving events"
+      },
+      {
+        "name": "Tradier",
+        "extension": "openbb-tradier",
+        "api_key_required": true,
+        "cost": "Free sandbox, paid for live data",
+        "data_types": ["equity", "options"],
+        "features": "Options data with Greeks"
+      },
+      {
+        "name": "Trading Economics",
+        "extension": "openbb-tradingeconomics",
+        "api_key_required": true,
+        "cost": "Paid",
+        "data_types": ["economy"],
+        "features": "Global economic indicators"
+      },
+      {
+        "name": "CBOE",
+        "extension": "openbb-cboe",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["options", "volatility"],
+        "features": "Options market data, VIX"
+      },
+      {
+        "name": "Finviz",
+        "extension": "openbb-finviz",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["equity", "screener"],
+        "features": "Stock screener, market overview"
+      },
+      {
+        "name": "TMX",
+        "extension": "openbb-tmx",
+        "api_key_required": false,
+        "cost": "Free",
+        "data_types": ["equity"],
+        "features": "Canadian market data"
+      }
+    ],
+    "provider_priority": {
+      "description": "When provider parameter is omitted, OpenBB uses configured priority list",
+      "example": "For CPI data: FRED (if API key configured) → OECD (fallback)",
+      "configuration": "Can be set in user_settings.json or via obb.user.preferences"
+    },
+    "obtaining_api_keys": {
+      "fred": {
+        "url": "https://fred.stlouisfed.org/docs/api/api_key.html",
+        "process": "Free registration, instant API key"
+      },
+      "fmp": {
+        "url": "https://site.financialmodelingprep.com/developer/docs",
+        "process": "Free tier with registration, paid tiers available"
+      },
+      "polygon": {
+        "url": "https://polygon.io/",
+        "process": "Free tier with registration, paid tiers for more features"
+      },
+      "alpha_vantage": {
+        "url": "https://www.alphavantage.co/support/#api-key",
+        "process": "Free registration, instant API key"
+      },
+      "intrinio": {
+        "url": "https://intrinio.com/",
+        "process": "Contact sales for pricing and access"
+      }
+    }
+  },
+  "core_concepts": {
+    "obb_interface": {
+      "description": "The main entry point for all OpenBB Platform functionality",
+      "import": "from openbb import obb",
+      "note": "Always use 'from openbb import obb', not 'from openbb.obb.equity import *'"
+    },
+    "obbject": {
+      "description": "OpenBB's custom return object that wraps data and metadata",
+      "methods": [
+        "to_dataframe() - Convert results to pandas DataFrame",
+        "to_df() - Shorthand for to_dataframe()",
+        "to_dict() - Convert to dictionary",
+        "to_json() - Convert to JSON",
+        "chart() - Display interactive chart (requires charting extension)",
+        "show() - Display data in appropriate format"
+      ],
+      "properties": [
+        "results - The actual data returned",
+        "provider - Which provider was used",
+        "warnings - Any warnings from the request",
+        "chart - Chart object if charting is available",
+        "extra - Additional metadata"
+      ],
+      "example": "output = obb.equity.price.historical('AAPL')\ndf = output.to_dataframe()\ndata = output.results"
+    },
+    "multi_provider_architecture": {
+      "description": "OpenBB routes requests to integrated data providers. Each provider is a separate extension.",
+      "key_points": [
+        "OpenBB does not store data - it aggregates from providers",
+        "Standardized interface across providers",
+        "Automatic fallback to available providers",
+        "Provider-specific fields may vary",
+        "Some providers require API keys, others don't",
+        "Can specify provider explicitly or use priority list"
+      ]
+    },
+    "extensions_system": {
+      "data_extensions": {
+        "description": "Add new data sources/providers",
+        "examples": ["openbb-fmp", "openbb-polygon", "openbb-yfinance"],
+        "installation": "pip install openbb-{provider}"
+      },
+      "router_extensions": {
+        "description": "Add new functionality domains",
+        "examples": ["openbb-equity", "openbb-crypto", "openbb-economy"],
+        "installation": "pip install openbb-{domain}"
+      },
+      "toolkit_extensions": {
+        "description": "Add specialized analysis capabilities",
+        "examples": ["openbb-technical", "openbb-econometrics", "openbb-quantitative"],
+        "installation": "pip install openbb-{toolkit}"
+      },
+      "charting_extension": {
+        "description": "Add interactive Plotly charting",
+        "package": "openbb-charting",
+        "usage": "output.chart() after fetching data"
+      }
+    },
+    "rest_api": {
+      "description": "OpenBB Platform includes a FastAPI-based REST API",
+      "start_command": "uvicorn openbb_core.api.rest_api:app --host 0.0.0.0 --port 8000 --reload",
+      "alternative": "openbb-api",
+      "default_url": "http://127.0.0.1:6900",
+      "docs_url": "http://127.0.0.1:6900/docs",
+      "features": [
+        "Access all OpenBB functionality via HTTP",
+        "Automatic OpenAPI documentation",
+        "Use from any programming language",
+        "Authentication with PAT tokens"
+      ]
+    },
+    "cli": {
+      "description": "Command-line interface for OpenBB Platform",
+      "installation": "pip install openbb-cli",
+      "features": [
+        "Terminal-based interface",
+        "Interactive commands",
+        "Script automation support",
+        "Access to all data providers"
+      ]
+    },
+    "workspace": {
+      "description": "Enterprise UI for OpenBB Platform",
+      "url": "https://pro.openbb.co",
+      "features": [
+        "Web-based interface",
+        "Dashboards and visualizations",
+        "Collaborative workspace",
+        "Excel integration"
+      ]
+    }
+  },
+  "usage_patterns": {
+    "basic_workflow": {
+      "step_1": "Import OpenBB: from openbb import obb",
+      "step_2": "Fetch data: output = obb.equity.price.historical('AAPL')",
+      "step_3": "Convert to DataFrame: df = output.to_dataframe()",
+      "step_4": "Analyze or visualize data"
+    },
+    "specifying_providers": {
+      "explicit": "obb.equity.price.historical('AAPL', provider='yfinance')",
+      "priority_list": "Set in user_settings.json or obb.user.preferences",
+      "fallback": "If no provider specified, uses priority list"
+    },
+    "exploring_available_commands": {
+      "method_1": "Use IDE IntelliSense: type 'obb.equity.' and see suggestions",
+      "method_2": "Use help: help(obb.equity.price.historical)",
+      "method_3": "Use question mark: obb.equity.price.historical?",
+      "method_4": "Check documentation: docs.openbb.co"
+    },
+    "working_with_data": {
+      "convert_to_dataframe": "df = output.to_dataframe()",
+      "access_raw_results": "data = output.results",
+      "transpose_for_viewing": "df.transpose()",
+      "filter_columns": "df[['open', 'high', 'low', 'close']]",
+      "date_filtering": "df.loc['2023-01-01':'2023-12-31']"
+    },
+    "chaining_operations": {
+      "description": "Fetch data then apply technical analysis",
+      "example": "data = obb.equity.price.historical('AAPL', provider='yfinance')\nrsi = obb.technical.rsi(data.results, length=14)"
+    },
+    "error_handling": {
+      "check_provider_availability": "Ensure API key is configured for provider",
+      "check_symbol_validity": "Use search functions to find valid symbols",
+      "handle_rate_limits": "Free tiers have rate limits, consider paid tiers",
+      "check_warnings": "output.warnings may contain important information"
+    }
+  },
+  "implementation_recommendations": [
+    {
+      "scenario": "Building a stock analysis dashboard",
+      "recommended_solution": "Use obb.equity.price.historical() for price data, obb.equity.fundamental.* for financials, obb.technical.* for indicators",
+      "rationale": "Comprehensive data coverage with flexible provider options"
+    },
+    {
+      "scenario": "Economic data analysis",
+      "recommended_solution": "Use obb.economy.* functions with FRED provider for US data, OECD for international",
+      "rationale": "FRED is authoritative source for US economic data, free API"
+    },
+    {
+      "scenario": "Options trading analysis",
+      "recommended_solution": "Use obb.derivatives.options.chains() with Tradier or paid providers",
+      "rationale": "Options data requires reliable providers with Greeks calculations"
+    },
+    {
+      "scenario": "Cryptocurrency portfolio tracking",
+      "recommended_solution": "Use obb.crypto.price.historical() and obb.crypto.discovery.* functions",
+      "rationale": "Built-in crypto support with multiple provider options"
+    },
+    {
+      "scenario": "Fundamental screening",
+      "recommended_solution": "Use obb.equity.fundamental.metrics() and obb.equity.fundamental.ratios() with FMP provider",
+      "rationale": "FMP provides comprehensive fundamental data with good free tier"
+    },
+    {
+      "scenario": "Technical analysis automation",
+      "recommended_solution": "Install openbb-technical, fetch data with historical(), apply technical indicators",
+      "rationale": "Full suite of technical indicators with standardized interface"
+    },
+    {
+      "scenario": "Multi-language application",
+      "recommended_solution": "Use OpenBB REST API with openbb-api command",
+      "rationale": "Language-agnostic HTTP interface with automatic documentation"
+    },
+    {
+      "scenario": "Excel-based analysis",
+      "recommended_solution": "Use OpenBB Workspace Excel integration or export data via Python",
+      "rationale": "Native Excel integration available in Workspace product"
+    }
+  ],
+  "common_pitfalls": [
+    {
+      "issue": "API key not configured",
+      "symptom": "Function not available or returns error",
+      "solution": "Configure API key in user_settings.json or via obb.user.credentials"
+    },
+    {
+      "issue": "Rate limits exceeded",
+      "symptom": "Requests fail after multiple calls",
+      "solution": "Use paid tier or implement request throttling"
+    },
+    {
+      "issue": "Symbol not found",
+      "symptom": "No data returned or error",
+      "solution": "Use search functions to find correct symbol format for provider"
+    },
+    {
+      "issue": "Missing extension",
+      "symptom": "Module or function not available",
+      "solution": "Install required extension: pip install openbb-{extension}"
+    },
+    {
+      "issue": "Provider-specific fields",
+      "symptom": "Expected fields missing in results",
+      "solution": "Check documentation for provider-specific fields, try different provider"
+    },
+    {
+      "issue": "Data quality issues",
+      "symptom": "Inconsistent or missing data",
+      "solution": "Try alternative providers, paid tiers often have better data quality"
+    }
+  ],
+  "best_practices": [
+    "Always specify provider explicitly for production applications",
+    "Configure multiple providers as fallbacks",
+    "Use paid tiers for critical applications requiring reliability",
+    "Cache frequently accessed data to minimize API calls",
+    "Implement error handling and retries",
+    "Check output.warnings for potential issues",
+    "Use virtual environments to manage dependencies",
+    "Keep extensions updated: pip install --upgrade openbb",
+    "Consult provider documentation for data update frequencies",
+    "Use OBBject methods for data conversion rather than manual parsing"
+  ],
+  "community_resources": {
+    "documentation": "https://docs.openbb.co/",
+    "github": "https://github.com/OpenBB-finance/OpenBB",
+    "discord": "Community Discord server (link on GitHub)",
+    "examples": "https://github.com/OpenBB-finance/examples",
+    "blog": "https://openbb.co/blog",
+    "youtube": "OpenBB tutorials and examples"
+  },
+  "alternative_implementations": [
+    {
+      "name": "yfinance",
+      "comparison": "Single provider (Yahoo Finance), simpler but less flexible",
+      "use_case": "Quick prototyping with free data"
+    },
+    {
+      "name": "pandas-datareader",
+      "comparison": "Multiple providers but less maintained",
+      "use_case": "Legacy projects"
+    },
+    {
+      "name": "alpaca-py",
+      "comparison": "Trading-focused, requires broker account",
+      "use_case": "Algorithmic trading with Alpaca"
+    },
+    {
+      "name": "QuantLib",
+      "comparison": "Quantitative finance library, no data fetching",
+      "use_case": "Advanced derivatives pricing"
+    }
+  ],
+  "technical_insights": {
+    "architecture": "Modular provider-agnostic platform with extensions system",
+    "language": "Python 3.9-3.13",
+    "core_libraries": ["FastAPI", "Pydantic", "Pandas", "Plotly"],
+    "design_patterns": [
+      "Provider pattern for data sources",
+      "Router pattern for API organization",
+      "Extension pattern for modularity",
+      "Factory pattern for object creation"
+    ],
+    "performance_considerations": [
+      "API calls are synchronous by default",
+      "Large historical datasets can be memory-intensive",
+      "Consider pagination for large result sets",
+      "Provider response times vary significantly"
+    ]
+  },
+  "future_developments": {
+    "trends": [
+      "Expanding AI/LLM integrations (MCP servers)",
+      "More data providers being added",
+      "Enhanced charting capabilities",
+      "Improved Excel integration",
+      "Real-time data streaming support"
+    ],
+    "deprecation_notices": [
+      "Python 3.9 support ending fall 2025",
+      "Legacy SDK (OpenBB Terminal SDK) deprecated in favor of OpenBB Platform"
+    ]
+  },
+  "citations": [
+    "[1] OpenBB Documentation. 'OpenBB Docs.' https://docs.openbb.co/",
+    "[2] PyPI. 'openbb - PyPI.' https://pypi.org/project/openbb/",
+    "[3] OpenBB Documentation. 'Introduction | OpenBB Docs.' https://docs.openbb.co/python",
+    "[4] GitHub. 'Releases - OpenBB-finance/OpenBB.' https://github.com/OpenBB-finance/OpenBB/releases",
+    "[5] OpenBB Documentation. 'Platform | OpenBB.' https://openbb.co/products/platform",
+    "[6] AlgoTrading101. 'OpenBB Platform - A Complete Guide.' https://algotrading101.com/learn/openbb-platform-guide/",
+    "[7] OpenBB Documentation. 'Installation | OpenBB Docs.' https://docs.openbb.co/python/installation",
+    "[8] OpenBB Documentation. 'Authorization and API Keys | OpenBB Docs.' https://docs.openbb.co/platform/getting_started/api_keys",
+    "[9] OpenBB Documentation. 'equity/price/quote - Reference.' https://docs.openbb.co/platform/reference/equity/price/quote",
+    "[10] OpenBB Documentation. 'equity/fundamental/metrics - Reference.' https://docs.openbb.co/platform/reference/equity/fundamental/metrics",
+    "[11] OpenBB Documentation. 'derivatives/options/chains - Reference.' https://docs.openbb.co/platform/reference/derivatives/options/chains",
+    "[12] OpenBB Documentation. 'economy/cpi - Reference.' https://docs.openbb.co/platform/reference/economy/cpi",
+    "[13] OpenBB Documentation. 'Technical | OpenBB Docs.' https://docs.openbb.co/platform/reference/technical",
+    "[14] GitHub. 'examples/newOBB.py - OpenBB-finance/examples.' https://github.com/OpenBB-finance/examples/blob/main/newOBB.py",
+    "[15] OpenBB Documentation. 'Data Extensions | OpenBB Docs.' https://docs.openbb.co/platform/usage/extensions/data_extensions"
+  ]
+}

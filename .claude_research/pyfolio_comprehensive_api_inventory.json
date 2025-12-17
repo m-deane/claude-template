@@ -1,0 +1,2175 @@
+{
+  "search_summary": {
+    "platforms_searched": ["github", "pypi", "official_documentation", "ml4trading_docs"],
+    "repositories_analyzed": 3,
+    "docs_reviewed": 5,
+    "research_date": "2025-12-17",
+    "note": "Research covers both original pyfolio and pyfolio-reloaded fork"
+  },
+
+  "version_information": {
+    "original_pyfolio": {
+      "latest_version": "0.9.2",
+      "release_date": "2019-04-15",
+      "status": "Archived/Unmaintained (Quantopian shutdown)",
+      "python_support": ["2.7", "3.4", "3.5"],
+      "repository": "https://github.com/quantopian/pyfolio",
+      "pypi": "https://pypi.org/project/pyfolio/"
+    },
+    "pyfolio_reloaded": {
+      "latest_version": "0.9.9",
+      "release_date": "2025-06-02",
+      "status": "Actively Maintained",
+      "python_support": ["3.9", "3.10", "3.11", "3.12", "3.13"],
+      "repository": "https://github.com/stefan-jansen/pyfolio-reloaded",
+      "pypi": "https://pypi.org/project/pyfolio-reloaded/",
+      "maintainer": "Stefan Jansen (ml4trading)",
+      "improvements": [
+        "Python 3.13 compatibility",
+        "Pandas 1.0+ compatibility fixes",
+        "Modern packaging (src/ layout)",
+        "Active bug fixes and maintenance"
+      ]
+    }
+  },
+
+  "installation": {
+    "original": {
+      "pip": "pip install pyfolio",
+      "recommendation": "NOT recommended - use pyfolio-reloaded instead"
+    },
+    "reloaded": {
+      "pip": "pip install pyfolio-reloaded",
+      "conda": "conda install -c ml4t pyfolio-reloaded",
+      "recommendation": "Recommended for new projects"
+    }
+  },
+
+  "dependencies": {
+    "core_requirements": [
+      "ipython>=3.2.3",
+      "matplotlib>=1.4.0",
+      "numpy>=1.11.1",
+      "pandas>=0.18.1",
+      "pytz>=2014.10",
+      "scipy>=0.14.0",
+      "scikit-learn>=0.16.1",
+      "seaborn>=0.7.1",
+      "empyrical>=0.5.0"
+    ],
+    "optional_requirements": {
+      "bayesian_analysis": ["PyMC3", "Theano"],
+      "testing": ["nose>=1.3.7", "nose-parameterized>=0.5.0", "runipy>=0.1.3"]
+    },
+    "notes": [
+      "Bayesian tear sheets require PyMC3 and Theano",
+      "Some dependencies may have compatibility issues with latest Python versions in original pyfolio"
+    ]
+  },
+
+  "module_inventory": {
+    "core_modules": [
+      {
+        "name": "pyfolio.tears",
+        "description": "Tear sheet generation - comprehensive visual reports",
+        "type": "primary"
+      },
+      {
+        "name": "pyfolio.timeseries",
+        "description": "Time series analysis and performance metrics",
+        "type": "primary"
+      },
+      {
+        "name": "pyfolio.plotting",
+        "description": "Visualization and plotting functions",
+        "type": "primary"
+      },
+      {
+        "name": "pyfolio.perf_attrib",
+        "description": "Performance attribution analysis",
+        "type": "primary"
+      },
+      {
+        "name": "pyfolio.utils",
+        "description": "Utility and helper functions",
+        "type": "primary"
+      },
+      {
+        "name": "pyfolio.pos",
+        "description": "Position tracking and analysis",
+        "type": "secondary"
+      },
+      {
+        "name": "pyfolio.txn",
+        "description": "Transaction handling and analysis",
+        "type": "secondary"
+      },
+      {
+        "name": "pyfolio.round_trips",
+        "description": "Round-trip trade analysis",
+        "type": "secondary"
+      },
+      {
+        "name": "pyfolio.capacity",
+        "description": "Capacity and liquidity analysis",
+        "type": "secondary"
+      },
+      {
+        "name": "pyfolio.interesting_periods",
+        "description": "Historical market event definitions (data only)",
+        "type": "data"
+      }
+    ],
+    "infrastructure_modules": [
+      {
+        "name": "pyfolio._version",
+        "description": "Version management"
+      },
+      {
+        "name": "pyfolio._seaborn",
+        "description": "Seaborn styling integration"
+      },
+      {
+        "name": "pyfolio.deprecate",
+        "description": "Deprecation utilities"
+      },
+      {
+        "name": "pyfolio.ipycompat",
+        "description": "IPython/Jupyter compatibility"
+      }
+    ],
+    "note_on_bayesian": "Bayesian module may be optional or integrated differently. create_bayesian_tear_sheet() exists but bayesian.py file not found in master branch."
+  },
+
+  "api_reference": {
+    "tears_module": {
+      "description": "Portfolio tear sheet generation functions",
+      "functions": [
+        {
+          "name": "create_full_tear_sheet",
+          "signature": "create_full_tear_sheet(returns, positions=None, transactions=None, market_data=None, benchmark_rets=None, slippage=None, live_start_date=None, sector_mappings=None, round_trips=False, estimate_intraday='infer', hide_positions=False, cone_std=(1.0, 1.5, 2.0), bootstrap=False, unadjusted_returns=None, turnover_denom='AGB', set_context=True, factor_returns=None, factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions={})",
+          "description": "Generates comprehensive tear sheets analyzing strategy performance, positions, transactions, and significant events. This is the main entry point for complete portfolio analysis.",
+          "parameters": {
+            "returns": "pd.Series - Daily returns of the strategy",
+            "positions": "pd.DataFrame (optional) - Daily net position values",
+            "transactions": "pd.DataFrame (optional) - Prices and amounts of trades",
+            "market_data": "pd.DataFrame (optional) - Panel with OHLCV data",
+            "benchmark_rets": "pd.Series (optional) - Daily returns of benchmark",
+            "slippage": "int/float (optional) - Basis points of slippage",
+            "live_start_date": "date (optional) - Out-of-sample period start",
+            "sector_mappings": "dict/pd.Series (optional) - Security to sector mapping",
+            "round_trips": "bool - Include round trip analysis (default: False)",
+            "estimate_intraday": "str/bool - Detect intraday strategies (default: 'infer')",
+            "hide_positions": "bool - Hide position details (default: False)",
+            "cone_std": "tuple - Standard deviation levels for cone plot (default: (1.0, 1.5, 2.0))",
+            "bootstrap": "bool - Perform bootstrap analysis (default: False)",
+            "unadjusted_returns": "pd.Series (optional) - Returns before slippage",
+            "turnover_denom": "str - Turnover denominator 'AGB' or 'portfolio_value' (default: 'AGB')",
+            "set_context": "bool - Set plotting context (default: True)",
+            "factor_returns": "pd.DataFrame (optional) - Factor returns for attribution",
+            "factor_loadings": "pd.DataFrame (optional) - Factor loadings",
+            "pos_in_dollars": "bool - Positions in dollars vs shares (default: True)",
+            "header_rows": "dict (optional) - Custom header rows",
+            "factor_partitions": "dict - Factor groupings (default: {})"
+          },
+          "returns": "None (displays plots)",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "create_returns_tear_sheet",
+          "signature": "create_returns_tear_sheet(returns, positions=None, transactions=None, live_start_date=None, cone_std=(1.0, 1.5, 2.0), benchmark_rets=None, bootstrap=False, turnover_denom='AGB', header_rows=None, return_fig=False)",
+          "description": "Generates comprehensive returns analysis with rolling metrics, drawdowns, and monthly breakdowns",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame (optional) - Position values",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "live_start_date": "date (optional) - OOS period start",
+            "cone_std": "tuple - Cone standard deviations (default: (1.0, 1.5, 2.0))",
+            "benchmark_rets": "pd.Series (optional) - Benchmark returns",
+            "bootstrap": "bool - Bootstrap statistics (default: False)",
+            "turnover_denom": "str - Turnover calculation method (default: 'AGB')",
+            "header_rows": "dict (optional) - Custom headers",
+            "return_fig": "bool - Return figure object (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "HIGH"
+        },
+        {
+          "name": "create_position_tear_sheet",
+          "signature": "create_position_tear_sheet(returns, positions, show_and_plot_top_pos=2, hide_positions=False, sector_mappings=None, transactions=None, estimate_intraday='infer', return_fig=False)",
+          "description": "Analyzes portfolio positions, holdings, leverage, and exposures",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values over time",
+            "show_and_plot_top_pos": "int - Number of top positions to show (default: 2)",
+            "hide_positions": "bool - Hide position details (default: False)",
+            "sector_mappings": "dict/pd.Series (optional) - Symbol to sector mapping",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "estimate_intraday": "str/bool - Intraday detection (default: 'infer')",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "HIGH"
+        },
+        {
+          "name": "create_txn_tear_sheet",
+          "signature": "create_txn_tear_sheet(returns, positions, transactions, turnover_denom='AGB', unadjusted_returns=None, estimate_intraday='infer', return_fig=False)",
+          "description": "Analyzes transaction costs, turnover, and daily volume patterns",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values",
+            "transactions": "pd.DataFrame - Transaction data",
+            "turnover_denom": "str - Turnover denominator (default: 'AGB')",
+            "unadjusted_returns": "pd.Series (optional) - Pre-slippage returns",
+            "estimate_intraday": "str/bool - Intraday detection (default: 'infer')",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "create_round_trip_tear_sheet",
+          "signature": "create_round_trip_tear_sheet(returns, positions, transactions, sector_mappings=None, estimate_intraday='infer', return_fig=False)",
+          "description": "Analyzes trade round trips - duration, frequency, and profitability from entry to exit",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values",
+            "transactions": "pd.DataFrame - Transaction data",
+            "sector_mappings": "dict/pd.Series (optional) - Symbol to sector mapping",
+            "estimate_intraday": "str/bool - Intraday detection (default: 'infer')",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "MEDIUM",
+          "note": "Round trip = opening a position and returning to zero shares"
+        },
+        {
+          "name": "create_capacity_tear_sheet",
+          "signature": "create_capacity_tear_sheet(returns, positions, transactions, market_data, liquidation_daily_vol_limit=0.2, trade_daily_vol_limit=0.05, last_n_days=126, days_to_liquidate_limit=1, estimate_intraday='infer', return_fig=False)",
+          "description": "Generates portfolio capacity analysis with 'capacity sweep' showing projected Sharpe ratios at various capital bases",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values",
+            "transactions": "pd.DataFrame - Transaction data",
+            "market_data": "pd.DataFrame - OHLCV market data panel",
+            "liquidation_daily_vol_limit": "float - Max daily volume fraction for liquidation (default: 0.2)",
+            "trade_daily_vol_limit": "float - Max daily volume fraction for trades (default: 0.05)",
+            "last_n_days": "int - Recent days to analyze (default: 126)",
+            "days_to_liquidate_limit": "int - Max acceptable liquidation days (default: 1)",
+            "estimate_intraday": "str/bool - Intraday detection (default: 'infer')",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "create_perf_attrib_tear_sheet",
+          "signature": "create_perf_attrib_tear_sheet(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True, factor_partitions={}, return_fig=False)",
+          "description": "Generates performance attribution analysis across risk factors and sectors",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values",
+            "factor_returns": "pd.DataFrame - Factor returns time series",
+            "factor_loadings": "pd.DataFrame - Security factor loadings",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "pos_in_dollars": "bool - Positions in dollars (default: True)",
+            "factor_partitions": "dict - Factor groupings (default: {})",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "create_interesting_times_tear_sheet",
+          "signature": "create_interesting_times_tear_sheet(returns, benchmark_rets=None, periods=None, legend_loc='best', return_fig=False)",
+          "description": "Plots strategy returns during historical market events (dotcom bubble, financial crisis, flash crash, etc.)",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "benchmark_rets": "pd.Series (optional) - Benchmark returns",
+            "periods": "dict (optional) - Custom periods, defaults to interesting_periods.PERIODS",
+            "legend_loc": "str - Legend location (default: 'best')",
+            "return_fig": "bool - Return figure (default: False)"
+          },
+          "returns": "None or matplotlib.figure.Figure",
+          "priority": "LOW"
+        },
+        {
+          "name": "create_simple_tear_sheet",
+          "signature": "create_simple_tear_sheet(returns, positions=None, transactions=None, benchmark_rets=None, slippage=None, estimate_intraday='infer', live_start_date=None, turnover_denom='AGB', header_rows=None)",
+          "description": "Simplified version generating key statistics and plots without market data or sector analysis",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame (optional) - Position values",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "benchmark_rets": "pd.Series (optional) - Benchmark returns",
+            "slippage": "int/float (optional) - Slippage in basis points",
+            "estimate_intraday": "str/bool - Intraday detection (default: 'infer')",
+            "live_start_date": "date (optional) - OOS period start",
+            "turnover_denom": "str - Turnover denominator (default: 'AGB')",
+            "header_rows": "dict (optional) - Custom headers"
+          },
+          "returns": "None",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "create_bayesian_tear_sheet",
+          "signature": "create_bayesian_tear_sheet(returns, live_start_date=None, samples=2000, ...)",
+          "description": "Generates Bayesian performance analysis with uncertainty quantification using PyMC3",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "live_start_date": "date (optional) - OOS period start",
+            "samples": "int - MCMC samples (default: 2000)"
+          },
+          "returns": "None",
+          "priority": "LOW",
+          "requirements": ["PyMC3", "Theano"],
+          "note": "Computationally intensive, uses MCMC sampling for posterior estimation"
+        },
+        {
+          "name": "timer",
+          "signature": "timer(msg_body, previous_time)",
+          "description": "Utility for timing tear sheet generation",
+          "priority": "UTILITY"
+        }
+      ]
+    },
+
+    "timeseries_module": {
+      "description": "Time series analysis and performance metrics calculation",
+      "functions": [
+        {
+          "name": "aggregate_returns",
+          "signature": "aggregate_returns(returns, convert_to)",
+          "description": "Resamples returns to weekly, monthly, or yearly periods",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "convert_to": "str - 'weekly', 'monthly', or 'yearly'"
+          },
+          "returns": "pd.Series - Aggregated returns",
+          "priority": "HIGH"
+        },
+        {
+          "name": "annual_return",
+          "signature": "annual_return(returns, period='daily')",
+          "description": "Calculates CAGR (Compounded Annual Growth Rate)",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float - Annual return",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "annual_volatility",
+          "signature": "annual_volatility(returns, period='daily')",
+          "description": "Calculates annualized volatility",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float - Annualized volatility",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "sharpe_ratio",
+          "signature": "sharpe_ratio(returns, risk_free=0, period='daily')",
+          "description": "Calculates risk-adjusted return metric",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "risk_free": "float - Risk-free rate (default: 0)",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float or np.nan - Sharpe ratio",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "sortino_ratio",
+          "signature": "sortino_ratio(returns, required_return=0, period='daily')",
+          "description": "Calculates return-to-downside-risk ratio",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "required_return": "float - Minimum acceptable return (default: 0)",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float or np.array - Sortino ratio",
+          "priority": "HIGH"
+        },
+        {
+          "name": "calmar_ratio",
+          "signature": "calmar_ratio(returns, period='daily')",
+          "description": "Calculates return over max drawdown ratio",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float - Calmar ratio (np.nan if unavailable)",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "omega_ratio",
+          "signature": "omega_ratio(returns, annual_return_threshhold=0.0)",
+          "description": "Calculates omega ratio with specified return threshold",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "annual_return_threshhold": "float - Threshold (default: 0.0)"
+          },
+          "returns": "float - Omega ratio",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "alpha",
+          "signature": "alpha(returns, factor_returns)",
+          "description": "Calculates annualized alpha against benchmark factor",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series - Benchmark returns"
+          },
+          "returns": "float - Annualized alpha",
+          "priority": "HIGH"
+        },
+        {
+          "name": "beta",
+          "signature": "beta(returns, factor_returns)",
+          "description": "Calculates beta relative to factor returns",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series - Benchmark returns"
+          },
+          "returns": "float - Beta",
+          "priority": "HIGH"
+        },
+        {
+          "name": "alpha_beta",
+          "signature": "alpha_beta(returns, factor_returns)",
+          "description": "Calculates both alpha and beta simultaneously",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series - Benchmark returns"
+          },
+          "returns": "tuple(float, float) - (alpha, beta)",
+          "priority": "HIGH"
+        },
+        {
+          "name": "max_drawdown",
+          "signature": "max_drawdown(returns)",
+          "description": "Calculates maximum observed drawdown",
+          "parameters": {
+            "returns": "pd.Series - Period returns"
+          },
+          "returns": "float - Maximum drawdown",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "get_max_drawdown",
+          "signature": "get_max_drawdown(returns)",
+          "description": "Alias for max_drawdown()",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "get_max_drawdown_underwater",
+          "signature": "get_max_drawdown_underwater(underwater)",
+          "description": "Identifies peak, valley, and recovery dates for maximum drawdown",
+          "parameters": {
+            "underwater": "pd.Series - Underwater (drawdown) series"
+          },
+          "returns": "tuple(datetime, datetime, datetime) - (peak, valley, recovery)",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_top_drawdowns",
+          "signature": "get_top_drawdowns(returns, top=10)",
+          "description": "Returns sorted list of top drawdown events",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "top": "int - Number of drawdowns to return (default: 10)"
+          },
+          "returns": "list - Top drawdown events",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "gen_drawdown_table",
+          "signature": "gen_drawdown_table(returns, top=10)",
+          "description": "Generates DataFrame of top drawdown periods with details",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "top": "int - Number of drawdowns (default: 10)"
+          },
+          "returns": "pd.DataFrame - Drawdown details",
+          "priority": "HIGH"
+        },
+        {
+          "name": "downside_risk",
+          "signature": "downside_risk(returns, required_return=0, period='daily')",
+          "description": "Calculates downside deviation below threshold",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "required_return": "float - Target return (default: 0)",
+            "period": "str - Return frequency (default: 'daily')"
+          },
+          "returns": "float or np.array - Downside risk",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "tail_ratio",
+          "signature": "tail_ratio(returns)",
+          "description": "Calculates ratio of right tail (95%) to left tail (5%)",
+          "parameters": {
+            "returns": "pd.Series - Period returns"
+          },
+          "returns": "float - Tail ratio",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "common_sense_ratio",
+          "signature": "common_sense_ratio(returns)",
+          "description": "Calculates product of tail ratio and gain-to-pain ratio",
+          "parameters": {
+            "returns": "pd.Series - Period returns"
+          },
+          "returns": "float - Common sense ratio",
+          "priority": "LOW"
+        },
+        {
+          "name": "value_at_risk",
+          "signature": "value_at_risk(returns, period=None, sigma=2.0)",
+          "description": "Calculates value at risk at specified confidence level",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "period": "str (optional) - Period",
+            "sigma": "float - Confidence level in std (default: 2.0)"
+          },
+          "returns": "float - VaR",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "var_cov_var_normal",
+          "signature": "var_cov_var_normal(P, c, mu=0, sigma=1)",
+          "description": "Calculates variance-covariance VaR",
+          "parameters": {
+            "P": "float - Portfolio value",
+            "c": "float - Confidence level",
+            "mu": "float - Mean (default: 0)",
+            "sigma": "float - Std dev (default: 1)"
+          },
+          "returns": "float - VaR",
+          "priority": "LOW"
+        },
+        {
+          "name": "cum_returns",
+          "signature": "cum_returns(returns, starting_value=0)",
+          "description": "Calculates cumulative returns from simple returns using log transformation",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "starting_value": "float - Starting value (default: 0)"
+          },
+          "returns": "pd.Series - Cumulative returns",
+          "priority": "HIGH"
+        },
+        {
+          "name": "normalize",
+          "signature": "normalize(returns, starting_value=1)",
+          "description": "Normalizes returns based on first value",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "starting_value": "float - Starting value (default: 1)"
+          },
+          "returns": "pd.Series - Normalized returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "gross_lev",
+          "signature": "gross_lev(positions)",
+          "description": "Calculates daily gross leverage (long + short exposure / NAV)",
+          "parameters": {
+            "positions": "pd.DataFrame - Position values"
+          },
+          "returns": "pd.Series - Gross leverage",
+          "priority": "HIGH"
+        },
+        {
+          "name": "perf_stats",
+          "signature": "perf_stats(returns, factor_returns=None, positions=None, transactions=None, turnover_denom='AGB')",
+          "description": "Calculates comprehensive performance metrics",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series (optional) - Benchmark returns",
+            "positions": "pd.DataFrame (optional) - Position values",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "turnover_denom": "str - Turnover denominator (default: 'AGB')"
+          },
+          "returns": "pd.Series - Performance statistics",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "rolling_beta",
+          "signature": "rolling_beta(returns, factor_returns, rolling_window=126)",
+          "description": "Calculates rolling beta with 6-month default window",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series - Benchmark returns",
+            "rolling_window": "int - Window size (default: 126 = 6 months)"
+          },
+          "returns": "pd.Series - Rolling beta",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "rolling_sharpe",
+          "signature": "rolling_sharpe(returns, rolling_sharpe_window)",
+          "description": "Calculates rolling Sharpe ratio over specified window",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "rolling_sharpe_window": "int - Window size"
+          },
+          "returns": "pd.Series - Rolling Sharpe",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "rolling_volatility",
+          "signature": "rolling_volatility(returns, rolling_vol_window)",
+          "description": "Calculates rolling volatility over specified window",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "rolling_vol_window": "int - Window size"
+          },
+          "returns": "pd.Series - Rolling volatility",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "rolling_regression",
+          "signature": "rolling_regression(returns, factor_returns, rolling_window=126, nan_threshold=0.1)",
+          "description": "Calculates rolling multivariate regression coefficients",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.DataFrame - Factor returns",
+            "rolling_window": "int - Window size (default: 126)",
+            "nan_threshold": "float - Max NaN fraction (default: 0.1)"
+          },
+          "returns": "pd.DataFrame - Rolling regression coefficients",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "stability_of_timeseries",
+          "signature": "stability_of_timeseries(returns)",
+          "description": "Calculates R-squared of linear fit to log cumulative returns",
+          "parameters": {
+            "returns": "pd.Series - Period returns"
+          },
+          "returns": "float - Stability measure",
+          "priority": "LOW"
+        },
+        {
+          "name": "extract_interesting_date_ranges",
+          "signature": "extract_interesting_date_ranges(returns, periods=None)",
+          "description": "Segments returns by historical market events",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "periods": "OrderedDict (optional) - Custom periods"
+          },
+          "returns": "OrderedDict - Returns by period",
+          "priority": "LOW"
+        },
+        {
+          "name": "simulate_paths",
+          "signature": "simulate_paths(is_returns, num_days, starting_value=1, num_samples=1000, random_seed=None)",
+          "description": "Generates alternative outcome paths via resampling",
+          "parameters": {
+            "is_returns": "pd.Series - In-sample returns",
+            "num_days": "int - Number of days to simulate",
+            "starting_value": "float - Starting value (default: 1)",
+            "num_samples": "int - Number of paths (default: 1000)",
+            "random_seed": "int (optional) - Random seed"
+          },
+          "returns": "numpy.ndarray - Simulated paths",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "forecast_cone_bootstrap",
+          "signature": "forecast_cone_bootstrap(is_returns, num_days, cone_std=(1.0, 1.5, 2.0), starting_value=1, num_samples=1000, random_seed=None)",
+          "description": "Generates non-parametric probability cone bounds from bootstrapped sampling",
+          "parameters": {
+            "is_returns": "pd.Series - In-sample returns",
+            "num_days": "int - Days to forecast",
+            "cone_std": "tuple - Std levels (default: (1.0, 1.5, 2.0))",
+            "starting_value": "float - Starting value (default: 1)",
+            "num_samples": "int - Bootstrap samples (default: 1000)",
+            "random_seed": "int (optional) - Random seed"
+          },
+          "returns": "pd.DataFrame - Cone boundaries",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "summarize_paths",
+          "signature": "summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0)",
+          "description": "Calculates cone boundaries from simulated paths",
+          "parameters": {
+            "samples": "numpy.ndarray - Simulated paths",
+            "cone_std": "tuple - Std levels (default: (1.0, 1.5, 2.0))",
+            "starting_value": "float - Starting value (default: 1.0)"
+          },
+          "returns": "pd.DataFrame - Cone boundaries",
+          "priority": "LOW"
+        },
+        {
+          "name": "calc_bootstrap",
+          "signature": "calc_bootstrap(func, returns, *args, **kwargs)",
+          "description": "Bootstrap sampling distribution for user-defined statistic",
+          "parameters": {
+            "func": "callable - Statistic function",
+            "returns": "pd.Series - Returns",
+            "args": "Additional positional arguments",
+            "kwargs": "Additional keyword arguments"
+          },
+          "returns": "numpy.ndarray - Bootstrap distribution",
+          "priority": "LOW"
+        },
+        {
+          "name": "calc_distribution_stats",
+          "signature": "calc_distribution_stats(x)",
+          "description": "Calculates summary statistics (mean, median, std, percentiles)",
+          "parameters": {
+            "x": "array-like - Data"
+          },
+          "returns": "pd.Series - Distribution statistics",
+          "priority": "LOW"
+        },
+        {
+          "name": "perf_stats_bootstrap",
+          "signature": "perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **kwargs)",
+          "description": "Calculates bootstrapped performance statistics",
+          "parameters": {
+            "returns": "pd.Series - Period returns",
+            "factor_returns": "pd.Series (optional) - Benchmark returns",
+            "return_stats": "bool - Return statistics (default: True)",
+            "kwargs": "Additional arguments"
+          },
+          "returns": "pd.DataFrame - Bootstrapped statistics",
+          "priority": "LOW"
+        }
+      ]
+    },
+
+    "plotting_module": {
+      "description": "Visualization and plotting functions for portfolio analysis",
+      "functions": [
+        {
+          "name": "plot_returns",
+          "signature": "plot_returns(returns, live_start_date=None, ax=None)",
+          "description": "Plots cumulative returns (green=backtest, red=live)",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "plot_rolling_returns",
+          "signature": "plot_rolling_returns(returns, factor_returns=None, live_start_date=None, logy=False, cone_std=None, legend_loc='best', volatility_match=False, cone_function=forecast_cone_bootstrap, ax=None, **kwargs)",
+          "description": "Plots cumulative rolling returns with optional cone overlay",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_rolling_sharpe",
+          "signature": "plot_rolling_sharpe(returns, factor_returns=None, rolling_window=126, legend_loc='best', ax=None, **kwargs)",
+          "description": "Plots rolling Sharpe ratio",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_rolling_beta",
+          "signature": "plot_rolling_beta(returns, factor_returns, legend_loc='best', ax=None, **kwargs)",
+          "description": "Plots rolling 6-month and 12-month beta",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_rolling_volatility",
+          "signature": "plot_rolling_volatility(returns, factor_returns=None, rolling_window=126, legend_loc='best', ax=None, **kwargs)",
+          "description": "Plots rolling volatility",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_drawdown_periods",
+          "signature": "plot_drawdown_periods(returns, top=10, ax=None, **kwargs)",
+          "description": "Plots cumulative returns highlighting drawdown periods",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_drawdown_underwater",
+          "signature": "plot_drawdown_underwater(returns, ax=None, **kwargs)",
+          "description": "Plots rolling drawdown depth over time",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_annual_returns",
+          "signature": "plot_annual_returns(returns, ax=None, **kwargs)",
+          "description": "Bar chart of yearly returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_monthly_returns_heatmap",
+          "signature": "plot_monthly_returns_heatmap(returns, ax=None, **kwargs)",
+          "description": "Calendar heatmap of monthly returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_monthly_returns_timeseries",
+          "signature": "plot_monthly_returns_timeseries(returns, ax=None, **kwargs)",
+          "description": "Monthly returns as line series",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_monthly_returns_dist",
+          "signature": "plot_monthly_returns_dist(returns, ax=None, **kwargs)",
+          "description": "Distribution histogram of monthly returns",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_return_quantiles",
+          "signature": "plot_return_quantiles(returns, live_start_date=None, ax=None, **kwargs)",
+          "description": "Box plots of daily, weekly, monthly return distributions",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_holdings",
+          "signature": "plot_holdings(returns, positions, legend_loc='best', ax=None, **kwargs)",
+          "description": "Plots count of active positions over time",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_long_short_holdings",
+          "signature": "plot_long_short_holdings(returns, positions, legend_loc='upper left', ax=None, **kwargs)",
+          "description": "Stacked long/short position count",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_gross_leverage",
+          "signature": "plot_gross_leverage(returns, positions, ax=None, **kwargs)",
+          "description": "Gross leverage time series",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_exposures",
+          "signature": "plot_exposures(returns, positions, ax=None, **kwargs)",
+          "description": "Pie/cake chart of long/short exposure",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_max_median_position_concentration",
+          "signature": "plot_max_median_position_concentration(positions, ax=None, **kwargs)",
+          "description": "Plots max and median concentration metrics",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_sector_allocations",
+          "signature": "plot_sector_allocations(returns, sector_alloc, ax=None, **kwargs)",
+          "description": "Sector exposure time series",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_turnover",
+          "signature": "plot_turnover(returns, transactions, positions, turnover_denom='AGB', legend_loc='best', ax=None, **kwargs)",
+          "description": "Turnover percentage over time",
+          "priority": "HIGH"
+        },
+        {
+          "name": "plot_daily_turnover_hist",
+          "signature": "plot_daily_turnover_hist(transactions, positions, turnover_denom='AGB', ax=None, **kwargs)",
+          "description": "Turnover rate histogram",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_daily_volume",
+          "signature": "plot_daily_volume(returns, transactions, ax=None, **kwargs)",
+          "description": "Daily trading volume with average reference line",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_txn_time_hist",
+          "signature": "plot_txn_time_hist(transactions, bin_minutes=5, tz='America/New_York', ax=None, **kwargs)",
+          "description": "Histogram of transaction execution times",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_slippage_sweep",
+          "signature": "plot_slippage_sweep(returns, positions, transactions, slippage_params=(3, 8, 10, 12, 15, 20, 50), ax=None, **kwargs)",
+          "description": "Equity curves at various slippage assumptions",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_slippage_sensitivity",
+          "signature": "plot_slippage_sensitivity(returns, positions, transactions, ax=None, **kwargs)",
+          "description": "Per-dollar slippage vs. annual return curve",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_capacity_sweep",
+          "signature": "plot_capacity_sweep(returns, transactions, market_data, bt_starting_capital, min_pv=100000, max_pv=300000000, step_size=1000000, ax=None)",
+          "description": "Capital requirement analysis plot",
+          "priority": "LOW"
+        },
+        {
+          "name": "plot_round_trip_lifetimes",
+          "signature": "plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None)",
+          "description": "Timespans and directions of round trip trades",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_prob_profit_trade",
+          "signature": "plot_prob_profit_trade(round_trips, ax=None)",
+          "description": "Probability distribution of profitable trades",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_cones",
+          "signature": "plot_cones(name, bounds, oos_returns, num_samples=1000, ax=None, cone_std=(1.0, 1.5, 2.0), random_seed=None, num_strikes=3)",
+          "description": "Probability cone with redrawn boundaries when breached",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_perf_stats",
+          "signature": "plot_perf_stats(returns, factor_returns, ax=None)",
+          "description": "Box plot of bootstrapped performance metrics",
+          "priority": "LOW"
+        },
+        {
+          "name": "show_perf_stats",
+          "signature": "show_perf_stats(returns, factor_returns=None, positions=None, transactions=None, turnover_denom='AGB', live_start_date=None, bootstrap=False, header_rows=None)",
+          "description": "Pretty-prints performance metrics table",
+          "priority": "HIGH"
+        },
+        {
+          "name": "show_worst_drawdown_periods",
+          "signature": "show_worst_drawdown_periods(returns, top=5)",
+          "description": "Prints peak, valley, recovery dates and magnitudes",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "show_and_plot_top_positions",
+          "signature": "show_and_plot_top_positions(returns, positions_alloc, show_and_plot=2, hide_positions=False, legend_loc='real_best', ax=None, **kwargs)",
+          "description": "Prints and/or plots top 10 holdings",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "show_profit_attribution",
+          "signature": "show_profit_attribution(round_trips)",
+          "description": "Prints PnL contribution by security",
+          "priority": "LOW"
+        },
+        {
+          "name": "customize",
+          "signature": "@customize - decorator",
+          "description": "Decorator applying plotting context during function execution",
+          "priority": "UTILITY"
+        }
+      ]
+    },
+
+    "perf_attrib_module": {
+      "description": "Performance attribution analysis - attributing returns to risk factors",
+      "functions": [
+        {
+          "name": "perf_attrib",
+          "signature": "perf_attrib(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True)",
+          "description": "Attributes returns to risk factors; returns common and specific returns",
+          "parameters": {
+            "returns": "pd.Series - Strategy returns",
+            "positions": "pd.DataFrame - Position values",
+            "factor_returns": "pd.DataFrame - Factor returns",
+            "factor_loadings": "pd.DataFrame - Security factor loadings",
+            "transactions": "pd.DataFrame (optional) - Transaction data",
+            "pos_in_dollars": "bool - Positions in dollars (default: True)"
+          },
+          "returns": "tuple(pd.DataFrame, pd.DataFrame) - (perf_attrib_data, risk_exposures)",
+          "priority": "HIGH"
+        },
+        {
+          "name": "compute_exposures",
+          "signature": "compute_exposures(positions, factor_loadings, stack_positions=True, pos_in_dollars=True)",
+          "description": "Calculates daily risk factor exposures (normalized positions × factor loadings)",
+          "parameters": {
+            "positions": "pd.DataFrame - Position values",
+            "factor_loadings": "pd.DataFrame - Factor loadings",
+            "stack_positions": "bool - Stack positions (default: True)",
+            "pos_in_dollars": "bool - Positions in dollars (default: True)"
+          },
+          "returns": "pd.DataFrame - Daily factor exposures",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "create_perf_attrib_stats",
+          "signature": "create_perf_attrib_stats(perf_attrib, risk_exposures)",
+          "description": "Computes annualized multifactor alpha and Sharpe ratio",
+          "parameters": {
+            "perf_attrib": "pd.DataFrame - Performance attribution data",
+            "risk_exposures": "pd.DataFrame - Risk exposures"
+          },
+          "returns": "dict - Attribution statistics",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "show_perf_attrib_stats",
+          "signature": "show_perf_attrib_stats(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True)",
+          "description": "Displays attribution statistics as formatted table",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_returns",
+          "signature": "plot_returns(perf_attrib_data, cost=None, ax=None)",
+          "description": "Plots total, common, and specific returns overlay",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_factor_contribution_to_perf",
+          "signature": "plot_factor_contribution_to_perf(perf_attrib_data, ax=None, title='Cumulative common returns attribution')",
+          "description": "Stacked area showing factor contribution over time",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_risk_exposures",
+          "signature": "plot_risk_exposures(exposures, ax=None, title='Daily risk factor exposures')",
+          "description": "Daily factor exposure time series",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "plot_alpha_returns",
+          "signature": "plot_alpha_returns(alpha_returns, ax=None)",
+          "description": "Histogram of daily alpha (specific) returns",
+          "priority": "LOW"
+        }
+      ]
+    },
+
+    "pos_module": {
+      "description": "Position tracking and analysis functions",
+      "functions": [
+        {
+          "name": "get_percent_alloc",
+          "signature": "get_percent_alloc(values)",
+          "description": "Computes portfolio allocations as proportions by dividing values by row sums",
+          "parameters": {
+            "values": "pd.DataFrame - Position values or amounts"
+          },
+          "returns": "pd.DataFrame - Positions and their allocations",
+          "priority": "HIGH"
+        },
+        {
+          "name": "get_top_long_short_abs",
+          "signature": "get_top_long_short_abs(positions, top=10)",
+          "description": "Identifies leading long, short, and absolute value positions",
+          "parameters": {
+            "positions": "pd.DataFrame - Strategy positions over time",
+            "top": "int - Count to retrieve (default: 10)"
+          },
+          "returns": "tuple(pd.DataFrame, pd.DataFrame, pd.DataFrame) - (top_long, top_short, top_abs)",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_max_median_position_concentration",
+          "signature": "get_max_median_position_concentration(positions)",
+          "description": "Calculates maximum and median long/short position concentrations per period",
+          "parameters": {
+            "positions": "pd.DataFrame - Strategy positions"
+          },
+          "returns": "pd.DataFrame - Max long, max short, median long, median short concentrations",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "extract_pos",
+          "signature": "extract_pos(positions, cash)",
+          "description": "Transforms backtest position data into daily net position values",
+          "parameters": {
+            "positions": "pd.DataFrame - Rows per symbol with amount and last_sale_price columns",
+            "cash": "pd.Series - Portfolio cash timeseries"
+          },
+          "returns": "pd.DataFrame - Daily net position values",
+          "priority": "HIGH"
+        },
+        {
+          "name": "get_sector_exposures",
+          "signature": "get_sector_exposures(positions, symbol_sector_map)",
+          "description": "Aggregates position exposures by sector classification",
+          "parameters": {
+            "positions": "pd.DataFrame - Position values",
+            "symbol_sector_map": "dict or pd.Series - Securities to sectors mapping"
+          },
+          "returns": "pd.DataFrame - Sector allocations and cash",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_long_short_pos",
+          "signature": "get_long_short_pos(positions)",
+          "description": "Calculates long and short portfolio allocations",
+          "parameters": {
+            "positions": "pd.DataFrame - Strategy positions"
+          },
+          "returns": "pd.DataFrame - Long/short allocations as decimal percentages with net exposure",
+          "priority": "HIGH"
+        }
+      ]
+    },
+
+    "txn_module": {
+      "description": "Transaction handling and analysis functions",
+      "functions": [
+        {
+          "name": "map_transaction",
+          "signature": "map_transaction(txn)",
+          "description": "Converts a single transaction row into dictionary format",
+          "parameters": {
+            "txn": "pd.Series - Single transaction row"
+          },
+          "returns": "dict - Mapped transaction",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "make_transaction_frame",
+          "signature": "make_transaction_frame(transactions)",
+          "description": "Formats transaction data into organized DataFrame with calculated txn_dollars",
+          "parameters": {
+            "transactions": "pd.DataFrame - Improperly formatted transactional data"
+          },
+          "returns": "pd.DataFrame - Formatted daily transaction records",
+          "priority": "HIGH"
+        },
+        {
+          "name": "get_txn_vol",
+          "signature": "get_txn_vol(transactions)",
+          "description": "Extracts daily transaction metrics from transaction objects",
+          "parameters": {
+            "transactions": "pd.DataFrame - Time series with one row per symbol"
+          },
+          "returns": "pd.DataFrame - Aggregated daily volume and share counts",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "adjust_returns_for_slippage",
+          "signature": "adjust_returns_for_slippage(returns, positions, transactions, slippage_bps)",
+          "description": "Applies slippage penalties to strategy returns based on trading activity",
+          "parameters": {
+            "returns": "pd.Series - Daily returns",
+            "positions": "pd.DataFrame - Position values",
+            "transactions": "pd.DataFrame - Trade data",
+            "slippage_bps": "int/float - Basis points of slippage"
+          },
+          "returns": "pd.Series - Slippage-adjusted daily returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_turnover",
+          "signature": "get_turnover(positions, transactions, denominator='AGB')",
+          "description": "Calculates portfolio turnover rates",
+          "parameters": {
+            "positions": "pd.DataFrame - Daily position values including cash",
+            "transactions": "pd.DataFrame - Trade prices and amounts",
+            "denominator": "str - 'AGB' (Actual Gross Book) or 'portfolio_value' (default: 'AGB')"
+          },
+          "returns": "pd.Series - Turnover rates",
+          "priority": "HIGH"
+        }
+      ]
+    },
+
+    "round_trips_module": {
+      "description": "Round-trip trade analysis - tracking complete buy/sell cycles",
+      "functions": [
+        {
+          "name": "extract_round_trips",
+          "signature": "extract_round_trips(transactions, portfolio_value=None)",
+          "description": "Groups transactions into round trips. Long and short transactions matched to create round-trip trades with PnL, duration, and returns",
+          "parameters": {
+            "transactions": "pd.DataFrame - Executed trade data",
+            "portfolio_value": "pd.Series (optional) - Portfolio values over time"
+          },
+          "returns": "pd.DataFrame - One row per round trip with PnL, duration, returns",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "add_closing_transactions",
+          "signature": "add_closing_transactions(positions, transactions)",
+          "description": "Appends transactions that close out all positions at end of timespan",
+          "parameters": {
+            "positions": "pd.DataFrame - Strategy positions",
+            "transactions": "pd.DataFrame - Executed trades"
+          },
+          "returns": "pd.DataFrame - Transactions with closing transactions appended",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "apply_sector_mappings_to_round_trips",
+          "signature": "apply_sector_mappings_to_round_trips(round_trips, sector_mappings)",
+          "description": "Translates round trip symbols to sectors",
+          "parameters": {
+            "round_trips": "pd.DataFrame - Individual round trip trades",
+            "sector_mappings": "dict or pd.Series - Symbol-to-sector mapping"
+          },
+          "returns": "pd.DataFrame - Round trips with symbols replaced by sector names",
+          "priority": "LOW"
+        },
+        {
+          "name": "gen_round_trip_stats",
+          "signature": "gen_round_trip_stats(round_trips)",
+          "description": "Generates various round-trip statistics",
+          "parameters": {
+            "round_trips": "pd.DataFrame - Individual round trip trades"
+          },
+          "returns": "dict - DataFrames with PnL, summary, duration, returns, and symbol statistics",
+          "priority": "HIGH"
+        },
+        {
+          "name": "print_round_trip_stats",
+          "signature": "print_round_trip_stats(round_trips, hide_pos=False)",
+          "description": "Prints various round-trip statistics with pretty HTML tables in Jupyter",
+          "parameters": {
+            "round_trips": "pd.DataFrame - Individual round trip trades",
+            "hide_pos": "bool - Suppress symbol statistics (default: False)"
+          },
+          "returns": "None - Prints formatted tables",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "agg_all_long_short",
+          "signature": "agg_all_long_short(round_trips, col, stats_dict)",
+          "description": "Aggregates statistics across all trades and separately for long/short",
+          "parameters": {
+            "round_trips": "pd.DataFrame - Round trip data",
+            "col": "str - Column name to aggregate",
+            "stats_dict": "dict - Statistics functions"
+          },
+          "returns": "pd.DataFrame - Aggregated statistics",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "_groupby_consecutive",
+          "signature": "_groupby_consecutive(txn, max_delta=pd.Timedelta('8h'))",
+          "description": "Merges transactions of same direction separated by less than max_delta",
+          "parameters": {
+            "txn": "pd.DataFrame - Transaction prices and amounts",
+            "max_delta": "pd.Timedelta - Time threshold (default: 8 hours)"
+          },
+          "returns": "pd.DataFrame - Consolidated transactions",
+          "priority": "UTILITY"
+        }
+      ]
+    },
+
+    "capacity_module": {
+      "description": "Capacity and liquidity analysis functions",
+      "functions": [
+        {
+          "name": "daily_txns_with_bar_data",
+          "signature": "daily_txns_with_bar_data(transactions, market_data)",
+          "description": "Aggregates absolute share values traded daily per ticker with closing prices and volume",
+          "parameters": {
+            "transactions": "pd.DataFrame - Trade execution details",
+            "market_data": "pd.DataFrame - Multi-indexed volume and price data"
+          },
+          "returns": "pd.DataFrame - Daily transaction totals with price and volume",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "days_to_liquidate_positions",
+          "signature": "days_to_liquidate_positions(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5)",
+          "description": "Estimates liquidation timeline for each position based on trailing average dollar volume",
+          "parameters": {
+            "positions": "pd.DataFrame - Daily position values including cash",
+            "market_data": "pd.DataFrame - Multi-indexed market data",
+            "max_bar_consumption": "float - Max proportion of daily bar (default: 0.2)",
+            "capital_base": "float - Reference capital (default: 1e6)",
+            "mean_volume_window": "int - Trailing window size (default: 5)"
+          },
+          "returns": "pd.DataFrame - Estimated liquidation days by ticker and date",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_max_days_to_liquidate_by_ticker",
+          "signature": "get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5, last_n_days=None)",
+          "description": "Identifies worst-case liquidation duration per ticker across backtest period",
+          "parameters": {
+            "positions": "pd.DataFrame - Position values",
+            "market_data": "pd.DataFrame - Market data",
+            "max_bar_consumption": "float - Max bar fraction (default: 0.2)",
+            "capital_base": "float - Reference capital (default: 1e6)",
+            "mean_volume_window": "int - Window size (default: 5)",
+            "last_n_days": "int (optional) - Filter recent data"
+          },
+          "returns": "pd.DataFrame - Max liquidation days, dates, allocation % by symbol",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_low_liquidity_transactions",
+          "signature": "get_low_liquidity_transactions(transactions, market_data, last_n_days=None)",
+          "description": "Identifies daily transactions consuming highest proportion of available bar volume",
+          "parameters": {
+            "transactions": "pd.DataFrame - Trade execution records",
+            "market_data": "pd.DataFrame - Market data with volume/price",
+            "last_n_days": "int (optional) - Filter parameter"
+          },
+          "returns": "pd.DataFrame - Max bar consumption percentages by symbol",
+          "priority": "LOW"
+        },
+        {
+          "name": "apply_slippage_penalty",
+          "signature": "apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backtest_starting_capital, impact=0.1)",
+          "description": "Applies quadratic volumeshare slippage adjustments to returns",
+          "parameters": {
+            "returns": "pd.Series - Daily return series",
+            "txn_daily": "pd.DataFrame - Daily transaction totals with pricing/volume",
+            "simulate_starting_capital": "float - Test scenario capital",
+            "backtest_starting_capital": "float - Original backtest capital",
+            "impact": "float - Penalty scaling factor (default: 0.1)"
+          },
+          "returns": "pd.Series - Slippage-adjusted daily returns",
+          "priority": "MEDIUM"
+        }
+      ]
+    },
+
+    "utils_module": {
+      "description": "Utility and helper functions",
+      "functions": [
+        {
+          "name": "extract_rets_pos_txn_from_zipline",
+          "signature": "extract_rets_pos_txn_from_zipline(backtest)",
+          "description": "Extracts strategy data from Zipline backtest output",
+          "parameters": {
+            "backtest": "pd.DataFrame - Zipline backtest result"
+          },
+          "returns": "tuple(pd.Series, pd.DataFrame, pd.DataFrame) - (returns, positions, transactions)",
+          "priority": "CRITICAL"
+        },
+        {
+          "name": "check_intraday",
+          "signature": "check_intraday(estimate, returns, positions, transactions)",
+          "description": "Detects and processes intraday strategies",
+          "parameters": {
+            "estimate": "str/bool - 'infer', True, or False",
+            "returns": "pd.Series - Returns",
+            "positions": "pd.DataFrame - Positions",
+            "transactions": "pd.DataFrame - Transactions"
+          },
+          "returns": "pd.DataFrame - Processed positions",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "detect_intraday",
+          "signature": "detect_intraday(positions, transactions, threshold=0.25)",
+          "description": "Identifies intraday strategy via position-to-transaction ratio",
+          "parameters": {
+            "positions": "pd.DataFrame - Positions",
+            "transactions": "pd.DataFrame - Transactions",
+            "threshold": "float - Detection threshold (default: 0.25)"
+          },
+          "returns": "bool - True if intraday",
+          "priority": "LOW"
+        },
+        {
+          "name": "estimate_intraday",
+          "signature": "estimate_intraday(returns, positions, transactions, EOD_hour=23)",
+          "description": "Resamples positions to peak market exposure point",
+          "parameters": {
+            "returns": "pd.Series - Returns",
+            "positions": "pd.DataFrame - Positions",
+            "transactions": "pd.DataFrame - Transactions",
+            "EOD_hour": "int - End-of-day hour (default: 23)"
+          },
+          "returns": "pd.DataFrame - Resampled positions",
+          "priority": "LOW"
+        },
+        {
+          "name": "clip_returns_to_benchmark",
+          "signature": "clip_returns_to_benchmark(rets, benchmark_rets)",
+          "description": "Aligns return dates with benchmark date range",
+          "parameters": {
+            "rets": "pd.Series - Strategy returns",
+            "benchmark_rets": "pd.Series - Benchmark returns"
+          },
+          "returns": "pd.Series - Clipped returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "get_symbol_rets",
+          "signature": "get_symbol_rets(symbol, start=None, end=None)",
+          "description": "Retrieves returns for registered symbol",
+          "parameters": {
+            "symbol": "str - Symbol ticker",
+            "start": "date (optional) - Start date",
+            "end": "date (optional) - End date"
+          },
+          "returns": "pd.Series - Symbol returns",
+          "priority": "MEDIUM"
+        },
+        {
+          "name": "register_return_func",
+          "signature": "register_return_func(func)",
+          "description": "Registers custom function for symbol return retrieval",
+          "parameters": {
+            "func": "callable - Return retrieval function"
+          },
+          "returns": "None",
+          "priority": "LOW"
+        },
+        {
+          "name": "print_table",
+          "signature": "print_table(table, name=None, float_format=None, formatters=None, header_rows=None)",
+          "description": "Pretty-prints pandas objects (HTML in Jupyter, text elsewhere)",
+          "parameters": {
+            "table": "pd.DataFrame or pd.Series - Data to print",
+            "name": "str (optional) - Table name",
+            "float_format": "str (optional) - Float format string",
+            "formatters": "list/dict (optional) - Column formatters",
+            "header_rows": "dict (optional) - Header rows"
+          },
+          "returns": "None",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "format_asset",
+          "signature": "format_asset(asset)",
+          "description": "Prettifies Zipline asset objects for display",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "configure_legend",
+          "signature": "configure_legend(ax, autofmt_xdate=True, change_colors=False, rotation=30, ha='right')",
+          "description": "Formats legend positioning and styling",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "standardize_data",
+          "signature": "standardize_data(x)",
+          "description": "Z-score standardization",
+          "parameters": {
+            "x": "array-like - Data"
+          },
+          "returns": "np.array - Standardized data",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "sample_colormap",
+          "signature": "sample_colormap(cmap_name, n_samples)",
+          "description": "Samples specified matplotlib colormap",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "vectorize",
+          "signature": "@vectorize - decorator",
+          "description": "Decorator enabling Series functions to accept DataFrames",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "one_dec_places",
+          "signature": "one_dec_places(x, pos)",
+          "description": "Formatter adding one decimal place to plot ticks",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "two_dec_places",
+          "signature": "two_dec_places(x, pos)",
+          "description": "Formatter adding two decimal places to plot ticks",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "percentage",
+          "signature": "percentage(x, pos)",
+          "description": "Formatter adding percentage sign to plot ticks",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "to_series",
+          "signature": "to_series(df)",
+          "description": "Test utility converting DataFrame first column to Series",
+          "priority": "UTILITY"
+        },
+        {
+          "name": "to_utc",
+          "signature": "to_utc(df)",
+          "description": "Test utility applying UTC timestamps",
+          "priority": "UTILITY"
+        }
+      ]
+    },
+
+    "interesting_periods_module": {
+      "description": "Historical market event definitions (data module, no functions)",
+      "data_structures": [
+        {
+          "name": "PERIODS",
+          "type": "OrderedDict",
+          "description": "Mapping of event/period names to tuples of pandas Timestamp objects representing date ranges for significant market events (dotcom bubble, financial crisis, flash crash, recovery periods, etc.)",
+          "usage": "Used by extract_interesting_date_ranges() and create_interesting_times_tear_sheet()"
+        }
+      ]
+    }
+  },
+
+  "core_concepts": {
+    "tear_sheets": {
+      "description": "Comprehensive visual reports combining multiple plots and statistics",
+      "types": [
+        "Full tear sheet - Complete analysis with all components",
+        "Returns tear sheet - Focus on return metrics and distributions",
+        "Position tear sheet - Portfolio holdings and exposures",
+        "Transaction tear sheet - Trading costs and turnover",
+        "Round trip tear sheet - Complete trade cycle analysis",
+        "Capacity tear sheet - Liquidity and scalability analysis",
+        "Performance attribution tear sheet - Factor-based return attribution",
+        "Bayesian tear sheet - Uncertainty quantification"
+      ],
+      "key_insight": "Tear sheets are the primary interface for pyfolio - they provide at-a-glance comprehensive portfolio analysis"
+    },
+
+    "returns_analysis": {
+      "description": "Analysis of strategy returns over time",
+      "key_metrics": [
+        "CAGR (Compound Annual Growth Rate)",
+        "Total returns",
+        "Cumulative returns",
+        "Rolling returns",
+        "Daily/monthly/annual returns",
+        "Return distributions and quantiles"
+      ],
+      "visualizations": [
+        "Cumulative return plots",
+        "Rolling returns with cone plots",
+        "Monthly return heatmaps",
+        "Annual return bar charts",
+        "Return distribution histograms"
+      ]
+    },
+
+    "risk_metrics": {
+      "description": "Quantification of portfolio risk",
+      "volatility_metrics": [
+        "Annual volatility - Annualized standard deviation",
+        "Rolling volatility - Time-varying risk",
+        "Downside risk - Deviation below target return"
+      ],
+      "drawdown_metrics": [
+        "Max drawdown - Largest peak-to-trough decline",
+        "Drawdown periods - Duration and magnitude of declines",
+        "Underwater plots - Visualization of drawdown recovery",
+        "Top drawdown table - Worst drawdown events"
+      ],
+      "tail_risk": [
+        "Value at Risk (VaR) - Expected loss at confidence level",
+        "Tail ratio - Right tail to left tail comparison",
+        "Return quantiles - Distribution extremes"
+      ]
+    },
+
+    "risk_adjusted_metrics": {
+      "description": "Returns adjusted for risk taken",
+      "metrics": [
+        {
+          "name": "Sharpe Ratio",
+          "formula": "(Returns - Risk_free) / Volatility",
+          "interpretation": "Higher is better, >1 is good, >2 is very good"
+        },
+        {
+          "name": "Sortino Ratio",
+          "formula": "(Returns - Target) / Downside_risk",
+          "interpretation": "Like Sharpe but only penalizes downside volatility"
+        },
+        {
+          "name": "Calmar Ratio",
+          "formula": "Annual_return / Max_drawdown",
+          "interpretation": "Return per unit of worst drawdown"
+        },
+        {
+          "name": "Omega Ratio",
+          "formula": "Probability_weighted gains / losses",
+          "interpretation": "Ratio of gains to losses above/below threshold"
+        },
+        {
+          "name": "Common Sense Ratio",
+          "formula": "Tail_ratio × Gain_to_pain_ratio",
+          "interpretation": "Combines tail behavior with gain/pain"
+        }
+      ]
+    },
+
+    "benchmark_comparison": {
+      "description": "Comparison against market benchmark",
+      "metrics": [
+        {
+          "name": "Alpha",
+          "description": "Excess return beyond what beta would predict",
+          "interpretation": "Positive alpha = outperformance"
+        },
+        {
+          "name": "Beta",
+          "description": "Sensitivity to benchmark movements",
+          "interpretation": "Beta=1 moves with market, >1 more volatile, <1 less volatile"
+        },
+        {
+          "name": "Rolling Beta",
+          "description": "Time-varying market sensitivity",
+          "windows": ["6-month (126 days)", "12-month (252 days)"]
+        }
+      ]
+    },
+
+    "position_analysis": {
+      "description": "Analysis of portfolio holdings",
+      "metrics": [
+        "Long/short exposure - Directional positioning",
+        "Gross leverage - Total exposure relative to capital",
+        "Net leverage - Long minus short exposure",
+        "Position concentration - Diversification measure",
+        "Number of holdings - Portfolio breadth",
+        "Top positions - Largest holdings",
+        "Sector exposure - Allocation by sector"
+      ],
+      "visualizations": [
+        "Position count over time",
+        "Long/short holdings stacked area",
+        "Gross leverage time series",
+        "Exposure pie charts",
+        "Position concentration metrics",
+        "Sector allocation plots"
+      ]
+    },
+
+    "transaction_analysis": {
+      "description": "Analysis of trading activity",
+      "metrics": [
+        {
+          "name": "Turnover",
+          "description": "Trading activity relative to portfolio size",
+          "denominators": [
+            "AGB (Actual Gross Book) - Sum of absolute position values",
+            "Portfolio Value - Net portfolio value"
+          ]
+        },
+        {
+          "name": "Daily Volume",
+          "description": "Dollar volume of trades per day"
+        },
+        {
+          "name": "Transaction Costs",
+          "description": "Commissions and fees"
+        },
+        {
+          "name": "Slippage",
+          "description": "Execution price deviation from expected price"
+        }
+      ],
+      "visualizations": [
+        "Turnover time series",
+        "Daily turnover histogram",
+        "Daily volume plot",
+        "Transaction time distribution",
+        "Slippage sensitivity analysis"
+      ]
+    },
+
+    "round_trip_analysis": {
+      "description": "Complete trade cycle analysis from entry to exit",
+      "definition": "Round trip starts when opening a position and completes when shares return to zero",
+      "metrics": [
+        "PnL per round trip - Profit/loss for each complete trade",
+        "Duration - Time from entry to exit",
+        "Returns - Percentage return per trade",
+        "Win rate - Percentage of profitable trades",
+        "Average winner vs loser - Comparative profitability",
+        "Long vs short performance - Directional comparison"
+      ],
+      "visualizations": [
+        "Round trip lifetime plots - Duration and direction",
+        "Probability of profit distribution",
+        "PnL attribution by symbol/sector"
+      ]
+    },
+
+    "capacity_analysis": {
+      "description": "Portfolio scalability and liquidity constraints",
+      "concepts": [
+        {
+          "name": "Days to Liquidate",
+          "description": "Time required to exit positions given volume constraints",
+          "constraint": "Typically limited to consuming small % of daily volume"
+        },
+        {
+          "name": "Capacity Sweep",
+          "description": "Projected performance at different capital levels",
+          "shows": "How Sharpe ratio degrades with increased capital"
+        },
+        {
+          "name": "Low Liquidity Transactions",
+          "description": "Trades consuming high proportion of available volume",
+          "concern": "Market impact and execution difficulty"
+        },
+        {
+          "name": "Slippage Penalty",
+          "description": "Adjustment for price impact based on volume",
+          "model": "Quadratic volumeshare slippage model"
+        }
+      ]
+    },
+
+    "performance_attribution": {
+      "description": "Decomposing returns into factor contributions",
+      "methodology": "Attributes portfolio returns to systematic (factor) and specific (alpha) sources",
+      "components": [
+        {
+          "name": "Common Returns",
+          "description": "Returns explained by factor exposures",
+          "calculation": "Factor_exposures × Factor_returns"
+        },
+        {
+          "name": "Specific Returns",
+          "description": "Unexplained returns (alpha)",
+          "calculation": "Total_returns - Common_returns"
+        }
+      ],
+      "inputs": [
+        "Factor returns - Time series of factor performance",
+        "Factor loadings - Security exposures to each factor",
+        "Positions - Portfolio holdings over time"
+      ],
+      "outputs": [
+        "Risk exposures - Daily factor exposures",
+        "Factor contribution - Attribution by factor",
+        "Annualized alpha - Unexplained performance",
+        "Information ratio - Alpha / tracking error"
+      ],
+      "visualizations": [
+        "Factor contribution stacked area",
+        "Risk exposure time series",
+        "Total vs common vs specific returns",
+        "Alpha returns histogram"
+      ]
+    },
+
+    "bayesian_analysis": {
+      "description": "Uncertainty quantification using Bayesian statistics",
+      "key_benefit": "Provides probability distributions instead of point estimates, showing confidence in metrics",
+      "requirements": ["PyMC3", "Theano"],
+      "computational_note": "Uses MCMC sampling - computationally intensive",
+      "features": [
+        {
+          "name": "Bayesian Cone",
+          "description": "Probabilistic forecast cone",
+          "improvements_over_standard": [
+            "Incorporates uncertainty (wider cone for short backtests)",
+            "Uses Student-T distribution (heavier tails than normal)"
+          ]
+        },
+        {
+          "name": "Mean Returns Comparison",
+          "description": "In-sample vs out-of-sample comparison with uncertainty",
+          "shows": "Posterior distributions of mean returns, not point estimates"
+        },
+        {
+          "name": "Parameter Posteriors",
+          "description": "Probability distributions for Sharpe, volatility, etc.",
+          "interpretation": "Quantifies confidence in performance metrics"
+        }
+      ],
+      "models": [
+        "normal - Normal distribution assumption",
+        "t - Student-T distribution (robust to outliers)",
+        "alpha_beta - Factor model with benchmark",
+        "best - Automatically selects best model"
+      ]
+    },
+
+    "interesting_periods": {
+      "description": "Strategy behavior during significant market events",
+      "purpose": "Understand how strategy performs during stress periods",
+      "predefined_periods": [
+        "Dotcom bubble (2000-2001)",
+        "Financial crisis (2008-2009)",
+        "Flash crash (2010)",
+        "Recovery periods",
+        "Brexit vote",
+        "Other notable market events"
+      ],
+      "usage": "Plots strategy returns overlaid on benchmark during these periods"
+    },
+
+    "intraday_strategies": {
+      "description": "Special handling for strategies that close positions daily",
+      "detection": "Automatic via estimate_intraday='infer' or manual override",
+      "processing": "Resamples positions to peak exposure point (typically end-of-day)",
+      "threshold": "Position-to-transaction ratio < 0.25 suggests intraday"
+    }
+  },
+
+  "data_structures": {
+    "returns": {
+      "type": "pd.Series",
+      "description": "Time series of daily returns",
+      "index": "DatetimeIndex",
+      "values": "float - Simple returns (not log returns)",
+      "example": "2020-01-02: 0.0123 (1.23% return)"
+    },
+    "positions": {
+      "type": "pd.DataFrame",
+      "description": "Daily net position values",
+      "index": "DatetimeIndex",
+      "columns": "Symbol names + 'cash' column",
+      "values": "float - Dollar value or share count",
+      "note": "Can be absolute values or normalized"
+    },
+    "transactions": {
+      "type": "pd.DataFrame",
+      "description": "Executed trades",
+      "index": "DatetimeIndex (can have duplicates)",
+      "required_columns": ["symbol/sid", "amount", "price"],
+      "optional_columns": ["commission", "order_id"],
+      "amount_convention": "Positive = buy, Negative = sell"
+    },
+    "benchmark_rets": {
+      "type": "pd.Series",
+      "description": "Benchmark return time series",
+      "common_benchmarks": ["SPY", "Market factor", "Custom benchmark"]
+    },
+    "market_data": {
+      "type": "pd.DataFrame or pd.Panel",
+      "description": "OHLCV market data",
+      "structure": "Multi-indexed with (date, symbol)",
+      "required_for": ["Capacity analysis", "Slippage modeling"]
+    },
+    "factor_returns": {
+      "type": "pd.DataFrame",
+      "description": "Factor return time series",
+      "index": "DatetimeIndex",
+      "columns": "Factor names",
+      "common_factors": ["Momentum", "Value", "Size", "Quality"]
+    },
+    "factor_loadings": {
+      "type": "pd.DataFrame",
+      "description": "Security exposures to factors",
+      "index": "Symbol names",
+      "columns": "Factor names",
+      "values": "float - Factor beta/loading"
+    },
+    "sector_mappings": {
+      "type": "dict or pd.Series",
+      "description": "Symbol to sector classification",
+      "example": "{'AAPL': 'Technology', 'JPM': 'Financials'}"
+    }
+  },
+
+  "typical_workflows": [
+    {
+      "name": "Basic Analysis from Zipline",
+      "steps": [
+        "Run Zipline backtest",
+        "Extract data: returns, positions, transactions = pf.utils.extract_rets_pos_txn_from_zipline(backtest)",
+        "Generate full tear sheet: pf.create_full_tear_sheet(returns, positions, transactions)",
+        "Review plots and metrics"
+      ]
+    },
+    {
+      "name": "Returns-Only Analysis",
+      "steps": [
+        "Obtain returns series",
+        "Optionally get benchmark returns",
+        "Generate: pf.create_simple_tear_sheet(returns, benchmark_rets=benchmark)",
+        "Or more detailed: pf.create_returns_tear_sheet(returns, benchmark_rets=benchmark)"
+      ]
+    },
+    {
+      "name": "Deep Dive with Round Trips",
+      "steps": [
+        "Prepare returns, positions, transactions",
+        "Generate: pf.create_full_tear_sheet(returns, positions, transactions, round_trips=True)",
+        "Or separate: pf.create_round_trip_tear_sheet(returns, positions, transactions)",
+        "Analyze trade efficiency and patterns"
+      ]
+    },
+    {
+      "name": "Factor Attribution Analysis",
+      "steps": [
+        "Obtain factor returns (e.g., from research platform)",
+        "Get factor loadings for securities",
+        "Generate: pf.create_perf_attrib_tear_sheet(returns, positions, factor_returns, factor_loadings)",
+        "Understand which factors drive performance"
+      ]
+    },
+    {
+      "name": "Capacity Analysis",
+      "steps": [
+        "Obtain market_data with volume information",
+        "Generate: pf.create_capacity_tear_sheet(returns, positions, transactions, market_data)",
+        "Identify liquidity constraints and scaling limits"
+      ]
+    },
+    {
+      "name": "Custom Metric Calculation",
+      "steps": [
+        "Use individual functions from timeseries module",
+        "Example: sharpe = pf.timeseries.sharpe_ratio(returns)",
+        "Example: drawdown = pf.timeseries.max_drawdown(returns)",
+        "Build custom analysis combining metrics"
+      ]
+    }
+  ],
+
+  "best_practices": [
+    {
+      "category": "Data Preparation",
+      "practices": [
+        "Ensure returns are simple returns, not log returns",
+        "Use consistent timezone (UTC recommended)",
+        "Remove any NaN or inf values from returns",
+        "Verify transactions have required columns (symbol, amount, price)",
+        "Include cash column in positions DataFrame"
+      ]
+    },
+    {
+      "category": "Analysis",
+      "practices": [
+        "Always specify live_start_date to separate in-sample from out-of-sample",
+        "Include benchmark for proper context",
+        "Use sector_mappings for better position analysis",
+        "Run round trip analysis to understand trade efficiency",
+        "Check capacity constraints for real-world applicability"
+      ]
+    },
+    {
+      "category": "Performance",
+      "practices": [
+        "Start with create_simple_tear_sheet for quick overview",
+        "Use return_fig=True to save figures instead of displaying",
+        "Bootstrap analysis is slow - use sparingly",
+        "Bayesian analysis requires PyMC3 and is computationally intensive",
+        "Cache results for repeated analysis"
+      ]
+    },
+    {
+      "category": "Interpretation",
+      "practices": [
+        "Look at risk-adjusted metrics (Sharpe, Sortino) not just returns",
+        "Examine drawdown characteristics - recovery time matters",
+        "Check rolling metrics for stability over time",
+        "Compare in-sample vs out-of-sample performance",
+        "Verify results aren't driven by few large positions (check concentration)",
+        "Consider capacity constraints for live trading",
+        "Use interesting periods to test strategy in various market conditions"
+      ]
+    }
+  ],
+
+  "common_pitfalls": [
+    {
+      "issue": "Using log returns instead of simple returns",
+      "solution": "Convert: simple_returns = np.exp(log_returns) - 1"
+    },
+    {
+      "issue": "Missing cash column in positions",
+      "solution": "Add cash column or ensure positions sum correctly"
+    },
+    {
+      "issue": "Timezone mismatches between data sources",
+      "solution": "Convert all timestamps to UTC: df.index = df.index.tz_localize('UTC')"
+    },
+    {
+      "issue": "Overfitting to in-sample period",
+      "solution": "Always use live_start_date to separate OOS period"
+    },
+    {
+      "issue": "Ignoring transaction costs",
+      "solution": "Include commissions in transactions, use slippage parameter"
+    },
+    {
+      "issue": "Not checking capacity constraints",
+      "solution": "Run capacity tear sheet to verify strategy is tradeable at scale"
+    },
+    {
+      "issue": "Benchmark selection bias",
+      "solution": "Use appropriate benchmark for strategy type"
+    }
+  ],
+
+  "integration_notes": {
+    "zipline": {
+      "description": "Primary integration - Zipline is algorithmic trading library",
+      "extraction": "Use pf.utils.extract_rets_pos_txn_from_zipline(backtest)",
+      "workflow": "Run Zipline backtest → Extract data → Generate tear sheets"
+    },
+    "quantopian": {
+      "note": "Originally designed for Quantopian platform (now defunct)",
+      "legacy": "Many examples reference Quantopian API"
+    },
+    "jupyter": {
+      "description": "Best used in Jupyter notebooks for interactive analysis",
+      "features": "HTML tables, inline plots, interactive exploration"
+    },
+    "custom_backtesting": {
+      "requirements": [
+        "Create returns Series with DatetimeIndex",
+        "Create positions DataFrame (optional but recommended)",
+        "Create transactions DataFrame (optional but recommended)",
+        "Pass to appropriate tear sheet function"
+      ]
+    }
+  },
+
+  "limitations_and_considerations": [
+    {
+      "limitation": "Original pyfolio unmaintained since 2019",
+      "recommendation": "Use pyfolio-reloaded for modern Python support"
+    },
+    {
+      "limitation": "Some functions assume daily frequency",
+      "workaround": "May need to resample higher-frequency data"
+    },
+    {
+      "limitation": "Limited support for multi-asset class portfolios",
+      "context": "Primarily designed for equity strategies"
+    },
+    {
+      "limitation": "Bayesian analysis computationally expensive",
+      "consideration": "May take minutes to hours for MCMC sampling"
+    },
+    {
+      "limitation": "Capacity analysis requires market data",
+      "requirement": "Need OHLCV data for all traded symbols"
+    },
+    {
+      "limitation": "Performance attribution requires factor data",
+      "source": "Need to obtain factor returns from research provider"
+    }
+  ],
+
+  "alternatives_and_ecosystem": [
+    {
+      "library": "empyrical",
+      "relationship": "Dependency - provides many underlying metrics",
+      "description": "Common financial risk and performance metrics"
+    },
+    {
+      "library": "Zipline",
+      "relationship": "Complementary - backtesting engine",
+      "description": "Algorithmic trading library, pyfolio analyzes Zipline results"
+    },
+    {
+      "library": "QuantStats",
+      "relationship": "Alternative",
+      "description": "Similar portfolio analytics with HTML reports"
+    },
+    {
+      "library": "bt",
+      "relationship": "Alternative backtesting",
+      "description": "Flexible backtesting framework"
+    },
+    {
+      "library": "Backtrader",
+      "relationship": "Alternative ecosystem",
+      "description": "Complete backtesting platform with PyFolio analyzer"
+    }
+  ],
+
+  "technical_insights": {
+    "common_patterns": [
+      "Tear sheets use decorator pattern for consistent styling",
+      "Most functions accept optional ax parameter for subplot integration",
+      "return_fig parameter allows programmatic figure handling",
+      "Consistent parameter naming across modules (returns, positions, transactions)",
+      "Vectorized operations using pandas for performance"
+    ],
+    "best_practices_code": [
+      "Use extract_rets_pos_txn_from_zipline for standardized data extraction",
+      "Leverage utils.print_table for consistent output formatting",
+      "Use utils.check_intraday for automatic strategy type detection",
+      "Apply @customize decorator for consistent plot styling",
+      "Use cone_std parameter for customized confidence intervals"
+    ],
+    "pitfalls_code": [
+      "Don't modify returns in place - functions may cache",
+      "Ensure DatetimeIndex is properly sorted",
+      "Watch for duplicate timestamps in transactions",
+      "Be careful with turnover_denom - AGB vs portfolio_value give different results",
+      "Bootstrap functions are not deterministic without random_seed"
+    ]
+  },
+
+  "implementation_recommendations": [
+    {
+      "scenario": "Quick portfolio analysis without transactions",
+      "recommended_solution": "create_simple_tear_sheet(returns, benchmark_rets)",
+      "rationale": "Minimal data requirements, fast execution, covers key metrics"
+    },
+    {
+      "scenario": "Complete portfolio analysis with all data",
+      "recommended_solution": "create_full_tear_sheet(returns, positions, transactions, benchmark_rets, live_start_date)",
+      "rationale": "Comprehensive view including all aspects of performance"
+    },
+    {
+      "scenario": "Focus on trade efficiency",
+      "recommended_solution": "create_round_trip_tear_sheet(returns, positions, transactions)",
+      "rationale": "Detailed analysis of individual trades and patterns"
+    },
+    {
+      "scenario": "Understanding factor exposures",
+      "recommended_solution": "create_perf_attrib_tear_sheet(returns, positions, factor_returns, factor_loadings)",
+      "rationale": "Decompose returns into systematic and specific components"
+    },
+    {
+      "scenario": "Assessing scalability",
+      "recommended_solution": "create_capacity_tear_sheet(returns, positions, transactions, market_data)",
+      "rationale": "Identify liquidity constraints and capital limits"
+    },
+    {
+      "scenario": "Custom metric calculation",
+      "recommended_solution": "Use individual timeseries functions (sharpe_ratio, max_drawdown, etc.)",
+      "rationale": "Flexible composition of specific metrics needed"
+    },
+    {
+      "scenario": "Uncertainty quantification",
+      "recommended_solution": "create_bayesian_tear_sheet(returns, live_start_date) [with PyMC3 installed]",
+      "rationale": "Provides probability distributions for metrics, shows confidence"
+    }
+  ],
+
+  "community_insights": {
+    "popular_solutions": [
+      "pyfolio-reloaded as maintained fork",
+      "Combination with Zipline for end-to-end backtesting",
+      "Integration with QuantRocket platform",
+      "Custom tear sheets by extending plotting module",
+      "Export to HTML/PDF for client reporting"
+    ],
+    "controversial_topics": [
+      "Choice of turnover denominator (AGB vs portfolio_value)",
+      "Appropriateness of Bayesian analysis for short time series",
+      "Benchmark selection for strategy evaluation",
+      "Treatment of transaction costs in returns"
+    ],
+    "expert_opinions": [
+      "Always separate in-sample from out-of-sample using live_start_date",
+      "Risk-adjusted metrics more important than absolute returns",
+      "Capacity analysis often overlooked but critical for real money",
+      "Round trip analysis reveals trading discipline issues",
+      "Rolling metrics show stability/regime changes better than cumulative"
+    ]
+  },
+
+  "citations": [
+    {
+      "citation": "[1] Quantopian. 'pyfolio - Portfolio and risk analytics in Python.' GitHub, 2019. https://github.com/quantopian/pyfolio",
+      "type": "repository"
+    },
+    {
+      "citation": "[2] Stefan Jansen. 'pyfolio-reloaded - Portfolio and risk analytics in Python.' GitHub/PyPI, Version 0.9.9, 2025. https://github.com/stefan-jansen/pyfolio-reloaded",
+      "type": "repository"
+    },
+    {
+      "citation": "[3] 'pyfolio API Reference.' ml4trading.io Documentation, 2024. https://pyfolio.ml4trading.io/api-reference.html",
+      "type": "documentation"
+    },
+    {
+      "citation": "[4] 'pyfolio Package.' Python Package Index (PyPI), 2019. https://pypi.org/project/pyfolio/",
+      "type": "package_registry"
+    },
+    {
+      "citation": "[5] 'pyfolio-reloaded Package.' Python Package Index (PyPI), 2025. https://pypi.org/project/pyfolio-reloaded/",
+      "type": "package_registry"
+    },
+    {
+      "citation": "[6] 'Round Trip Analysis Example.' pyfolio Documentation. https://quantopian.github.io/pyfolio/notebooks/round_trip_tear_sheet_example/",
+      "type": "tutorial"
+    },
+    {
+      "citation": "[7] 'Bayesian Analysis Example.' pyfolio Documentation. https://quantopian.github.io/pyfolio/notebooks/bayesian/",
+      "type": "tutorial"
+    }
+  ]
+}
