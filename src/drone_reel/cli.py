@@ -228,6 +228,7 @@ def create(
 
         if not selected_scenes:
             console.print("[red]Error:[/red] No usable scenes found in video files")
+            console.print("[dim]Tip: Videos must be at least 1 second long.[/dim]")
             console.print("[dim]Tip: Try using --clips to specify number of clips[/dim]")
             raise SystemExit(1)
 
@@ -321,6 +322,12 @@ def create(
     duration_info = format_duration(actual_duration)
     if actual_duration < duration * 0.95:  # More than 5% shorter than requested
         duration_info += f" [dim](requested {format_duration(duration)})[/dim]"
+
+    # Get actual output dimensions
+    if no_reframe:
+        from moviepy import VideoFileClip
+        with VideoFileClip(str(output_path)) as final_clip:
+            output_w, output_h = final_clip.w, final_clip.h
 
     console.print(Panel.fit(
         f"[bold green]Reel created successfully![/bold green]\n\n"
