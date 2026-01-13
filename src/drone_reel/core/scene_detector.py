@@ -61,6 +61,8 @@ class SceneDetector:
         """
         Detect all scenes in a video file.
 
+        If no scene changes are detected, treats the entire video as a single scene.
+
         Args:
             video_path: Path to the video file
 
@@ -100,7 +102,38 @@ class SceneDetector:
                     )
                 )
 
+        # If no scenes detected, treat entire video as one scene
+        if not scenes:
+            video_duration = self._get_video_duration(video_path)
+            if video_duration >= self.min_scene_length:
+                # Split into segments if video is longer than max_scene_length
+                if video_duration > self.max_scene_length:
+                    scenes = self._split_long_scene(
+                        video_path, 0, video_duration, self.max_scene_length
+                    )
+                else:
+                    score = self._score_scene(video_path, 0, video_duration)
+                    scenes.append(
+                        SceneInfo(
+                            start_time=0,
+                            end_time=video_duration,
+                            duration=video_duration,
+                            score=score,
+                            source_file=video_path,
+                        )
+                    )
+
         return scenes
+
+    def _get_video_duration(self, video_path: Path) -> float:
+        """Get the duration of a video file in seconds."""
+        cap = cv2.VideoCapture(str(video_path))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        cap.release()
+        if fps > 0:
+            return frame_count / fps
+        return 0.0
 
     def _split_long_scene(
         self, video_path: Path, start: float, end: float, max_length: float

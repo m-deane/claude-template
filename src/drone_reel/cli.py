@@ -226,12 +226,20 @@ def create(
             min_per_video=1,
         )
 
+        if not selected_scenes:
+            console.print("[red]Error:[/red] No usable scenes found in video files")
+            console.print("[dim]Tip: Try using --clips to specify number of clips[/dim]")
+            raise SystemExit(1)
+
         if len(selected_scenes) < num_clips_needed:
             console.print(
                 f"[yellow]Warning:[/yellow] Only {len(selected_scenes)} scenes available, "
                 f"requested {num_clips_needed}"
             )
             clip_durations = clip_durations[:len(selected_scenes)]
+
+        # Calculate actual duration
+        actual_duration = sum(clip_durations)
 
         # Preview mode - show plan and exit
         if preview:
@@ -310,11 +318,16 @@ def create(
             graded_path.rename(output_path)
 
     # Done!
+    duration_info = format_duration(actual_duration)
+    if actual_duration < duration * 0.95:  # More than 5% shorter than requested
+        duration_info += f" [dim](requested {format_duration(duration)})[/dim]"
+
     console.print(Panel.fit(
         f"[bold green]Reel created successfully![/bold green]\n\n"
         f"Output: [cyan]{output_path}[/cyan]\n"
-        f"Duration: {format_duration(duration)}\n"
-        f"Resolution: {output_w}x{output_h}",
+        f"Duration: {duration_info}\n"
+        f"Resolution: {output_w}x{output_h}\n"
+        f"Clips: {len(selected_scenes)}",
         border_style="green",
     ))
 

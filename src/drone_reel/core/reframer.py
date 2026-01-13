@@ -247,7 +247,7 @@ class Reframer:
 
             return resized
 
-        reframed_clip = clip.fl(reframe_frame)
+        reframed_clip = clip.transform(reframe_frame)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 

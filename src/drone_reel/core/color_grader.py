@@ -327,7 +327,7 @@ class ColorGrader:
 
             return graded_rgb
 
-        graded_clip = clip.fl(grade_frame_func)
+        graded_clip = clip.transform(grade_frame_func)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 

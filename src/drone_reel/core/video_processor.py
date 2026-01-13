@@ -10,12 +10,15 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Optional
 
+import cv2
 import numpy as np
 from moviepy import (
     AudioFileClip,
     CompositeVideoClip,
     VideoFileClip,
+    afx,
     concatenate_videoclips,
+    vfx,
 )
 
 from drone_reel.core.scene_detector import SceneInfo
@@ -117,13 +120,11 @@ class VideoProcessor:
         """
         clip = VideoFileClip(str(segment.scene.source_file))
 
-        subclip = clip.subclip(
-            segment.effective_start,
-            min(segment.effective_start + segment.effective_duration, clip.duration),
-        )
+        end_time = min(segment.effective_start + segment.effective_duration, clip.duration)
+        subclip = clip.subclipped(segment.effective_start, end_time)
 
         if target_size:
-            subclip = subclip.resize(target_size)
+            subclip = subclip.resized(target_size)
 
         return subclip
 
@@ -177,9 +178,11 @@ class VideoProcessor:
         if audio_path:
             audio = AudioFileClip(str(audio_path))
             if audio.duration > final_clip.duration:
-                audio = audio.subclip(0, final_clip.duration)
-            audio = audio.audio_fadeout(min(1.0, final_clip.duration * 0.1))
-            final_clip = final_clip.set_audio(audio)
+                audio = audio.subclipped(0, final_clip.duration)
+            # Apply fade out to audio
+            fade_duration = min(1.0, final_clip.duration * 0.1)
+            audio = audio.with_effects([afx.AudioFadeOut(fade_duration)])
+            final_clip = final_clip.with_audio(audio)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -215,7 +218,6 @@ class VideoProcessor:
         for i, clip in enumerate(clips):
             if i < len(segments) and segments[i].transition_out == TransitionType.CROSSFADE:
                 if i + 1 < len(clips):
-                    overlap = segments[i].transition_duration
                     processed_clips.append(clip)
                 else:
                     processed_clips.append(clip)
@@ -232,11 +234,11 @@ class VideoProcessor:
     ) -> VideoFileClip:
         """Apply an entrance transition to a clip."""
         if transition == TransitionType.CROSSFADE:
-            return clip.crossfadein(duration)
+            return clip.with_effects([vfx.CrossFadeIn(duration)])
         elif transition == TransitionType.FADE_BLACK:
-            return clip.fadein(duration)
+            return clip.with_effects([vfx.FadeIn(duration)])
         elif transition == TransitionType.FADE_WHITE:
-            return clip.fadein(duration, initial_color=(255, 255, 255))
+            return clip.with_effects([vfx.FadeIn(duration, initial_color=(255, 255, 255))])
         elif transition == TransitionType.ZOOM_IN:
             return self._zoom_transition(clip, duration, zoom_in=True, is_start=True)
         elif transition == TransitionType.ZOOM_OUT:
@@ -251,11 +253,11 @@ class VideoProcessor:
     ) -> VideoFileClip:
         """Apply an exit transition to a clip."""
         if transition == TransitionType.CROSSFADE:
-            return clip.crossfadeout(duration)
+            return clip.with_effects([vfx.CrossFadeOut(duration)])
         elif transition == TransitionType.FADE_BLACK:
-            return clip.fadeout(duration)
+            return clip.with_effects([vfx.FadeOut(duration)])
         elif transition == TransitionType.FADE_WHITE:
-            return clip.fadeout(duration, final_color=(255, 255, 255))
+            return clip.with_effects([vfx.FadeOut(duration, final_color=(255, 255, 255))])
         elif transition == TransitionType.ZOOM_IN:
             return self._zoom_transition(clip, duration, zoom_in=True, is_start=False)
         elif transition == TransitionType.ZOOM_OUT:
@@ -270,13 +272,15 @@ class VideoProcessor:
         is_start: bool = True,
     ) -> VideoFileClip:
         """Create a zoom transition effect."""
+        clip_duration = clip.duration
+
         def zoom_effect(get_frame, t):
             frame = get_frame(t)
 
             if is_start:
                 progress = min(t / duration, 1.0)
             else:
-                time_from_end = clip.duration - t
+                time_from_end = clip_duration - t
                 progress = min(time_from_end / duration, 1.0)
 
             if zoom_in:
@@ -285,9 +289,6 @@ class VideoProcessor:
                 scale = 1.0 + progress * 0.2
 
             if scale != 1.0:
-                from PIL import Image
-                import cv2
-
                 h, w = frame.shape[:2]
                 new_h, new_w = int(h * scale), int(w * scale)
 
@@ -301,7 +302,7 @@ class VideoProcessor:
 
             return frame
 
-        return clip.fl(zoom_effect)
+        return clip.transform(zoom_effect)
 
     def _transition_cut(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Simple cut transition (no effect)."""
@@ -311,10 +312,10 @@ class VideoProcessor:
         self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
     ):
         """Crossfade transition between clips."""
-        clip1 = clip1.crossfadeout(duration)
-        clip2 = clip2.crossfadein(duration)
+        clip1 = clip1.with_effects([vfx.CrossFadeOut(duration)])
+        clip2 = clip2.with_effects([vfx.CrossFadeIn(duration)])
 
-        clip2 = clip2.set_start(clip1.duration - duration)
+        clip2 = clip2.with_start(clip1.duration - duration)
 
         return CompositeVideoClip([clip1, clip2])
 
@@ -322,16 +323,16 @@ class VideoProcessor:
         self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
     ):
         """Fade to black transition."""
-        clip1 = clip1.fadeout(duration / 2)
-        clip2 = clip2.fadein(duration / 2)
+        clip1 = clip1.with_effects([vfx.FadeOut(duration / 2)])
+        clip2 = clip2.with_effects([vfx.FadeIn(duration / 2)])
         return concatenate_videoclips([clip1, clip2])
 
     def _transition_fade_white(
         self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
     ):
         """Fade to white transition."""
-        clip1 = clip1.fadeout(duration / 2, final_color=(255, 255, 255))
-        clip2 = clip2.fadein(duration / 2, initial_color=(255, 255, 255))
+        clip1 = clip1.with_effects([vfx.FadeOut(duration / 2, final_color=(255, 255, 255))])
+        clip2 = clip2.with_effects([vfx.FadeIn(duration / 2, initial_color=(255, 255, 255))])
         return concatenate_videoclips([clip1, clip2])
 
     def _transition_zoom_in(
