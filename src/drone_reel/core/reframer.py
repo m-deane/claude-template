@@ -12,7 +12,7 @@ from typing import Callable, Optional
 
 import cv2
 import numpy as np
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 
 class AspectRatio(Enum):

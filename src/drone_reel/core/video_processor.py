@@ -11,12 +11,11 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
-from moviepy.editor import (
+from moviepy import (
     AudioFileClip,
     CompositeVideoClip,
     VideoFileClip,
     concatenate_videoclips,
-    vfx,
 )
 
 from drone_reel.core.scene_detector import SceneInfo

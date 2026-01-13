@@ -1,0 +1,18 @@
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build
+*.egg-info/
+dist/
+build/
+__pycache__/
+*.pyc
