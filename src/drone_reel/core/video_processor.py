@@ -5,6 +5,10 @@ Handles clip extraction, stitching, and applying various transitions
 between clips using MoviePy.
 """
 
+import os
+import platform
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -21,7 +25,8 @@ from moviepy import (
     vfx,
 )
 
-from drone_reel.core.scene_detector import SceneInfo
+from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType, SceneInfo
+from drone_reel.core.reframer import Reframer
 
 
 class TransitionType(Enum):
@@ -74,26 +79,32 @@ class VideoProcessor:
     def __init__(
         self,
         output_fps: int = 30,
-        output_codec: str = "libx264",
+        output_codec: Optional[str] = None,
         output_audio_codec: str = "aac",
         preset: str = "medium",
-        threads: int = 4,
+        threads: Optional[int] = None,
+        video_bitrate: Optional[str] = None,
+        audio_bitrate: str = "192k",
     ):
         """
         Initialize the video processor.
 
         Args:
             output_fps: Output video frame rate
-            output_codec: Video codec for output
+            output_codec: Video codec for output (auto-detected if None)
             output_audio_codec: Audio codec for output
             preset: FFmpeg encoding preset (ultrafast to veryslow)
-            threads: Number of encoding threads
+            threads: Number of encoding threads (auto-detected if None)
+            video_bitrate: Video bitrate (e.g., "8M", "15M", "25M")
+            audio_bitrate: Audio bitrate (e.g., "128k", "192k", "320k")
         """
         self.output_fps = output_fps
-        self.output_codec = output_codec
+        self.output_codec = output_codec or self._detect_best_encoder()
         self.output_audio_codec = output_audio_codec
         self.preset = preset
-        self.threads = threads
+        self.threads = threads or self._detect_cpu_cores()
+        self.video_bitrate = video_bitrate or "15M"  # Default 15 Mbps for high quality
+        self.audio_bitrate = audio_bitrate
         self._transition_funcs: dict[TransitionType, Callable] = {
             TransitionType.CUT: self._transition_cut,
             TransitionType.CROSSFADE: self._transition_crossfade,
@@ -101,12 +112,75 @@ class VideoProcessor:
             TransitionType.FADE_WHITE: self._transition_fade_white,
             TransitionType.ZOOM_IN: self._transition_zoom_in,
             TransitionType.ZOOM_OUT: self._transition_zoom_out,
+            TransitionType.SLIDE_LEFT: self._transition_slide_left,
+            TransitionType.SLIDE_RIGHT: self._transition_slide_right,
         }
+
+    def _detect_cpu_cores(self) -> int:
+        """
+        Auto-detect optimal number of CPU cores for encoding.
+
+        Returns:
+            Number of threads to use (leaves 1 core free for system)
+        """
+        try:
+            cpu_count = os.cpu_count() or 4
+            return max(1, cpu_count - 1)
+        except Exception:
+            return 4
+
+    def _detect_best_encoder(self) -> str:
+        """
+        Detect and return the best available hardware encoder.
+
+        Checks for hardware encoders in this priority:
+        1. h264_videotoolbox (macOS)
+        2. h264_nvenc (NVIDIA GPUs)
+        3. h264_qsv (Intel Quick Sync)
+        4. libx264 (software fallback)
+
+        Returns:
+            Codec name string
+        """
+        encoders_to_test = []
+
+        if platform.system() == "Darwin":
+            encoders_to_test.append("h264_videotoolbox")
+
+        encoders_to_test.extend(["h264_nvenc", "h264_qsv", "libx264"])
+
+        for encoder in encoders_to_test:
+            if self._test_encoder(encoder):
+                return encoder
+
+        return "libx264"
+
+    def _test_encoder(self, encoder: str) -> bool:
+        """
+        Test if an encoder is available in FFmpeg.
+
+        Args:
+            encoder: Encoder name to test
+
+        Returns:
+            True if encoder is available, False otherwise
+        """
+        try:
+            result = subprocess.run(
+                ["ffmpeg", "-hide_banner", "-encoders"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            return encoder in result.stdout
+        except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+            return False
 
     def extract_clip(
         self,
         segment: ClipSegment,
         target_size: Optional[tuple[int, int]] = None,
+        reframer: Optional[Reframer] = None,
     ) -> VideoFileClip:
         """
         Extract a clip segment from its source video.
@@ -114,19 +188,72 @@ class VideoProcessor:
         Args:
             segment: ClipSegment defining what to extract
             target_size: Optional (width, height) to resize to
+            reframer: Optional Reframer for proper aspect ratio cropping
 
         Returns:
             VideoFileClip of the extracted segment
+
+        Note:
+            The returned clip keeps a reference to its source video file.
+            The caller is responsible for closing the clip when done.
         """
-        clip = VideoFileClip(str(segment.scene.source_file))
+        source_clip = VideoFileClip(str(segment.scene.source_file))
 
-        end_time = min(segment.effective_start + segment.effective_duration, clip.duration)
-        subclip = clip.subclipped(segment.effective_start, end_time)
+        end_time = min(
+            segment.effective_start + segment.effective_duration, source_clip.duration
+        )
+        subclip = source_clip.subclipped(segment.effective_start, end_time)
 
-        if target_size:
+        if reframer:
+            # Reset reframer tracking for this new clip
+            reframer.reset_tracking()
+
+            # Calculate total frames for this clip
+            fps = subclip.fps or 30
+            total_frames = int(subclip.duration * fps)
+
+            def reframe_filter(get_frame, t):
+                """Apply reframing to each frame."""
+                frame = get_frame(t)
+                frame_index = int(t * fps)
+                return reframer.reframe_frame(frame, frame_index, total_frames)
+
+            subclip = subclip.transform(reframe_filter)
+
+            # Update clip size to match reframer output
+            output_w, output_h = reframer.calculate_output_dimensions(
+                source_clip.w, source_clip.h
+            )
+            subclip = subclip.with_duration(subclip.duration)
+
+        elif target_size:
+            # Legacy resize (may stretch - use reframer for proper aspect ratio)
             subclip = subclip.resized(target_size)
 
+        # Store reference to source clip so it stays open while subclip is used
+        # The source will be closed when the subclip is closed
+        subclip._source_clip_ref = source_clip
+
         return subclip
+
+    def _extract_clip_parallel(
+        self,
+        segment: ClipSegment,
+        target_size: Optional[tuple[int, int]],
+        reframer: Optional[Reframer] = None,
+    ) -> VideoFileClip:
+        """
+        Helper method for parallel clip extraction.
+
+        Args:
+            segment: ClipSegment to extract
+            target_size: Optional target size for resizing
+            reframer: Optional Reframer for proper aspect ratio cropping
+
+        Returns:
+            Extracted VideoFileClip
+        """
+        return self.extract_clip(segment, target_size, reframer)
 
     def stitch_clips(
         self,
@@ -135,6 +262,9 @@ class VideoProcessor:
         audio_path: Optional[Path] = None,
         target_size: Optional[tuple[int, int]] = None,
         progress_callback: Optional[Callable[[float], None]] = None,
+        parallel_extraction: bool = True,
+        reframer: Optional[Reframer] = None,
+        reframers: Optional[list[Reframer]] = None,
     ) -> Path:
         """
         Stitch multiple clip segments into a single video.
@@ -143,8 +273,11 @@ class VideoProcessor:
             segments: List of ClipSegment objects to combine
             output_path: Path for output video file
             audio_path: Optional music track to add
-            target_size: Optional (width, height) for output
+            target_size: Optional (width, height) for output (ignored if reframer provided)
             progress_callback: Optional callback for progress updates
+            parallel_extraction: Use parallel extraction for I/O performance
+            reframer: Optional single Reframer for all clips
+            reframers: Optional list of Reframers (one per clip) for intelligent per-clip reframing
 
         Returns:
             Path to the output video file
@@ -153,78 +286,175 @@ class VideoProcessor:
             raise ValueError("No segments provided")
 
         clips = []
-        total_segments = len(segments)
+        audio = None
 
-        for i, segment in enumerate(segments):
-            clip = self.extract_clip(segment, target_size)
+        # Use per-clip reframers if provided, otherwise fall back to single reframer
+        has_reframing = reframer is not None or reframers is not None
 
-            if segment.transition_in != TransitionType.CUT:
-                clip = self._apply_transition_in(
-                    clip, segment.transition_in, segment.transition_duration
-                )
+        # Disable parallel extraction when using reframer (has per-clip state)
+        use_parallel = parallel_extraction and not has_reframing
 
-            if segment.transition_out != TransitionType.CUT:
-                clip = self._apply_transition_out(
-                    clip, segment.transition_out, segment.transition_duration
-                )
+        try:
+            total_segments = len(segments)
 
-            clips.append(clip)
+            if use_parallel and len(segments) > 1:
+                max_workers = min(4, len(segments))
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    future_to_idx = {
+                        executor.submit(self._extract_clip_parallel, seg, target_size, None): i
+                        for i, seg in enumerate(segments)
+                    }
+
+                    clips_dict = {}
+                    for future in as_completed(future_to_idx):
+                        idx = future_to_idx[future]
+                        try:
+                            clip = future.result()
+                            clips_dict[idx] = clip
+
+                            if progress_callback:
+                                progress_callback((len(clips_dict)) / total_segments * 0.3)
+                        except Exception as e:
+                            for c in clips_dict.values():
+                                try:
+                                    if hasattr(c, '_source_clip_ref') and c._source_clip_ref:
+                                        c._source_clip_ref.close()
+                                    c.close()
+                                except Exception:
+                                    pass
+                            raise RuntimeError(
+                                f"Failed to extract clip {idx}: {str(e)}"
+                            ) from e
+
+                    clips = [clips_dict[i] for i in range(len(segments))]
+            else:
+                for i, segment in enumerate(segments):
+                    # Use per-clip reframer if available, otherwise single reframer
+                    clip_reframer = None
+                    if reframers and i < len(reframers):
+                        clip_reframer = reframers[i]
+                    elif reframer:
+                        clip_reframer = reframer
+
+                    clip = self.extract_clip(segment, target_size, clip_reframer)
+                    clips.append(clip)
+
+                    if progress_callback:
+                        progress_callback((i + 1) / total_segments * 0.3)
+
+            processed_clips = []
+            for i, (clip, segment) in enumerate(zip(clips, segments)):
+                processed_clip = clip
+
+                if segment.transition_in != TransitionType.CUT:
+                    processed_clip = self._apply_transition_in(
+                        processed_clip, segment.transition_in, segment.transition_duration
+                    )
+
+                if segment.transition_out != TransitionType.CUT:
+                    processed_clip = self._apply_transition_out(
+                        processed_clip, segment.transition_out, segment.transition_duration
+                    )
+
+                processed_clips.append(processed_clip)
+
+                if progress_callback:
+                    progress_callback(0.3 + (i + 1) / total_segments * 0.2)
+
+            final_clip = self._concatenate_with_transitions(processed_clips, segments)
+
+            if audio_path:
+                audio = AudioFileClip(str(audio_path))
+                if audio.duration > final_clip.duration:
+                    audio = audio.subclipped(0, final_clip.duration)
+                fade_duration = min(1.0, final_clip.duration * 0.1)
+                audio = audio.with_effects([afx.AudioFadeOut(fade_duration)])
+                final_clip = final_clip.with_audio(audio)
+
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            final_clip.write_videofile(
+                str(output_path),
+                fps=self.output_fps,
+                codec=self.output_codec,
+                audio_codec=self.output_audio_codec,
+                preset=self.preset,
+                threads=self.threads,
+                bitrate=self.video_bitrate,
+                audio_bitrate=self.audio_bitrate,
+                ffmpeg_params=["-pix_fmt", "yuv420p"],  # Ensure compatibility
+                logger=None,
+            )
 
             if progress_callback:
-                progress_callback((i + 1) / total_segments * 0.5)
+                progress_callback(1.0)
 
-        final_clip = self._concatenate_with_transitions(clips, segments)
+            return output_path
 
-        if audio_path:
-            audio = AudioFileClip(str(audio_path))
-            if audio.duration > final_clip.duration:
-                audio = audio.subclipped(0, final_clip.duration)
-            # Apply fade out to audio
-            fade_duration = min(1.0, final_clip.duration * 0.1)
-            audio = audio.with_effects([afx.AudioFadeOut(fade_duration)])
-            final_clip = final_clip.with_audio(audio)
+        except Exception as e:
+            raise RuntimeError(f"Failed to stitch clips: {str(e)}") from e
 
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        finally:
+            for clip in clips:
+                try:
+                    # Close source clip reference if it exists
+                    if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                        clip._source_clip_ref.close()
+                    clip.close()
+                except Exception:
+                    pass
 
-        final_clip.write_videofile(
-            str(output_path),
-            fps=self.output_fps,
-            codec=self.output_codec,
-            audio_codec=self.output_audio_codec,
-            preset=self.preset,
-            threads=self.threads,
-            logger=None,
-        )
+            if audio:
+                try:
+                    audio.close()
+                except Exception:
+                    pass
 
-        for clip in clips:
-            clip.close()
-        final_clip.close()
-
-        if progress_callback:
-            progress_callback(1.0)
-
-        return output_path
+            try:
+                if "final_clip" in locals():
+                    final_clip.close()
+            except Exception:
+                pass
 
     def _concatenate_with_transitions(
         self,
         clips: list[VideoFileClip],
         segments: list[ClipSegment],
     ) -> VideoFileClip:
-        """Concatenate clips, handling crossfade transitions."""
+        """
+        Concatenate clips, handling crossfade transitions with proper overlap.
+
+        For crossfade transitions, clips must overlap in time to avoid dark frames.
+        This method calculates proper start times so fading out and fading in
+        clips are composited together during the transition period.
+        """
         if len(clips) == 1:
             return clips[0]
 
-        processed_clips = []
-        for i, clip in enumerate(clips):
-            if i < len(segments) and segments[i].transition_out == TransitionType.CROSSFADE:
-                if i + 1 < len(clips):
-                    processed_clips.append(clip)
-                else:
-                    processed_clips.append(clip)
-            else:
-                processed_clips.append(clip)
+        # Build timeline with proper overlaps for crossfades
+        composed_clips = []
+        current_time = 0.0
 
-        return concatenate_videoclips(processed_clips, method="compose")
+        for i, clip in enumerate(clips):
+            # Set the start time for this clip
+            clip_with_start = clip.with_start(current_time)
+            composed_clips.append(clip_with_start)
+
+            # Calculate next clip start time based on transition type
+            if i + 1 < len(clips):
+                if i < len(segments) and segments[i].transition_out == TransitionType.CROSSFADE:
+                    # For crossfade: overlap clips by transition duration
+                    # Clamp overlap to max 40% of clip duration to prevent artifacts
+                    overlap = min(segments[i].transition_duration, clip.duration * 0.4)
+                    current_time += clip.duration - overlap
+                else:
+                    # For hard cuts: no overlap
+                    current_time += clip.duration
+            else:
+                # Last clip: just add duration
+                current_time += clip.duration
+
+        return CompositeVideoClip(composed_clips)
 
     def _apply_transition_in(
         self,
@@ -232,17 +462,26 @@ class VideoProcessor:
         transition: TransitionType,
         duration: float,
     ) -> VideoFileClip:
-        """Apply an entrance transition to a clip."""
+        """
+        Apply an entrance transition to a clip.
+
+        Includes safety checks to prevent dark frames from overly long transitions.
+        """
+        # Safety: clamp duration to max 40% of clip to prevent dark frames
+        safe_duration = min(duration, clip.duration * 0.4)
+        if safe_duration < 0.1:
+            return clip  # Skip transition if clip too short
+
         if transition == TransitionType.CROSSFADE:
-            return clip.with_effects([vfx.CrossFadeIn(duration)])
+            return clip.with_effects([vfx.CrossFadeIn(safe_duration)])
         elif transition == TransitionType.FADE_BLACK:
-            return clip.with_effects([vfx.FadeIn(duration)])
+            return clip.with_effects([vfx.FadeIn(safe_duration)])
         elif transition == TransitionType.FADE_WHITE:
-            return clip.with_effects([vfx.FadeIn(duration, initial_color=(255, 255, 255))])
+            return clip.with_effects([vfx.FadeIn(safe_duration, initial_color=(255, 255, 255))])
         elif transition == TransitionType.ZOOM_IN:
-            return self._zoom_transition(clip, duration, zoom_in=True, is_start=True)
+            return self._zoom_transition(clip, safe_duration, zoom_in=True, is_start=True)
         elif transition == TransitionType.ZOOM_OUT:
-            return self._zoom_transition(clip, duration, zoom_in=False, is_start=True)
+            return self._zoom_transition(clip, safe_duration, zoom_in=False, is_start=True)
         return clip
 
     def _apply_transition_out(
@@ -251,17 +490,26 @@ class VideoProcessor:
         transition: TransitionType,
         duration: float,
     ) -> VideoFileClip:
-        """Apply an exit transition to a clip."""
+        """
+        Apply an exit transition to a clip.
+
+        Includes safety checks to prevent dark frames from overly long transitions.
+        """
+        # Safety: clamp duration to max 40% of clip to prevent dark frames
+        safe_duration = min(duration, clip.duration * 0.4)
+        if safe_duration < 0.1:
+            return clip  # Skip transition if clip too short
+
         if transition == TransitionType.CROSSFADE:
-            return clip.with_effects([vfx.CrossFadeOut(duration)])
+            return clip.with_effects([vfx.CrossFadeOut(safe_duration)])
         elif transition == TransitionType.FADE_BLACK:
-            return clip.with_effects([vfx.FadeOut(duration)])
+            return clip.with_effects([vfx.FadeOut(safe_duration)])
         elif transition == TransitionType.FADE_WHITE:
-            return clip.with_effects([vfx.FadeOut(duration, final_color=(255, 255, 255))])
+            return clip.with_effects([vfx.FadeOut(safe_duration, final_color=(255, 255, 255))])
         elif transition == TransitionType.ZOOM_IN:
-            return self._zoom_transition(clip, duration, zoom_in=True, is_start=False)
+            return self._zoom_transition(clip, safe_duration, zoom_in=True, is_start=False)
         elif transition == TransitionType.ZOOM_OUT:
-            return self._zoom_transition(clip, duration, zoom_in=False, is_start=False)
+            return self._zoom_transition(clip, safe_duration, zoom_in=False, is_start=False)
         return clip
 
     def _zoom_transition(
@@ -349,6 +597,199 @@ class VideoProcessor:
         clip2 = self._zoom_transition(clip2, duration, zoom_in=False, is_start=True)
         return concatenate_videoclips([clip1, clip2])
 
+    def _transition_slide_left(
+        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
+    ):
+        """Slide left transition - clip2 slides in from right."""
+        from moviepy import CompositeVideoClip
+
+        w, h = clip1.w, clip1.h
+
+        # Trim clips to overlap
+        clip1_trimmed = clip1.subclipped(0, clip1.duration)
+        clip2_trimmed = clip2.subclipped(0, min(duration, clip2.duration))
+
+        # Animate clip2 sliding from right
+        def slide_position(t):
+            progress = t / duration
+            x = int(w * (1 - progress))  # Slide from right to center
+            return (x, 0)
+
+        clip2_sliding = clip2_trimmed.with_position(slide_position)
+
+        # Composite during transition, then continue with clip2
+        transition = CompositeVideoClip([clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)).with_duration(duration)
+        clip2_rest = clip2.subclipped(duration) if clip2.duration > duration else None
+
+        if clip2_rest:
+            return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest])
+        return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition])
+
+    def _transition_slide_right(
+        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
+    ):
+        """Slide right transition - clip2 slides in from left."""
+        from moviepy import CompositeVideoClip
+
+        w, h = clip1.w, clip1.h
+
+        # Trim clips to overlap
+        clip1_trimmed = clip1.subclipped(0, clip1.duration)
+        clip2_trimmed = clip2.subclipped(0, min(duration, clip2.duration))
+
+        # Animate clip2 sliding from left
+        def slide_position(t):
+            progress = t / duration
+            x = int(-w * (1 - progress))  # Slide from left to center
+            return (x, 0)
+
+        clip2_sliding = clip2_trimmed.with_position(slide_position)
+
+        # Composite during transition
+        transition = CompositeVideoClip([clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)).with_duration(duration)
+        clip2_rest = clip2.subclipped(duration) if clip2.duration > duration else None
+
+        if clip2_rest:
+            return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest])
+        return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition])
+
+    def _are_motion_directions_aligned(
+        self,
+        dir1: tuple[float, float],
+        dir2: tuple[float, float],
+        threshold: float = 0.7,
+    ) -> bool:
+        """
+        Check if two motion direction vectors are aligned (similar direction).
+
+        Args:
+            dir1: First motion direction (x, y)
+            dir2: Second motion direction (x, y)
+            threshold: Cosine similarity threshold (0.7 = ~45 degrees)
+
+        Returns:
+            True if motion directions are aligned
+        """
+        # Handle zero vectors
+        mag1 = np.sqrt(dir1[0] ** 2 + dir1[1] ** 2)
+        mag2 = np.sqrt(dir2[0] ** 2 + dir2[1] ** 2)
+
+        if mag1 < 0.01 or mag2 < 0.01:
+            return False  # Static scenes
+
+        # Normalize
+        norm1 = (dir1[0] / mag1, dir1[1] / mag1)
+        norm2 = (dir2[0] / mag2, dir2[1] / mag2)
+
+        # Cosine similarity
+        dot = norm1[0] * norm2[0] + norm1[1] * norm2[1]
+        return dot >= threshold
+
+    def _are_motion_speeds_similar(
+        self,
+        dir1: tuple[float, float],
+        dir2: tuple[float, float],
+        tolerance: float = 0.5,
+    ) -> bool:
+        """
+        Check if two motion direction vectors have similar magnitude (speed).
+
+        Args:
+            dir1: First motion direction (x, y)
+            dir2: Second motion direction (x, y)
+            tolerance: Relative difference threshold
+
+        Returns:
+            True if motion speeds are similar
+        """
+        mag1 = np.sqrt(dir1[0] ** 2 + dir1[1] ** 2)
+        mag2 = np.sqrt(dir2[0] ** 2 + dir2[1] ** 2)
+
+        if mag1 < 0.01 and mag2 < 0.01:
+            return True  # Both static
+
+        max_mag = max(mag1, mag2)
+        if max_mag < 0.01:
+            return True
+
+        rel_diff = abs(mag1 - mag2) / max_mag
+        return rel_diff <= tolerance
+
+    def select_motion_matched_transition(
+        self,
+        scene1: SceneInfo,
+        scene2: SceneInfo,
+        default_duration: float = 0.3,
+    ) -> tuple[TransitionType, float]:
+        """
+        Select the best transition type based on motion matching between scenes.
+
+        Motion-matched cuts follow these principles:
+        - Same direction, similar speed → Hard cut (seamless continuation)
+        - Same direction, different speed → Quick crossfade (0.2s)
+        - Different direction → Longer crossfade (0.4s)
+        - Static scenes → Default crossfade (0.3s)
+
+        Args:
+            scene1: First scene (outgoing)
+            scene2: Second scene (incoming)
+            default_duration: Default transition duration
+
+        Returns:
+            Tuple of (TransitionType, duration)
+        """
+        # Check if scenes have enhanced motion info
+        if not isinstance(scene1, EnhancedSceneInfo) or not isinstance(
+            scene2, EnhancedSceneInfo
+        ):
+            return TransitionType.CROSSFADE, default_duration
+
+        dir1 = scene1.motion_direction
+        dir2 = scene2.motion_direction
+
+        # Check for static scenes
+        mag1 = np.sqrt(dir1[0] ** 2 + dir1[1] ** 2)
+        mag2 = np.sqrt(dir2[0] ** 2 + dir2[1] ** 2)
+
+        if mag1 < 0.01 and mag2 < 0.01:
+            # Both static - use default crossfade
+            return TransitionType.CROSSFADE, default_duration
+
+        # Check if motion directions are aligned
+        directions_aligned = self._are_motion_directions_aligned(dir1, dir2)
+        speeds_similar = self._are_motion_speeds_similar(dir1, dir2)
+
+        if directions_aligned and speeds_similar:
+            # Matching motion - hard cut for seamless continuation
+            return TransitionType.CUT, 0.0
+
+        if directions_aligned:
+            # Same direction but different speed - quick crossfade
+            return TransitionType.CROSSFADE, 0.2
+
+        # Check for horizontal pan motion - use slide transitions
+        from drone_reel.core.scene_detector import MotionType
+
+        # Scene1 panning right + Scene2 different → slide from right (SLIDE_LEFT)
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.PAN_RIGHT:
+            return TransitionType.SLIDE_LEFT, 0.4
+
+        # Scene1 panning left + Scene2 different → slide from left (SLIDE_RIGHT)
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.PAN_LEFT:
+            return TransitionType.SLIDE_RIGHT, 0.4
+
+        # Use zoom transitions for reveal/dramatic motion types
+        if isinstance(scene2, EnhancedSceneInfo) and scene2.motion_type == MotionType.REVEAL:
+            return TransitionType.ZOOM_IN, 0.3
+
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
+            MotionType.FLYOVER, MotionType.FPV
+        ):
+            return TransitionType.ZOOM_OUT, 0.3
+
+        # Different motion directions - longer crossfade for smooth transition
+        return TransitionType.CROSSFADE, 0.4
+
     def create_segments_from_scenes(
         self,
         scenes: list[SceneInfo],
@@ -396,6 +837,78 @@ class VideoProcessor:
                 transition_in=transition_in,
                 transition_out=transition_out,
                 transition_duration=transition_duration,
+            )
+            segments.append(segment)
+
+        return segments
+
+    def create_motion_matched_segments(
+        self,
+        scenes: list[SceneInfo],
+        clip_durations: list[float],
+        default_transition_duration: float = 0.3,
+    ) -> list[ClipSegment]:
+        """
+        Create ClipSegments with automatically selected motion-matched transitions.
+
+        This method analyzes the motion characteristics of adjacent scenes and
+        selects the optimal transition type and duration:
+        - Aligned motion + similar speed → Hard cut (seamless)
+        - Aligned motion + different speed → Quick crossfade (0.2s)
+        - Different motion → Longer crossfade (0.4s)
+        - Static scenes → Default crossfade
+
+        Args:
+            scenes: List of SceneInfo objects (EnhancedSceneInfo for best results)
+            clip_durations: Duration for each clip
+            default_transition_duration: Fallback transition duration
+
+        Returns:
+            List of ClipSegment objects with motion-matched transitions
+        """
+        if len(scenes) != len(clip_durations):
+            min_len = min(len(scenes), len(clip_durations))
+            scenes = scenes[:min_len]
+            clip_durations = clip_durations[:min_len]
+
+        segments = []
+        for i, (scene, duration) in enumerate(zip(scenes, clip_durations)):
+            center_offset = max(0, (scene.duration - duration) / 2)
+
+            # Determine transition in (from previous segment)
+            transition_in = TransitionType.CUT
+            transition_in_duration = default_transition_duration
+            if i > 0:
+                trans_type, trans_dur = self.select_motion_matched_transition(
+                    scenes[i - 1], scene, default_transition_duration
+                )
+                transition_in = trans_type
+                transition_in_duration = trans_dur
+
+            # Determine transition out (to next segment)
+            transition_out = TransitionType.CUT
+            transition_out_duration = default_transition_duration
+            if i < len(scenes) - 1:
+                trans_type, trans_dur = self.select_motion_matched_transition(
+                    scene, scenes[i + 1], default_transition_duration
+                )
+                transition_out = trans_type
+                transition_out_duration = trans_dur
+            else:
+                # Last clip - fade out
+                transition_out = TransitionType.FADE_BLACK
+                transition_out_duration = 0.5
+
+            # Use the longer of in/out durations for consistent look
+            effective_duration = max(transition_in_duration, transition_out_duration)
+
+            segment = ClipSegment(
+                scene=scene,
+                start_offset=center_offset,
+                duration=duration,
+                transition_in=transition_in,
+                transition_out=transition_out,
+                transition_duration=effective_duration,
             )
             segments.append(segment)
 
