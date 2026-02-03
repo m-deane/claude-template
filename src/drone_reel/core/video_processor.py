@@ -268,6 +268,7 @@ class VideoProcessor:
         parallel_extraction: bool = True,
         reframer: Optional[Reframer] = None,
         reframers: Optional[list[Reframer]] = None,
+        shake_scores: Optional[list[float]] = None,
     ) -> Path:
         """
         Stitch multiple clip segments into a single video.
@@ -281,6 +282,7 @@ class VideoProcessor:
             parallel_extraction: Use parallel extraction for I/O performance
             reframer: Optional single Reframer for all clips
             reframers: Optional list of Reframers (one per clip) for intelligent per-clip reframing
+            shake_scores: Optional list of shake scores (0-100) per clip for adaptive stabilization
 
         Returns:
             Path to the output video file
@@ -345,17 +347,32 @@ class VideoProcessor:
                     if progress_callback:
                         progress_callback((i + 1) / total_segments * 0.3)
 
-            # Apply stabilization if enabled
+            # Apply adaptive stabilization if enabled
             if self.stabilize:
                 from drone_reel.core.stabilizer import stabilize_clip
                 stabilized_clips = []
+                stabilized_count = 0
+                skipped_count = 0
                 for i, clip in enumerate(clips):
+                    # Get per-clip shake score for adaptive stabilization
+                    clip_shake = shake_scores[i] if shake_scores and i < len(shake_scores) else 50.0
                     try:
-                        stabilized = stabilize_clip(clip, smoothing_radius=15, border_crop=0.04)
+                        stabilized = stabilize_clip(
+                            clip,
+                            smoothing_radius=15,
+                            border_crop=0.04,
+                            shake_score=clip_shake,
+                        )
+                        # Track whether stabilization was actually applied
+                        if stabilized is clip:
+                            skipped_count += 1
+                        else:
+                            stabilized_count += 1
                         stabilized_clips.append(stabilized)
                     except Exception:
                         # If stabilization fails, use original clip
                         stabilized_clips.append(clip)
+                        skipped_count += 1
                     if progress_callback:
                         progress_callback(0.3 + (i + 1) / total_segments * 0.15)
                 clips = stabilized_clips

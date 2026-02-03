@@ -14,6 +14,7 @@ def stabilize_clip(
     clip,
     smoothing_radius: int = 30,
     border_crop: float = 0.05,
+    shake_score: float = 50.0,
     progress_callback: Optional[Callable[[float], None]] = None,
 ):
     """
@@ -23,15 +24,39 @@ def stabilize_clip(
     camera shake while preserving intentional camera movements like
     pans and tilts.
 
+    ADAPTIVE STABILIZATION: The shake_score controls whether and how
+    aggressively to stabilize:
+    - shake_score < 15: Skip stabilization (already stable)
+    - shake_score 15-30: Light stabilization (gentle smoothing)
+    - shake_score > 30: Full stabilization
+
     Args:
         clip: MoviePy VideoClip to stabilize
         smoothing_radius: Number of frames to average for smoothing (default 30)
         border_crop: Fraction of frame to crop for stabilization margin (default 5%)
+        shake_score: Shake score from motion analysis (0-100). Lower = more stable.
         progress_callback: Optional callback for progress updates (0.0 to 1.0)
 
     Returns:
-        Stabilized MoviePy VideoClip
+        Stabilized MoviePy VideoClip (or original if already stable)
     """
+    # Adaptive stabilization thresholds
+    STABLE_THRESHOLD = 15.0      # Below this, clip is stable - skip stabilization
+    LIGHT_STAB_THRESHOLD = 30.0  # Below this, use light stabilization
+
+    # Skip stabilization for already-stable clips
+    if shake_score < STABLE_THRESHOLD:
+        if progress_callback:
+            progress_callback(1.0)
+        return clip  # Already stable, don't degrade it
+
+    # Adaptive parameters based on shake severity
+    if shake_score < LIGHT_STAB_THRESHOLD:
+        # Light stabilization for mildly shaky clips
+        smoothing_radius = 10  # Smaller window = less aggressive
+        border_crop = 0.02     # Minimal crop
+    # else: use the provided parameters (full stabilization)
+
     # Get clip properties
     fps = clip.fps
     n_frames = int(clip.duration * fps)

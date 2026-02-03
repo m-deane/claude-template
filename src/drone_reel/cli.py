@@ -849,6 +849,11 @@ def create(
         ensure_output_dir(output_path)
         output_path = get_unique_output_path(output_path)
 
+        # Extract shake scores for selected scenes (for adaptive stabilization)
+        selected_shake_scores = [
+            scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes
+        ]
+
         video_processor.stitch_clips(
             segments,
             output_path,
@@ -856,6 +861,7 @@ def create(
             target_size=None,  # Let reframers handle sizing
             progress_callback=update_progress,
             reframers=clip_reframers if clip_reframers else None,
+            shake_scores=selected_shake_scores if stabilize else None,
         )
 
         # Step 8: Apply color grading (if enabled)
