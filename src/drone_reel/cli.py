@@ -323,8 +323,12 @@ def create(
         import cv2
         from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
 
-        def calculate_scene_motion_energy(scene) -> float:
-            """Calculate motion energy for a scene using optical flow (sampled)."""
+        def calculate_scene_motion_and_brightness(scene) -> tuple[float, float]:
+            """Calculate motion energy and brightness for a scene using optical flow (sampled).
+
+            Returns:
+                tuple of (motion_energy: 0-100, mean_brightness: 0-255)
+            """
             try:
                 cap = cv2.VideoCapture(str(scene.source_file))
                 fps = cap.get(cv2.CAP_PROP_FPS) or 30
@@ -337,6 +341,7 @@ def create(
                 sample_frames = list(range(start_frame, end_frame, sample_interval))[:6]
 
                 motion_scores = []
+                brightness_values = []
                 prev_gray = None
 
                 for frame_num in sample_frames:
@@ -347,11 +352,14 @@ def create(
 
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     # Resize for faster processing
-                    gray = cv2.resize(gray, (320, 180))
+                    gray_small = cv2.resize(gray, (320, 180))
+
+                    # Track brightness
+                    brightness_values.append(float(np.mean(gray)))
 
                     if prev_gray is not None:
                         flow = cv2.calcOpticalFlowFarneback(
-                            prev_gray, gray, None,
+                            prev_gray, gray_small, None,
                             pyr_scale=0.5, levels=2, winsize=15,
                             iterations=2, poly_n=5, poly_sigma=1.1, flags=0
                         )
@@ -359,35 +367,48 @@ def create(
                         motion_score = min(float(magnitude.mean()) / 3.0 * 100, 100.0)
                         motion_scores.append(motion_score)
 
-                    prev_gray = gray
+                    prev_gray = gray_small
 
                 cap.release()
-                return float(np.mean(motion_scores)) if motion_scores else 0.0
+                motion_energy = float(np.mean(motion_scores)) if motion_scores else 0.0
+                mean_brightness = float(np.mean(brightness_values)) if brightness_values else 127.0
+                return (motion_energy, mean_brightness)
             except Exception:
-                return 0.0
+                return (0.0, 127.0)
 
-        # Calculate motion energy for candidates
+        # Calculate motion energy and brightness for candidates
         progress.add_task("[cyan]Analyzing motion energy...", total=len(sorted_candidates))
 
         scene_motion_map = {}
+        scene_brightness_map = {}
         for scene in sorted_candidates:
-            motion_energy = calculate_scene_motion_energy(scene)
+            motion_energy, brightness = calculate_scene_motion_and_brightness(scene)
             scene_motion_map[id(scene)] = motion_energy
+            scene_brightness_map[id(scene)] = brightness
 
-        # Motion energy filtering thresholds
+        # Filtering thresholds
         MIN_MOTION_ENERGY = 25.0   # 25/100 - minimum acceptable motion
         IDEAL_MOTION_ENERGY = 45.0 # 45/100 - good motion level
+        MIN_BRIGHTNESS = 30.0      # Minimum brightness (0-255) - filter out nearly black frames
+        MAX_BRIGHTNESS = 245.0     # Maximum brightness (0-255) - filter out nearly white frames
 
         # Separate scenes into motion tiers, but preserve high-subject scenes
         high_motion_scenes = []
         medium_motion_scenes = []
         low_motion_scenes = []
         high_subject_scenes = []  # Scenes with interesting subjects (boats, people, etc.)
+        dark_scenes_filtered = 0  # Track how many dark scenes were filtered
 
         SUBJECT_SCORE_THRESHOLD = 0.6  # Scenes with subjects above this are preserved
 
         for scene in sorted_candidates:
             motion_energy = scene_motion_map.get(id(scene), 0.0)
+            brightness = scene_brightness_map.get(id(scene), 127.0)
+
+            # Filter out too dark or too bright scenes first
+            if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
+                dark_scenes_filtered += 1
+                continue  # Skip this scene entirely
 
             # Check for high subject score (Fix #3: Include subject shots)
             subject_score = getattr(scene, 'subject_score', 0.0) if hasattr(scene, 'subject_score') else 0.0
@@ -416,7 +437,10 @@ def create(
             if low_motion_scenes:
                 console.print(f"[yellow]Warning:[/yellow] Including {len(low_motion_scenes)} low-motion scenes to meet clip count")
         else:
-            console.print(f"[green]Motion filtering:[/green] {len(high_motion_scenes)} high, {len(medium_motion_scenes)} medium, {len(low_motion_scenes)} filtered out")
+            filter_msg = f"[green]Motion filtering:[/green] {len(high_motion_scenes)} high, {len(medium_motion_scenes)} medium, {len(low_motion_scenes)} filtered out"
+            if dark_scenes_filtered > 0:
+                filter_msg += f", [yellow]{dark_scenes_filtered} dark/bright[/yellow]"
+            console.print(filter_msg)
 
         # Use diversity-aware selection on prioritized scenes
         selected_scenes = diversity_selector.select(prioritized_scenes, count=num_clips_needed)
