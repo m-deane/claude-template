@@ -54,7 +54,13 @@ def stabilize_clip(
 
     for i in range(n_frames):
         frame = clip.get_frame(i / fps)
-        gray = cv2.cvtColor((frame * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY)
+        # Handle both uint8 (0-255) and float (0-1) frame formats
+        is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
+        if is_float:
+            frame_uint8 = (frame * 255).astype(np.uint8)
+        else:
+            frame_uint8 = frame.astype(np.uint8)
+        gray = cv2.cvtColor(frame_uint8, cv2.COLOR_RGB2GRAY)
 
         if prev_gray is not None:
             # Detect features in previous frame
@@ -139,8 +145,14 @@ def stabilize_clip(
             [sin_a, cos_a, dy + cx * (-sin_a) + cy * (1 - cos_a)]
         ], dtype=np.float32)
 
+        # Handle both uint8 (0-255) and float (0-1) frame formats
+        is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
+        if is_float:
+            frame_uint8 = (frame * 255).astype(np.uint8)
+        else:
+            frame_uint8 = frame.astype(np.uint8)
+
         # Apply transform
-        frame_uint8 = (frame * 255).astype(np.uint8)
         stabilized = cv2.warpAffine(
             frame_uint8, transform_matrix, (w, h),
             borderMode=cv2.BORDER_REPLICATE
@@ -155,7 +167,11 @@ def stabilize_clip(
             # Resize back to original size
             stabilized = cv2.resize(cropped, (w, h))
 
-        return stabilized.astype(np.float32) / 255.0
+        # Return in same format as input
+        if is_float:
+            return stabilized.astype(np.float32) / 255.0
+        else:
+            return stabilized
 
     # Create new clip with stabilized frames
     from moviepy import VideoClip
