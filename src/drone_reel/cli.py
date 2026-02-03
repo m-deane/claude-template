@@ -378,24 +378,39 @@ def create(
         MIN_MOTION_ENERGY = 25.0   # 25/100 - minimum acceptable motion
         IDEAL_MOTION_ENERGY = 45.0 # 45/100 - good motion level
 
-        # Separate scenes into motion tiers
+        # Separate scenes into motion tiers, but preserve high-subject scenes
         high_motion_scenes = []
         medium_motion_scenes = []
         low_motion_scenes = []
+        high_subject_scenes = []  # Scenes with interesting subjects (boats, people, etc.)
+
+        SUBJECT_SCORE_THRESHOLD = 0.6  # Scenes with subjects above this are preserved
 
         for scene in sorted_candidates:
             motion_energy = scene_motion_map.get(id(scene), 0.0)
-            if motion_energy >= IDEAL_MOTION_ENERGY:
+
+            # Check for high subject score (Fix #3: Include subject shots)
+            subject_score = getattr(scene, 'subject_score', 0.0) if hasattr(scene, 'subject_score') else 0.0
+            has_subject = subject_score >= SUBJECT_SCORE_THRESHOLD
+
+            if has_subject:
+                # High-subject scenes are always included regardless of motion
+                high_subject_scenes.append(scene)
+            elif motion_energy >= IDEAL_MOTION_ENERGY:
                 high_motion_scenes.append(scene)
             elif motion_energy >= MIN_MOTION_ENERGY:
                 medium_motion_scenes.append(scene)
             else:
                 low_motion_scenes.append(scene)
 
-        # Prefer high-motion scenes, then medium, only use low if needed
-        prioritized_scenes = high_motion_scenes + medium_motion_scenes
+        # Report subject scenes found
+        if high_subject_scenes:
+            console.print(f"[cyan]Subject detection:[/cyan] {len(high_subject_scenes)} scenes with interesting subjects preserved")
 
-        # If we don't have enough high/medium motion scenes, add low motion
+        # Prefer: high-subject, then high-motion, then medium-motion
+        prioritized_scenes = high_subject_scenes + high_motion_scenes + medium_motion_scenes
+
+        # If we don't have enough scenes, add low motion
         if len(prioritized_scenes) < num_clips_needed:
             prioritized_scenes.extend(low_motion_scenes)
             if low_motion_scenes:
@@ -419,11 +434,40 @@ def create(
             )
             clip_durations = clip_durations[:len(selected_scenes)]
 
-        # Reorder scenes: put highest hook_potential clips first for strong opening
+        # Reorder scenes: put highest hook_potential + motion clips first for strong opening
+        # Fix #2: Start with most dynamic/interesting shot
         from drone_reel.core.scene_detector import EnhancedSceneInfo, HookPotential
 
+        def get_opening_score(scene):
+            """
+            Score for opening clip selection (higher = better for opening).
+            Combines hook potential, motion energy, and subject interest.
+            """
+            score = 0.0
+
+            if isinstance(scene, EnhancedSceneInfo):
+                # Hook tier contribution (0-50 points)
+                tier_scores = {
+                    HookPotential.MAXIMUM: 50,
+                    HookPotential.HIGH: 40,
+                    HookPotential.MEDIUM: 25,
+                    HookPotential.LOW: 10,
+                    HookPotential.POOR: 0,
+                }
+                score += tier_scores.get(scene.hook_tier, 25)
+
+                # Motion energy contribution (0-30 points)
+                motion = scene_motion_map.get(id(scene), 0.0)
+                score += min(motion, 100) * 0.3  # Cap at 30 points
+
+                # Subject score contribution (0-20 points)
+                subject = getattr(scene, 'subject_score', 0.0)
+                score += subject * 20
+
+            return score
+
         def get_hook_priority(scene):
-            """Get hook priority for ordering (lower = first)."""
+            """Get hook priority for subsequent clips (lower = first)."""
             if isinstance(scene, EnhancedSceneInfo):
                 tier_priority = {
                     HookPotential.MAXIMUM: 0,
@@ -435,8 +479,15 @@ def create(
                 return (tier_priority.get(scene.hook_tier, 2), -scene.hook_potential)
             return (2, 0)  # Default to MEDIUM priority
 
-        # Sort by hook potential - best hooks first
-        selected_scenes = sorted(selected_scenes, key=get_hook_priority)
+        # Select BEST opening clip based on combined score (hook + motion + subject)
+        best_opener = max(selected_scenes, key=get_opening_score)
+        other_scenes = [s for s in selected_scenes if s is not best_opener]
+
+        # Sort remaining by hook potential
+        other_scenes = sorted(other_scenes, key=get_hook_priority)
+
+        # Rebuild list with best opener first
+        selected_scenes = [best_opener] + other_scenes
 
         # Motion variety sequencing: avoid consecutive clips with same motion type
         # Keep first scene (best hook) fixed, then reorder rest to maximize variety

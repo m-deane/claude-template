@@ -445,48 +445,67 @@ class ColorGrader:
     def _grade_frame_cpu(self, frame: np.ndarray) -> np.ndarray:
         """CPU implementation of frame grading."""
         result = frame.astype(np.float32)
+        applied_adjustments = False  # Track if any color adjustments were made
 
         if self.lut is not None:
             result = self._apply_lut(result, self.lut)
+            applied_adjustments = True
 
         if self._tone_curve_luts is not None:
             result = self.apply_curve(result)
+            applied_adjustments = True
 
         if self.adjustments.brightness != 0:
             result = self._adjust_brightness(result, self.adjustments.brightness)
+            applied_adjustments = True
 
         if self.adjustments.contrast != 0:
             result = self._adjust_contrast(result, self.adjustments.contrast)
+            applied_adjustments = True
 
         if self.adjustments.temperature != 0:
             result = self._adjust_temperature(result, self.adjustments.temperature)
+            applied_adjustments = True
 
         if self.adjustments.tint != 0:
             result = self._adjust_tint(result, self.adjustments.tint)
+            applied_adjustments = True
 
         if self.adjustments.saturation != 0:
             result = self._adjust_saturation(result, self.adjustments.saturation)
+            applied_adjustments = True
 
         if self.adjustments.vibrance != 0:
             result = self._adjust_vibrance(result, self.adjustments.vibrance)
+            applied_adjustments = True
 
         if self.adjustments.shadows != 0:
             result = self._adjust_shadows(result, self.adjustments.shadows)
+            applied_adjustments = True
 
         if self.adjustments.highlights != 0:
             result = self._adjust_highlights(result, self.adjustments.highlights)
+            applied_adjustments = True
 
         if self.adjustments.fade > 0:
             result = self._apply_fade(result, self.adjustments.fade)
+            applied_adjustments = True
 
         if self.adjustments.selective_color is not None:
             result = self._apply_selective_color(result, self.adjustments.selective_color)
+            applied_adjustments = True
 
         if self.adjustments.grain > 0:
             result = self._apply_grain(result, self.adjustments.grain)
+            applied_adjustments = True
 
         if self.preset == ColorPreset.TEAL_ORANGE:
             result = self._apply_teal_orange_grade(result)
+            applied_adjustments = True
+
+        # Apply subtle dithering to mask banding in gradients (only if adjustments were made)
+        if applied_adjustments:
+            result = self._apply_dither(result)
 
         result = np.clip(result, 0, 255).astype(np.uint8)
         self._frame_index += 1
@@ -708,6 +727,46 @@ class ColorGrader:
         result[:, :, 0] += weighted_noise
         result[:, :, 1] += weighted_noise
         result[:, :, 2] += weighted_noise
+
+        return result
+
+    def _apply_dither(self, frame: np.ndarray, strength: float = 1.5) -> np.ndarray:
+        """
+        Apply subtle ordered dithering to mask color banding in gradients.
+
+        Uses Bayer-matrix ordered dithering which is spatially deterministic
+        (same pixel always gets same dither value) and won't cause temporal
+        flickering between frames.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Dithering strength (default 1.5 = subtle but effective)
+
+        Returns:
+            Frame with dithering applied
+        """
+        h, w = frame.shape[:2]
+
+        # 4x4 Bayer matrix for ordered dithering (normalized to -0.5 to 0.5)
+        bayer_4x4 = np.array([
+            [ 0,  8,  2, 10],
+            [12,  4, 14,  6],
+            [ 3, 11,  1,  9],
+            [15,  7, 13,  5]
+        ], dtype=np.float32) / 16.0 - 0.5
+
+        # Tile the Bayer matrix to cover the frame
+        tiles_y = (h + 3) // 4
+        tiles_x = (w + 3) // 4
+        dither_pattern = np.tile(bayer_4x4, (tiles_y, tiles_x))[:h, :w]
+
+        # Scale by strength
+        dither_pattern = dither_pattern * strength * 2
+
+        # Apply dither to all channels
+        result = frame.copy()
+        for c in range(3):
+            result[:, :, c] = result[:, :, c] + dither_pattern
 
         return result
 
