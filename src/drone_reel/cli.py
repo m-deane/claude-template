@@ -139,6 +139,12 @@ def main(ctx, version):
     default="high",
     help="Output video quality (low=5M, medium=10M, high=15M, ultra=25M bitrate)",
 )
+@click.option(
+    "--resolution",
+    type=click.Choice(["hd", "2k", "4k"]),
+    default="hd",
+    help="Output resolution (hd=1080p, 2k=1440p, 4k=2160p)",
+)
 def create(
     input_path: Path,
     music_path: Optional[Path],
@@ -154,6 +160,7 @@ def create(
     no_color: bool,
     preview: bool,
     quality: str,
+    resolution: str,
 ):
     """Create a reel from drone footage."""
     config = load_config()
@@ -203,8 +210,26 @@ def create(
     }
     video_bitrate, audio_bitrate = quality_presets.get(quality, ("15M", "192k"))
 
+    # Resolution presets (width in pixels)
+    resolution_presets = {
+        "hd": 1080,   # 1080x1920 vertical, 1920x1080 landscape
+        "2k": 1440,   # 1440x2560 vertical, 2560x1440 landscape
+        "4k": 2160,   # 2160x3840 vertical, 3840x2160 landscape
+    }
+    output_width = resolution_presets.get(resolution, 1080)
+    config.output_width = output_width
+
+    # Scale bitrate for higher resolutions (4K needs ~4x bitrate of 1080p)
+    if resolution == "4k":
+        bitrate_multipliers = {"low": "15M", "medium": "25M", "high": "40M", "ultra": "80M"}
+        video_bitrate = bitrate_multipliers.get(quality, "40M")
+    elif resolution == "2k":
+        bitrate_multipliers = {"low": "8M", "medium": "15M", "high": "25M", "ultra": "45M"}
+        video_bitrate = bitrate_multipliers.get(quality, "25M")
+
     platform_info = f" for {preset.name}" if preset else ""
-    quality_info = f" ({quality} quality, {video_bitrate} bitrate)"
+    resolution_label = {"hd": "1080p", "2k": "1440p", "4k": "2160p"}.get(resolution, "1080p")
+    quality_info = f" ({resolution_label} {quality}, {video_bitrate} bitrate)"
     console.print(Panel.fit(
         "[bold blue]Drone Reel Creator[/bold blue]\n"
         f"Creating {duration}s reel{platform_info} with {color} color grade{quality_info}",
