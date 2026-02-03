@@ -304,11 +304,22 @@ def create(
         # Step 3: Select best scenes with diversity optimization and motion filtering
         num_clips_needed = len(clip_durations)
 
+        # Dynamic max_per_source based on duration - longer reels need more clips per source
+        # Short reels (≤15s): 3 clips/source, Medium (≤30s): 4, Long (≤60s): 5, Very long: 6
+        if duration <= 15:
+            max_clips_per_source = 3
+        elif duration <= 30:
+            max_clips_per_source = 4
+        elif duration <= 60:
+            max_clips_per_source = 5
+        else:
+            max_clips_per_source = 6
+
         # Use DiversitySelector for better scene variety
         diversity_selector = DiversitySelector(
             diversity_weight=0.3,  # 30% diversity, 70% quality score
-            max_per_source=3,      # Max 3 clips from same video
-            min_temporal_gap=5.0,  # Min 5 seconds between clips from same source
+            max_per_source=max_clips_per_source,
+            min_temporal_gap=4.0,  # Reduced from 5.0 to allow more clips from same source
         )
 
         # Get initial candidate scenes - more than needed so we can filter
@@ -456,7 +467,16 @@ def create(
                 f"[yellow]Warning:[/yellow] Only {len(selected_scenes)} scenes available, "
                 f"requested {num_clips_needed}"
             )
+            # Scale up clip durations to fill target duration with fewer clips
+            # This ensures we get closer to requested duration even with limited scenes
+            original_total = sum(clip_durations)
             clip_durations = clip_durations[:len(selected_scenes)]
+            current_total = sum(clip_durations)
+            if current_total > 0 and original_total > current_total:
+                # Scale each clip proportionally to fill the gap
+                scale_factor = min(original_total / current_total, 1.8)  # Cap at 1.8x (max ~5.4s clips)
+                clip_durations = [d * scale_factor for d in clip_durations]
+                console.print(f"[cyan]Duration scaling:[/cyan] Extended clips by {scale_factor:.1f}x to reach target")
 
         # Reorder scenes: put highest hook_potential + motion clips first for strong opening
         # Fix #2: Start with most dynamic/interesting shot
@@ -568,8 +588,9 @@ def create(
         scene_sharpness_map = {id(scene): get_scene_sharpness(scene) for scene in selected_scenes}
 
         # Adjust clip durations based on scene characteristics AND sharpness
-        # Enforce global duration limits: min 1.5s, max 4.0s
-        # Blurry clips get shorter durations, sharp clips get longer
+        # Dynamic max duration based on target: longer reels allow longer clips
+        MIN_CLIP_DURATION = 2.0
+        MAX_CLIP_DURATION = 4.0 if duration <= 15 else (5.0 if duration <= 30 else 6.0)
         SHARP_THRESHOLD = 100  # Above this = sharp (full duration)
         SOFT_THRESHOLD = 30    # Below this = very blurry (minimum duration)
 
@@ -581,28 +602,30 @@ def create(
             # Sharpness-based duration scaling
             if sharpness < SOFT_THRESHOLD:
                 # Very blurry - use minimum duration
-                adjusted_dur = 2.0
+                adjusted_dur = MIN_CLIP_DURATION
             elif sharpness < SHARP_THRESHOLD:
                 # Soft but acceptable - reduce duration proportionally
-                # Scale from 2.0s (at 30 sharpness) to full dur (at 100 sharpness)
+                # Scale from min (at 30 sharpness) to full dur (at 100 sharpness)
                 scale = (sharpness - SOFT_THRESHOLD) / (SHARP_THRESHOLD - SOFT_THRESHOLD)
-                adjusted_dur = 2.0 + (dur - 2.0) * scale
+                adjusted_dur = MIN_CLIP_DURATION + (dur - MIN_CLIP_DURATION) * scale
 
             if isinstance(scene, EnhancedSceneInfo):
                 # MAXIMUM/HIGH hook tier scenes with good sharpness: ensure minimum showcase time
                 if scene.hook_tier in (HookPotential.MAXIMUM, HookPotential.HIGH) and sharpness >= SOFT_THRESHOLD:
                     adjusted_dur = max(adjusted_dur, 3.0)  # At least 3 seconds for best shots
 
-                # LOW/POOR hook tier: cap duration to keep pacing tight
+                # LOW/POOR hook tier: cap duration to keep pacing tight (but scale with reel length)
                 elif scene.hook_tier in (HookPotential.LOW, HookPotential.POOR):
-                    adjusted_dur = min(adjusted_dur, 2.0)  # Max 2 seconds for weak shots
+                    max_weak = 2.0 if duration <= 15 else 3.0  # Allow longer weak clips in longer reels
+                    adjusted_dur = min(adjusted_dur, max_weak)
 
-                # Static scenes: cap duration to avoid boring segments
+                # Static scenes: cap duration to avoid boring segments (but scale with reel length)
                 if scene.motion_type == MotionType.STATIC:
-                    adjusted_dur = min(adjusted_dur, 2.5)  # Static shots max 2.5s
+                    max_static = 2.5 if duration <= 15 else 3.5  # Allow longer static clips in longer reels
+                    adjusted_dur = min(adjusted_dur, max_static)
 
             # Enforce global duration limits
-            adjusted_dur = max(2.0, min(4.0, adjusted_dur))  # Min 2.0s, max 4.0s
+            adjusted_dur = max(MIN_CLIP_DURATION, min(MAX_CLIP_DURATION, adjusted_dur))
 
             adjusted_durations.append(adjusted_dur)
 
@@ -610,6 +633,14 @@ def create(
 
         # Calculate actual duration
         actual_duration = sum(clip_durations)
+
+        # If we're significantly short of target, scale up all clips proportionally
+        if actual_duration < duration * 0.85:  # More than 15% short
+            scale_factor = min(duration / actual_duration, 1.5)  # Cap at 1.5x scaling
+            clip_durations = [min(d * scale_factor, MAX_CLIP_DURATION) for d in clip_durations]
+            new_duration = sum(clip_durations)
+            console.print(f"[cyan]Duration adjustment:[/cyan] Scaled clips by {scale_factor:.2f}x ({actual_duration:.0f}s → {new_duration:.0f}s)")
+            actual_duration = new_duration
 
         # Preview mode - show plan and exit
         if preview:
