@@ -145,6 +145,11 @@ def main(ctx, version):
     default="hd",
     help="Output resolution (hd=1080p, 2k=1440p, 4k=2160p)",
 )
+@click.option(
+    "--stabilize",
+    is_flag=True,
+    help="Apply video stabilization to reduce camera shake",
+)
 def create(
     input_path: Path,
     music_path: Optional[Path],
@@ -161,6 +166,7 @@ def create(
     preview: bool,
     quality: str,
     resolution: str,
+    stabilize: bool,
 ):
     """Create a reel from drone footage."""
     config = load_config()
@@ -334,11 +340,16 @@ def create(
         import cv2
         from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
 
-        def calculate_scene_motion_and_brightness(scene) -> tuple[float, float]:
-            """Calculate motion energy and brightness for a scene using optical flow (sampled).
+        def calculate_scene_motion_and_brightness(scene) -> tuple[float, float, float]:
+            """Calculate motion energy, brightness, and shake score for a scene.
+
+            Shake detection uses optical flow variance - shaky footage has erratic,
+            inconsistent motion vectors while smooth footage (even fast pans) has
+            consistent flow patterns.
 
             Returns:
-                tuple of (motion_energy: 0-100, mean_brightness: 0-255)
+                tuple of (motion_energy: 0-100, mean_brightness: 0-255, shake_score: 0-100)
+                shake_score: 0 = perfectly stable, 100 = extremely shaky
             """
             try:
                 cap = cv2.VideoCapture(str(scene.source_file))
@@ -353,7 +364,9 @@ def create(
 
                 motion_scores = []
                 brightness_values = []
+                flow_variances = []  # For shake detection
                 prev_gray = None
+                prev_mean_flow = None
 
                 for frame_num in sample_frames:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
@@ -378,30 +391,55 @@ def create(
                         motion_score = min(float(magnitude.mean()) / 3.0 * 100, 100.0)
                         motion_scores.append(motion_score)
 
+                        # Shake detection: measure flow variance and direction consistency
+                        # Shaky footage has high spatial variance in flow vectors
+                        flow_std = float(np.std(magnitude))
+                        mean_flow = (float(np.mean(flow[..., 0])), float(np.mean(flow[..., 1])))
+
+                        # Also check for erratic direction changes between frames
+                        if prev_mean_flow is not None:
+                            direction_change = np.sqrt(
+                                (mean_flow[0] - prev_mean_flow[0])**2 +
+                                (mean_flow[1] - prev_mean_flow[1])**2
+                            )
+                            # Combine spatial variance and temporal direction change
+                            flow_variances.append(flow_std + direction_change * 2)
+
+                        prev_mean_flow = mean_flow
+
                     prev_gray = gray_small
 
                 cap.release()
                 motion_energy = float(np.mean(motion_scores)) if motion_scores else 0.0
                 mean_brightness = float(np.mean(brightness_values)) if brightness_values else 127.0
-                return (motion_energy, mean_brightness)
-            except Exception:
-                return (0.0, 127.0)
 
-        # Calculate motion energy and brightness for candidates
+                # Calculate shake score (0-100)
+                # Normalize: typical stable footage ~0-5, shaky footage 10+
+                raw_shake = float(np.mean(flow_variances)) if flow_variances else 0.0
+                shake_score = min(raw_shake * 5.0, 100.0)  # Scale to 0-100
+
+                return (motion_energy, mean_brightness, shake_score)
+            except Exception:
+                return (0.0, 127.0, 0.0)
+
+        # Calculate motion energy, brightness, and shake for candidates
         progress.add_task("[cyan]Analyzing motion energy...", total=len(sorted_candidates))
 
         scene_motion_map = {}
         scene_brightness_map = {}
+        scene_shake_map = {}
         for scene in sorted_candidates:
-            motion_energy, brightness = calculate_scene_motion_and_brightness(scene)
+            motion_energy, brightness, shake_score = calculate_scene_motion_and_brightness(scene)
             scene_motion_map[id(scene)] = motion_energy
             scene_brightness_map[id(scene)] = brightness
+            scene_shake_map[id(scene)] = shake_score
 
         # Filtering thresholds
         MIN_MOTION_ENERGY = 25.0   # 25/100 - minimum acceptable motion
         IDEAL_MOTION_ENERGY = 45.0 # 45/100 - good motion level
         MIN_BRIGHTNESS = 30.0      # Minimum brightness (0-255) - filter out nearly black frames
         MAX_BRIGHTNESS = 245.0     # Maximum brightness (0-255) - filter out nearly white frames
+        MAX_SHAKE_SCORE = 40.0     # Maximum shake score (0-100) - filter out very shaky clips
 
         # Separate scenes into motion tiers, but preserve high-subject scenes
         high_motion_scenes = []
@@ -409,16 +447,23 @@ def create(
         low_motion_scenes = []
         high_subject_scenes = []  # Scenes with interesting subjects (boats, people, etc.)
         dark_scenes_filtered = 0  # Track how many dark scenes were filtered
+        shaky_scenes_filtered = 0  # Track how many shaky scenes were filtered
 
         SUBJECT_SCORE_THRESHOLD = 0.6  # Scenes with subjects above this are preserved
 
         for scene in sorted_candidates:
             motion_energy = scene_motion_map.get(id(scene), 0.0)
             brightness = scene_brightness_map.get(id(scene), 127.0)
+            shake_score = scene_shake_map.get(id(scene), 0.0)
 
             # Filter out too dark or too bright scenes first
             if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
                 dark_scenes_filtered += 1
+                continue  # Skip this scene entirely
+
+            # Filter out very shaky/unstable clips
+            if shake_score > MAX_SHAKE_SCORE:
+                shaky_scenes_filtered += 1
                 continue  # Skip this scene entirely
 
             # Check for high subject score (Fix #3: Include subject shots)
@@ -451,6 +496,8 @@ def create(
             filter_msg = f"[green]Motion filtering:[/green] {len(high_motion_scenes)} high, {len(medium_motion_scenes)} medium, {len(low_motion_scenes)} filtered out"
             if dark_scenes_filtered > 0:
                 filter_msg += f", [yellow]{dark_scenes_filtered} dark/bright[/yellow]"
+            if shaky_scenes_filtered > 0:
+                filter_msg += f", [red]{shaky_scenes_filtered} shaky[/red]"
             console.print(filter_msg)
 
         # Use diversity-aware selection on prioritized scenes
@@ -691,7 +738,11 @@ def create(
             "preset": config.preset,
             "video_bitrate": video_bitrate,
             "audio_bitrate": audio_bitrate,
+            "stabilize": stabilize,
         }
+
+        if stabilize:
+            console.print("[cyan]Stabilization:[/cyan] Enabled - will reduce camera shake")
 
         if preset:
             processor_kwargs["output_fps"] = preset.fps

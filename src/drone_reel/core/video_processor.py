@@ -85,6 +85,7 @@ class VideoProcessor:
         threads: Optional[int] = None,
         video_bitrate: Optional[str] = None,
         audio_bitrate: str = "192k",
+        stabilize: bool = False,
     ):
         """
         Initialize the video processor.
@@ -97,6 +98,7 @@ class VideoProcessor:
             threads: Number of encoding threads (auto-detected if None)
             video_bitrate: Video bitrate (e.g., "8M", "15M", "25M")
             audio_bitrate: Audio bitrate (e.g., "128k", "192k", "320k")
+            stabilize: Apply video stabilization to reduce camera shake
         """
         self.output_fps = output_fps
         self.output_codec = output_codec or self._detect_best_encoder()
@@ -105,6 +107,7 @@ class VideoProcessor:
         self.threads = threads or self._detect_cpu_cores()
         self.video_bitrate = video_bitrate or "15M"  # Default 15 Mbps for high quality
         self.audio_bitrate = audio_bitrate
+        self.stabilize = stabilize
         self._transition_funcs: dict[TransitionType, Callable] = {
             TransitionType.CUT: self._transition_cut,
             TransitionType.CROSSFADE: self._transition_crossfade,
@@ -342,6 +345,21 @@ class VideoProcessor:
                     if progress_callback:
                         progress_callback((i + 1) / total_segments * 0.3)
 
+            # Apply stabilization if enabled
+            if self.stabilize:
+                from drone_reel.core.stabilizer import stabilize_clip
+                stabilized_clips = []
+                for i, clip in enumerate(clips):
+                    try:
+                        stabilized = stabilize_clip(clip, smoothing_radius=15, border_crop=0.04)
+                        stabilized_clips.append(stabilized)
+                    except Exception:
+                        # If stabilization fails, use original clip
+                        stabilized_clips.append(clip)
+                    if progress_callback:
+                        progress_callback(0.3 + (i + 1) / total_segments * 0.15)
+                clips = stabilized_clips
+
             processed_clips = []
             for i, (clip, segment) in enumerate(zip(clips, segments)):
                 processed_clip = clip
@@ -359,7 +377,8 @@ class VideoProcessor:
                 processed_clips.append(processed_clip)
 
                 if progress_callback:
-                    progress_callback(0.3 + (i + 1) / total_segments * 0.2)
+                    base_progress = 0.45 if self.stabilize else 0.3
+                    progress_callback(base_progress + (i + 1) / total_segments * 0.2)
 
             final_clip = self._concatenate_with_transitions(processed_clips, segments)
 
