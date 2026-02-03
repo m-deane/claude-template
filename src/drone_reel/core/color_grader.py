@@ -590,27 +590,36 @@ class ColorGrader:
         return (frame - 128) * factor + 128
 
     def _adjust_saturation(self, frame: np.ndarray, amount: float) -> np.ndarray:
-        """Adjust color saturation."""
-        hsv = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2HSV).astype(np.float32)
+        """Adjust color saturation using high-precision float32 conversion."""
+        # Convert to 0-1 range for float32 HSV conversion (avoids uint8 banding)
+        frame_normalized = frame / 255.0
+        hsv = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2HSV)
+        # In float32 HSV: H is 0-360, S is 0-1, V is 0-1
         factor = 1 + amount / 100
-        hsv[:, :, 1] = hsv[:, :, 1] * factor
-        hsv[:, :, 1] = np.clip(hsv[:, :, 1], 0, 255)
-        return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR).astype(np.float32)
+        hsv[:, :, 1] = np.clip(hsv[:, :, 1] * factor, 0, 1)
+        result = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return result * 255.0
 
     def _adjust_vibrance(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """
         Adjust vibrance (saturation that protects skin tones).
 
         Increases saturation more on less-saturated pixels.
+        Uses high-precision float32 conversion to avoid banding.
         """
-        hsv = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2HSV).astype(np.float32)
+        # Convert to 0-1 range for float32 HSV conversion
+        frame_normalized = frame / 255.0
+        hsv = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2HSV)
+        # In float32 HSV: S is 0-1
         saturation = hsv[:, :, 1]
 
-        mask = 1 - (saturation / 255)
-        adjustment = mask * (amount / 100) * 50
+        # Mask based on current saturation (less saturated pixels get more boost)
+        mask = 1 - saturation
+        adjustment = mask * (amount / 100) * 0.5  # Scaled for 0-1 range
 
-        hsv[:, :, 1] = np.clip(saturation + adjustment, 0, 255)
-        return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR).astype(np.float32)
+        hsv[:, :, 1] = np.clip(saturation + adjustment, 0, 1)
+        result = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return result * 255.0
 
     def _adjust_temperature(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """Adjust color temperature (warm/cool)."""
@@ -628,32 +637,46 @@ class ColorGrader:
     def _adjust_shadows(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """
         Adjust shadow levels using LAB color space for better color preservation.
+        Uses high-precision float32 conversion to avoid banding.
         """
-        lab = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32)
+        # Convert to 0-1 range for float32 LAB conversion
+        frame_normalized = frame / 255.0
+        lab = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2LAB)
+        # In float32 LAB: L is 0-100, a/b are roughly -127 to 127
         l_channel = lab[:, :, 0]
 
-        shadow_mask = 1 - (l_channel / 255)
+        # Shadow mask targets darker areas (low L values)
+        shadow_mask = 1 - (l_channel / 100)
         shadow_mask = shadow_mask ** 2
 
-        adjustment = shadow_mask * (amount / 100) * 50
-        lab[:, :, 0] = np.clip(l_channel + adjustment, 0, 255)
+        # Adjustment scaled for 0-100 L range
+        adjustment = shadow_mask * (amount / 100) * 25
+        lab[:, :, 0] = np.clip(l_channel + adjustment, 0, 100)
 
-        return cv2.cvtColor(lab.astype(np.uint8), cv2.COLOR_LAB2BGR).astype(np.float32)
+        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        return np.clip(result * 255.0, 0, 255)
 
     def _adjust_highlights(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """
         Adjust highlight levels using LAB color space for better color preservation.
+        Uses high-precision float32 conversion to avoid banding.
         """
-        lab = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32)
+        # Convert to 0-1 range for float32 LAB conversion
+        frame_normalized = frame / 255.0
+        lab = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2LAB)
+        # In float32 LAB: L is 0-100
         l_channel = lab[:, :, 0]
 
-        highlight_mask = l_channel / 255
+        # Highlight mask targets brighter areas (high L values)
+        highlight_mask = l_channel / 100
         highlight_mask = highlight_mask ** 2
 
-        adjustment = highlight_mask * (amount / 100) * 50
-        lab[:, :, 0] = np.clip(l_channel + adjustment, 0, 255)
+        # Adjustment scaled for 0-100 L range
+        adjustment = highlight_mask * (amount / 100) * 25
+        lab[:, :, 0] = np.clip(l_channel + adjustment, 0, 100)
 
-        return cv2.cvtColor(lab.astype(np.uint8), cv2.COLOR_LAB2BGR).astype(np.float32)
+        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        return np.clip(result * 255.0, 0, 255)
 
     def _apply_fade(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """Apply fade effect (lift blacks)."""
@@ -689,23 +712,30 @@ class ColorGrader:
         return result
 
     def _apply_teal_orange_grade(self, frame: np.ndarray) -> np.ndarray:
-        """Apply teal and orange color grade popular in cinema."""
-        hsv = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2HSV).astype(np.float32)
+        """Apply teal and orange color grade popular in cinema.
+        Uses high-precision float32 conversion to avoid banding.
+        """
+        # Convert to 0-1 range for float32 HSV conversion
+        frame_normalized = frame / 255.0
+        hsv = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2HSV)
+        # In float32 HSV: H is 0-360, S is 0-1, V is 0-1
 
         hue = hsv[:, :, 0]
 
-        orange_mask = ((hue >= 0) & (hue <= 30)) | ((hue >= 150) & (hue <= 180))
-        teal_mask = (hue >= 75) & (hue <= 105)
+        # Adjust hue ranges for 0-360 scale
+        orange_mask = ((hue >= 0) & (hue <= 60)) | ((hue >= 300) & (hue <= 360))
+        teal_mask = (hue >= 150) & (hue <= 210)
 
-        hsv[:, :, 1][orange_mask] = np.clip(hsv[:, :, 1][orange_mask] * 1.2, 0, 255)
-        hsv[:, :, 1][teal_mask] = np.clip(hsv[:, :, 1][teal_mask] * 1.15, 0, 255)
+        hsv[:, :, 1][orange_mask] = np.clip(hsv[:, :, 1][orange_mask] * 1.2, 0, 1)
+        hsv[:, :, 1][teal_mask] = np.clip(hsv[:, :, 1][teal_mask] * 1.15, 0, 1)
 
         mid_tones = ~orange_mask & ~teal_mask
         hsv[:, :, 0][mid_tones] = np.where(
-            hsv[:, :, 0][mid_tones] < 90, 15, 90  # Push towards orange or teal
+            hsv[:, :, 0][mid_tones] < 180, 30, 180  # Push towards orange or teal (scaled for 0-360)
         )
 
-        return cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR).astype(np.float32)
+        result = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return result * 255.0
 
     def grade_video(
         self,
