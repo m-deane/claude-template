@@ -1,0 +1,1419 @@
+{
+  "search_summary": {
+    "platforms_searched": ["github", "pypi", "vectorbt.dev", "vectorbt.pro"],
+    "repositories_analyzed": 1,
+    "docs_reviewed": 25,
+    "research_date": "2025-12-17",
+    "library_name": "VectorBT",
+    "primary_repository": "https://github.com/polakowo/vectorbt"
+  },
+
+  "version_and_installation": {
+    "latest_stable_version": "0.28.2",
+    "release_date": "2025-12-12",
+    "python_requirements": ">=3.6",
+    "supported_versions": ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"],
+    "installation": {
+      "basic": "pip install -U vectorbt",
+      "with_all_extras": "pip install -U \"vectorbt[full]\"",
+      "without_talib": "pip install -U \"vectorbt[full-no-talib]\"",
+      "coverage_extras": "pip install -U \"vectorbt[cov]\""
+    },
+    "core_dependencies": [
+      "numpy (array operations and numerical computing)",
+      "pandas (time series and dataframe handling)",
+      "numba (JIT compilation for performance)",
+      "plotly (interactive visualizations)"
+    ],
+    "optional_dependencies": [
+      "TA-Lib (technical analysis library - requires C library)",
+      "pandas-ta (alternative technical analysis library)",
+      "ta (another technical analysis library)",
+      "yfinance (Yahoo Finance data downloading)",
+      "ccxt (cryptocurrency exchange integration)",
+      "alpaca-trade-api (Alpaca broker integration)"
+    ],
+    "license": "Apache 2.0 with Commons Clause (free for non-commercial use)"
+  },
+
+  "vectorbt_vs_vectorbt_pro": {
+    "vectorbt_free": {
+      "status": "Maintenance mode - bug fixes and Python version support only",
+      "repository": "https://github.com/polakowo/vectorbt",
+      "documentation": "https://vectorbt.dev/",
+      "features": "Core backtesting, portfolio simulation, indicators, signal generation",
+      "limitations": "No new features being added to free version"
+    },
+    "vectorbt_pro": {
+      "status": "Active development with continuous new features",
+      "documentation": "https://vectorbt.pro/",
+      "access": "Paid subscription with private GitHub repository access",
+      "exclusive_features": [
+        "Parallelization support",
+        "Portfolio optimization",
+        "Pattern recognition",
+        "Event projections",
+        "Limit orders",
+        "Leverage support",
+        "Advanced cross-validation schemes",
+        "Robustness testing",
+        "500+ indicators (vs ~30 in free version)"
+      ],
+      "note": "All research below applies to the free vectorbt version unless noted"
+    }
+  },
+
+  "complete_module_inventory": {
+    "vectorbt.base": {
+      "description": "Foundational utilities for array operations and pandas integration",
+      "submodules": [
+        "accessors - Base accessor functionality",
+        "array_wrapper - ArrayWrapper class for converting NumPy arrays back to pandas",
+        "column_grouper - ColumnGrouper for managing column groups",
+        "combine_fns - Functions for combining multiple arrays",
+        "index_fns - Index manipulation utilities",
+        "indexing - Indexing operations",
+        "reshape_fns - Broadcasting and reshaping functions"
+      ],
+      "key_classes": {
+        "ArrayWrapper": {
+          "purpose": "Stores pandas metadata and wraps NumPy arrays back to pandas format",
+          "key_methods": [
+            "wrap() - Wrap NumPy array to pandas Series/DataFrame",
+            "wrap_reduced() - Wrap reduced/aggregated arrays"
+          ],
+          "properties": ["index", "columns", "ndim", "freq", "grouped_ndim"],
+          "note": "Immutable class - use Configured.replace() to modify"
+        }
+      },
+      "key_functions": {
+        "reshape_fns": [
+          "to_1d() - Reshape to 1D array",
+          "to_2d() - Reshape to 2D array",
+          "soft_to_ndim() - Softly bring to specified dimensions",
+          "broadcast() - Broadcast multiple arrays together",
+          "unstack_to_array() - Unstack multi-index to array",
+          "unstack_to_df() - Unstack to DataFrame"
+        ],
+        "combine_fns": [
+          "Functions for combining arrays with custom logic",
+          "Emphasis on stacking results for hyperparameter optimization"
+        ],
+        "index_fns": [
+          "Stack, combine, and cleanse MultiIndex levels",
+          "Operations on both index and columns"
+        ]
+      }
+    },
+
+    "vectorbt.data": {
+      "description": "Data downloading, storage, updating, and management",
+      "submodules": [
+        "base - Base Data class",
+        "custom - Custom data sources (YFData, BinanceData, etc.)",
+        "updater - Data update functionality"
+      ],
+      "key_classes": {
+        "Data": {
+          "description": "Base class for storing and managing data as dict of Series/DataFrames",
+          "class_methods": [
+            "download_symbol() - Override to implement custom download logic",
+            "from_data() - Create Data instance from existing data dict",
+            "align_columns(data, missing='raise') - Align data to same columns",
+            "align_index(data, missing='nan') - Align data to same index"
+          ],
+          "instance_methods": [
+            "get() - Retrieve data",
+            "update() - Update existing data"
+          ]
+        },
+        "YFData": {
+          "description": "Data class for Yahoo Finance via yfinance library",
+          "methods": [
+            "download(symbols, start, end, **kwargs) - Download data from Yahoo Finance",
+            "download_symbol(ticker_kwargs, **kwargs) - Download single symbol",
+            "update_symbol(**kwargs) - Update symbol data"
+          ],
+          "warnings": [
+            "Yahoo data may contain noise and missing points",
+            "Timezone handling: stocks in +0500, crypto in UTC",
+            "Only recommended for demonstration purposes"
+          ]
+        },
+        "other_data_classes": [
+          "AlpacaData - Alpaca broker data integration",
+          "BinanceData - Binance exchange data",
+          "CCXTData - CCXT library integration for multiple exchanges",
+          "SyntheticData - Generate synthetic data for testing"
+        ]
+      }
+    },
+
+    "vectorbt.generic": {
+      "description": "Generic time series operations, applicable to any numeric data",
+      "submodules": [
+        "accessors - GenericAccessor and GenericDFAccessor",
+        "decorators - Decorator patterns",
+        "drawdowns - Drawdown analysis (see separate section)",
+        "enums - Enumeration types",
+        "nb - Numba-compiled functions",
+        "plots_builder - Plot building utilities",
+        "plotting - Plotting functions",
+        "ranges - Range record analysis (see separate section)",
+        "splitters - Data splitting for cross-validation",
+        "stats_builder - Statistics building mixin"
+      ],
+      "key_classes": {
+        "GenericAccessor": {
+          "access_via": "pd.Series.vbt or pd.DataFrame.vbt",
+          "description": "Generic accessor for time series operations",
+          "rolling_methods": [
+            "rolling_apply(window, apply_func_nb, minp, on_matrix) - Apply custom function over rolling window",
+            "rolling_mean() - Rolling mean",
+            "rolling_min() - Rolling minimum",
+            "rolling_max() - Rolling maximum",
+            "rolling_split(window_len, set_lens, left_to_right) - Split into rolling windows"
+          ],
+          "groupby_methods": [
+            "groupby_apply(apply_func_nb, on_matrix) - Apply function to groups",
+            "squeeze_grouped() - Squeeze groups into single elements"
+          ],
+          "resampling_methods": [
+            "resample_apply(freq, apply_func_nb) - Apply function over resampled periods"
+          ],
+          "split_methods": [
+            "split(splitter, **kwargs) - Split data using custom splitter",
+            "range_split() - Split into ranges"
+          ],
+          "other_methods": [
+            "Various comparison and logical operators",
+            "Custom function application",
+            "Broadcasting utilities"
+          ],
+          "performance_note": "Numba-compiled versions are 80-100x faster than pandas equivalents"
+        },
+        "StatsBuilderMixin": {
+          "description": "Mixin for building statistics from performance metrics",
+          "method": "stats(column, metrics, agg_func, group_by, settings, tags)",
+          "usage": "Preset statistics for signals, returns, portfolio components"
+        }
+      }
+    },
+
+    "vectorbt.indicators": {
+      "description": "Technical indicators - both built-in and from external libraries",
+      "submodules": [
+        "basic - Built-in indicators",
+        "configs - Indicator configurations",
+        "factory - IndicatorFactory for creating custom indicators",
+        "nb - Numba-compiled indicator functions"
+      ],
+      "built_in_indicators": [
+        "MA - Moving Average",
+        "MACD - Moving Average Convergence Divergence",
+        "RSI - Relative Strength Index",
+        "BBANDS - Bollinger Bands",
+        "ATR - Average True Range",
+        "STOCH - Stochastic Oscillator",
+        "OBV - On-Balance Volume",
+        "MSTD - Moving Standard Deviation",
+        "FMAX, FMIN, FMEAN, FSTD - Fast statistics",
+        "OHLCSTX - OHLC-based stop/target exits",
+        "OHLCSTCX - Chained OHLC stops",
+        "RAND, RANDX, RANDNX - Random signal generators",
+        "RPROB, RPROBX, RPROBCX, RPROBNX - Probability-based generators",
+        "BOLB - Bollinger Band variant",
+        "FIXLB, LEXLB, MEANLB, TRENDLB - Labeled variants",
+        "STX, STCX - Generic stop exits"
+      ],
+      "shortcut_functions": {
+        "ta()": "vbt.IndicatorFactory.from_ta() - Wrapper for ta library",
+        "pandas_ta()": "vbt.IndicatorFactory.from_pandas_ta() - Wrapper for pandas-ta",
+        "talib()": "vbt.IndicatorFactory.from_talib() - Wrapper for TA-Lib"
+      },
+      "key_classes": {
+        "IndicatorFactory": {
+          "description": "Factory for creating custom technical indicators of any complexity",
+          "class_methods": [
+            "from_talib(func_name, init_kwargs, **kwargs) - Build indicator from TA-Lib function",
+            "from_pandas_ta(indicator_name, **kwargs) - Build from pandas-ta",
+            "from_ta(indicator_class, **kwargs) - Build from ta library",
+            "from_apply_func(apply_func, **params) - Build from custom apply function"
+          ],
+          "initialization_parameters": [
+            "class_name - Name for generated indicator class",
+            "short_name - Short identifier",
+            "input_names - List of input parameter names (e.g., ['close'])",
+            "param_names - List of tunable parameters (e.g., ['window', 'multiplier'])",
+            "output_names - List of output names (e.g., ['signal', 'upper', 'lower'])",
+            "takes_1d - Process 1D data column-by-column (default: False)"
+          ],
+          "common_methods_on_generated_indicators": [
+            "run(*inputs, **params) - Execute indicator calculation",
+            "run_combs(*inputs, **param_combos) - Run multiple parameter combinations",
+            "plot() - Visualize indicator outputs",
+            "*_above(), *_below() - Comparison operators for signal generation",
+            "*_crossed_above(), *_crossed_below() - Crossover detection",
+            "*_equal() - Equality comparisons",
+            "*_and(), *_or(), *_xor() - Logical operators"
+          ],
+          "advantages": [
+            "Broadcasts across parameter combinations automatically",
+            "Works with both Series and DataFrames",
+            "Handles missing values intelligently",
+            "Supports resampling to different timeframes",
+            "Integrates with Portfolio.from_signals()",
+            "Caching for performance with large matrices"
+          ],
+          "external_library_support": "99% of indicators from TA-Lib, pandas-ta, and ta libraries"
+        }
+      },
+      "usage_examples": {
+        "built_in": "vbt.MA.run(price, window=[10, 50])",
+        "talib": "SMA = vbt.IndicatorFactory.from_talib('SMA'); sma = SMA.run(price, timeperiod=[2, 3])",
+        "pandas_ta": "vbt.pandas_ta('SMA').run(price, [2, 3]).sma",
+        "custom": "See IndicatorFactory initialization parameters above"
+      }
+    },
+
+    "vectorbt.labels": {
+      "description": "Label generation for machine learning applications",
+      "submodules": [
+        "enums - Label enumeration types",
+        "generators - Label generation functions",
+        "nb - Numba-compiled label functions"
+      ]
+    },
+
+    "vectorbt.messaging": {
+      "description": "Messaging integrations for notifications",
+      "submodules": [
+        "telegram - Telegram bot integration for sending notifications"
+      ]
+    },
+
+    "vectorbt.ohlcv_accessors": {
+      "description": "Specialized accessors for OHLCV (Open, High, Low, Close, Volume) data",
+      "access_via": "df.vbt.ohlcv",
+      "properties": [
+        "open - Access open prices",
+        "high - Access high prices",
+        "low - Access low prices",
+        "close - Access close prices",
+        "volume - Access volume data"
+      ],
+      "methods": [
+        "plot() - Generate candlestick charts",
+        "Resampling to different timeframes",
+        "Technical analysis integration"
+      ]
+    },
+
+    "vectorbt.portfolio": {
+      "description": "Core portfolio simulation and backtesting engine",
+      "submodules": [
+        "base - Portfolio base class",
+        "decorators - Portfolio decorators",
+        "enums - Enumeration types (DirectionT, OrderStatusT, TradesTypeT, etc.)",
+        "logs - Simulation logging",
+        "nb - Numba-compiled portfolio functions",
+        "orders - Order records (see records section)",
+        "trades - Trade records (see records section)"
+      ],
+      "key_enums": {
+        "DirectionT": "Long=0, Short=1, All=2",
+        "OrderStatusT": "Filled, Rejected",
+        "TradesTypeT": "EntryTrades=0, ExitTrades=1, Positions=2",
+        "SizeTypeT": "Amount, Value, Percent, TargetAmount, TargetValue, TargetPercent"
+      }
+    },
+
+    "vectorbt.records": {
+      "description": "Sparse event data representation for orders, trades, positions, drawdowns",
+      "submodules": [
+        "base - Base record classes",
+        "col_mapper - Column mapping utilities",
+        "decorators - Record decorators",
+        "mapped_array - MappedArray for efficient record access",
+        "nb - Numba-compiled record functions"
+      ],
+      "key_concepts": {
+        "purpose": "Store sparse event data without converting to matrix form",
+        "advantages": [
+          "Memory efficient for sparse data",
+          "Fast access to specific events",
+          "Automatic aggregation and grouping",
+          "Integration with pandas indexing"
+        ]
+      }
+    },
+
+    "vectorbt.returns": {
+      "description": "Return analysis and risk metrics (similar to empyrical library)",
+      "submodules": [
+        "accessors - ReturnsAccessor",
+        "metrics - Return and risk metric functions",
+        "nb - Numba-compiled return calculations",
+        "qs_adapter - QuantStats adapter for additional metrics"
+      ],
+      "key_classes": {
+        "ReturnsAccessor": {
+          "access_via": "pd.Series.vbt.returns or pd.DataFrame.vbt.returns",
+          "description": "Accessor for return series with financial metrics",
+          "construction": [
+            "from_value(price, freq) - Convert price series to returns",
+            "price.vbt.to_returns() - Alternative conversion method",
+            "pd.Series.pct_change() then use .vbt.returns accessor"
+          ],
+          "return_metrics": [
+            "total_return() - Cumulative return",
+            "annualized_return() - Annualized growth rate (annual alias)",
+            "cumulative_returns() - Compound growth curve",
+            "daily_returns() - Daily bucketed returns",
+            "annual_returns() - Annual bucketed returns"
+          ],
+          "risk_metrics": [
+            "annualized_volatility(levy_alpha, ddof) - Standard deviation annualized",
+            "downside_risk() - Volatility of negative returns",
+            "value_at_risk() - VaR calculation",
+            "cond_value_at_risk() - CVaR (Expected Shortfall)",
+            "max_drawdown() - Maximum peak-to-trough decline",
+            "drawdown() - Continuous drawdown series"
+          ],
+          "risk_adjusted_metrics": [
+            "sharpe_ratio() - Risk-adjusted return",
+            "deflated_sharpe_ratio() - Haircut Sharpe ratio",
+            "sortino_ratio() - Downside risk-adjusted return",
+            "calmar_ratio() - Return / max drawdown",
+            "omega_ratio() - Probability-weighted returns",
+            "information_ratio() - Excess return vs benchmark",
+            "common_sense_ratio() - Common Sense Ratio"
+          ],
+          "benchmark_metrics": [
+            "beta() - Systematic risk vs benchmark",
+            "alpha() - Risk-adjusted excess return",
+            "capture() - Return capture ratio",
+            "up_capture() - Upside capture",
+            "down_capture() - Downside capture",
+            "tail_ratio() - Tail risk ratio"
+          ],
+          "rolling_versions": [
+            "rolling_sharpe_ratio_nb",
+            "rolling_downside_risk_nb",
+            "rolling_sortino_ratio_nb",
+            "rolling_information_ratio_nb",
+            "rolling_down_capture_nb",
+            "Note: All rolling versions are Numba-compiled for performance"
+          ],
+          "properties": [
+            "ann_factor - Get annualization factor based on frequency"
+          ]
+        }
+      },
+      "integrations": {
+        "empyrical": "Numba-compiled versions of empyrical metrics with rolling variants",
+        "quantstats": "Adapter provided via qs_adapter submodule"
+      }
+    },
+
+    "vectorbt.signals": {
+      "description": "Signal generation and manipulation for trading strategies",
+      "submodules": [
+        "accessors - Signal accessors",
+        "enums - Signal enumeration types",
+        "factory - Signal factory classes",
+        "generators - Signal generation functions",
+        "nb - Numba-compiled signal functions"
+      ],
+      "key_generators": {
+        "OHLCSTX": {
+          "description": "OHLC-based Stop Loss/Take Profit Exit Signals",
+          "inputs": ["entries", "open", "high", "low", "close"],
+          "parameters": [
+            "sl_stop - Stop loss percentage",
+            "sl_trail - Trailing stop flag (boolean)",
+            "tp_stop - Take profit percentage",
+            "reverse - Reverse position direction"
+          ],
+          "outputs": ["exits", "stop_price", "stop_type"],
+          "nb_function": "ohlc_stop_choice_nb()"
+        },
+        "OHLCSTCX": {
+          "description": "Chained OHLC Stop Signals - generates multiple entry/exit cycles",
+          "similar_to": "OHLCSTX",
+          "additional_output": "new_entries - Fresh entry opportunities"
+        },
+        "STX": {
+          "description": "Generic Stop-Based Exit Generator",
+          "inputs": ["ts - Generic time series instead of OHLC"],
+          "parameters": ["stop_list", "trailing_list"],
+          "comparison_methods": ["ts_above()", "ts_below()", "ts_crossed_above()", "ts_crossed_below()"]
+        },
+        "STCX": {
+          "description": "Chained Stop-Based Exit Signals",
+          "similar_to": "STX with chaining support"
+        },
+        "random_generators": {
+          "RAND": "Random binary entry signals (n_list parameter)",
+          "RANDX": "Paired random entry/exit signals",
+          "RANDNX": "Random signals with separate entry/exit n parameters"
+        },
+        "probability_generators": {
+          "RPROB": "Entry signals based on probability (prob_list)",
+          "RPROBX": "Paired entry/exit based on probabilities",
+          "RPROBCX": "Chained probability-based signals",
+          "RPROBNX": "Independent entry/exit probabilities (entry_prob_list, exit_prob_list)"
+        }
+      },
+      "common_methods": [
+        "run() - Execute signal generation",
+        "run_combs() - Generate multiple combinations",
+        "plot() - Visualize signals on price charts",
+        "custom_func() - Apply custom logic",
+        "*_above(), *_below() - Comparison operators",
+        "*_crossed_above(), *_crossed_below() - Crossover detection",
+        "*_equal() - Equality comparisons",
+        "*_and(), *_or(), *_xor() - Logical operators for combining signals"
+      ]
+    },
+
+    "vectorbt.utils": {
+      "description": "Utilities used throughout vectorbt",
+      "submodules": [
+        "array_ - Array manipulation utilities",
+        "attr_ - Attribute handling",
+        "checks - Validation and checking functions",
+        "colors - Color utilities for plotting",
+        "config - Nested configuration system",
+        "datetime_ - Date and time utilities",
+        "decorators - Decorator utilities",
+        "docs - Documentation helpers",
+        "enum_ - Enumeration utilities",
+        "figure - Figure manipulation",
+        "image_ - Image handling",
+        "mapping - Mapping utilities",
+        "math_ - Mathematical utilities",
+        "module_ - Module utilities",
+        "params - Parameter handling",
+        "random_ - Random number generation",
+        "requests_ - HTTP request utilities",
+        "schedule_ - Scheduling utilities",
+        "tags - Tagging system"
+      ],
+      "key_utilities": {
+        "config": {
+          "description": "Nested configuration system with frozen keys",
+          "features": [
+            "Hierarchical sub-configs per package/module/class",
+            "Inheritance from parent configs",
+            "Modification allowed, addition/removal prevented",
+            "Global settings accessible via vbt.settings"
+          ]
+        },
+        "datetime_": {
+          "functions": [
+            "Convert datetime to milliseconds",
+            "get_local_timezone() - Get local timezone",
+            "get_utc_timezone() - Get UTC timezone",
+            "Convert interval string to milliseconds",
+            "is_tz_aware() - Check if datetime is timezone-aware",
+            "parse_timezone() - Parse timezone from string/int/float",
+            "parse_datetime() - Parse timezone-aware datetime"
+          ],
+          "parsing_support": [
+            "pytz for timezone strings",
+            "dateparser for datetime strings",
+            "Integers/floats as hour offsets"
+          ]
+        },
+        "plotting": {
+          "framework": "Plotly for interactive visualizations",
+          "limitations": "Doesn't support multi-indexes",
+          "settings": "Configurable via vbt.settings['plotting']",
+          "classes": "Bar, various plot builders"
+        }
+      }
+    },
+
+    "vectorbt.root_accessors": {
+      "description": "Root-level pandas accessors",
+      "note": "Provides vbt accessor on pandas objects"
+    },
+
+    "vectorbt._settings": {
+      "description": "Global settings configuration",
+      "access": "vbt.settings",
+      "structure": "Nested configs for each sub-package, module, and class"
+    }
+  },
+
+  "portfolio_class_complete_api": {
+    "class": "vectorbt.portfolio.base.Portfolio",
+    "description": "Core class for portfolio simulation, analysis, and performance metrics",
+    "simulation_methods": {
+      "from_signals": {
+        "description": "Create portfolio from entry/exit signals with automatic signal management",
+        "signature": "Portfolio.from_signals(close, entries, exits, short_entries, short_exits, signal_func_nb, signal_args, size, size_type, price, fees, fixed_fees, slippage, min_size, max_size, size_granularity, reject_prob, lock_cash, allow_partial, raise_reject, log, accumulate, upon_long_conflict, upon_short_conflict, upon_dir_conflict, upon_opposite_entry, direction, val_price, open, high, low, sl_stop, sl_trail, tp_stop, stop_entry_price, stop_exit_price, upon_stop_exit, upon_stop_update, adjust_sl_func_nb, adjust_sl_args, adjust_tp_func_nb, adjust_tp_args, use_stops, init_cash, cash_sharing, call_seq, ffill_val_price, update_value, max_orders, max_logs, seed, group_by, broadcast_named_args, broadcast_kwargs, template_mapping, wrapper_kwargs, freq, attach_call_seq, **kwargs)",
+        "key_parameters": {
+          "close": "Asset prices (required)",
+          "entries": "Boolean array of long entry signals",
+          "exits": "Boolean array of long exit signals",
+          "short_entries": "Boolean array of short entry signals",
+          "short_exits": "Boolean array of short exit signals",
+          "signal_func_nb": "Custom Numba signal function (default: nb.no_signal_func_nb)",
+          "signal_args": "Arguments for signal function",
+          "size": "Order size (default: np.inf from settings)",
+          "size_type": "How to interpret size (Amount, Value, Percent, etc.)",
+          "direction": "Trade direction (Long, Short, All)",
+          "accumulate": "Allow stacking positions (bool, default: False)",
+          "sl_stop": "Stop loss level (percentage or price)",
+          "sl_trail": "Enable trailing stop loss (bool)",
+          "tp_stop": "Take profit level (percentage or price)",
+          "stop_entry_price": "Price for entry stop calculation",
+          "stop_exit_price": "Price for exit stop calculation",
+          "upon_stop_exit": "Action when stop is hit",
+          "upon_stop_update": "Action when updating stops",
+          "adjust_sl_func_nb": "Custom stop-loss adjustment function",
+          "adjust_tp_func_nb": "Custom take-profit adjustment function",
+          "use_stops": "Enable stop functionality (bool)",
+          "fees": "Transaction fees (per order, broadcastable)",
+          "fixed_fees": "Fixed fees per order",
+          "slippage": "Slippage percentage",
+          "init_cash": "Starting capital (numeric, 'auto', or 'autoalign')",
+          "cash_sharing": "Share capital between grouped columns (bool)",
+          "group_by": "Column grouping specification",
+          "freq": "Time frequency for annualization",
+          "log": "Enable detailed logging (bool)",
+          "ffill_val_price": "Forward-fill NaN prices (bool, default: True)",
+          "call_seq": "Custom call sequence for order execution",
+          "upon_long_conflict": "Action on long signal conflicts",
+          "upon_short_conflict": "Action on short signal conflicts",
+          "upon_dir_conflict": "Action on directional conflicts",
+          "upon_opposite_entry": "Action on opposite direction entry"
+        },
+        "features": [
+          "Prevents duplicate entries by default (use accumulate=True to allow)",
+          "Automatic stop-loss and take-profit implementation",
+          "Supports both long and short positions",
+          "Conflict resolution for overlapping signals",
+          "Accepts most parameters from from_orders()",
+          "Broadcasting across 50+ parameters efficiently"
+        ],
+        "returns": "Portfolio instance"
+      },
+      "from_orders": {
+        "description": "Create portfolio from predefined order specifications (most flexible and fastest)",
+        "signature": "Portfolio.from_orders(close, size, size_type, direction, price, fees, fixed_fees, slippage, min_size, max_size, size_granularity, reject_prob, lock_cash, allow_partial, raise_reject, log, val_price, init_cash, cash_sharing, call_seq, ffill_val_price, update_value, max_orders, max_logs, seed, group_by, broadcast_kwargs, wrapper_kwargs, freq, attach_call_seq, **kwargs)",
+        "key_parameters": {
+          "close": "Asset prices (required)",
+          "size": "Order sizes (broadcastable, default: None pulls from settings)",
+          "size_type": "Amount, Value, Percent, TargetAmount, TargetValue, TargetPercent",
+          "direction": "Long, Short, or All",
+          "price": "Custom execution prices (default: close)",
+          "fees": "Transaction costs per order (broadcastable)",
+          "fixed_fees": "Fixed fees per order",
+          "slippage": "Slippage as percentage or absolute",
+          "min_size": "Minimum order size",
+          "max_size": "Maximum order size",
+          "size_granularity": "Rounding granularity for sizes",
+          "reject_prob": "Probability of order rejection (for testing)",
+          "lock_cash": "Lock cash for pending orders",
+          "allow_partial": "Allow partial order fills (bool)",
+          "raise_reject": "Raise exception on rejection (bool)",
+          "log": "Enable detailed logging",
+          "val_price": "Valuation price (for portfolio value calculation)",
+          "init_cash": "Starting capital",
+          "cash_sharing": "Share capital between groups (bool)",
+          "call_seq": "Custom execution sequence",
+          "ffill_val_price": "Forward-fill valuation prices (default: True)",
+          "update_value": "Update portfolio value each bar (bool)",
+          "max_orders": "Maximum number of orders to allocate",
+          "max_logs": "Maximum log entries",
+          "seed": "Random seed for reproducibility",
+          "group_by": "Column grouping",
+          "freq": "Time frequency"
+        },
+        "features": [
+          "Most straightforward simulation mode",
+          "Fastest execution",
+          "Full broadcasting support",
+          "Handles rejection scenarios",
+          "Flexible order sizing"
+        ],
+        "returns": "Portfolio instance"
+      },
+      "from_order_func": {
+        "description": "Create portfolio using custom order generation functions (maximum flexibility)",
+        "key_parameters": {
+          "order_func_nb": "Numba-compiled function returning Order tuples (required)",
+          "flexible": "Enable multiple orders per timestamp (bool, activates flex_simulate_nb)",
+          "post_segment_func_nb": "Post-processing callback function",
+          "pre_sim_func_nb": "Pre-simulation initialization function",
+          "pre_segment_func_nb": "Pre-segment preparation function",
+          "Additional args": "Passed to order function"
+        },
+        "features": [
+          "Maximum control over order logic",
+          "Supports complex conditional strategies",
+          "Can generate multiple orders per bar (flexible=True)",
+          "Custom sequencing via call_seq",
+          "Segment-based processing with callbacks",
+          "Follows same broadcasting principles as from_orders()"
+        ],
+        "use_cases": [
+          "Strategies with complex dependencies",
+          "Multiple orders per timestamp",
+          "Custom money management rules",
+          "Advanced portfolio rebalancing"
+        ],
+        "nb_functions": {
+          "simulate_nb": "Standard simulation (one order per bar)",
+          "flex_simulate_nb": "Flexible simulation (multiple orders per bar)"
+        },
+        "returns": "Portfolio instance"
+      },
+      "from_holding": {
+        "description": "Simulate simple buy-and-hold strategy",
+        "key_parameters": {
+          "close": "Asset prices",
+          "bm_close": "Benchmark prices for comparison (optional)",
+          "init_cash": "Starting capital",
+          "freq": "Time frequency"
+        },
+        "features": [
+          "Simplest simulation mode",
+          "No rebalancing",
+          "Useful as baseline/benchmark",
+          "Can plot against benchmark"
+        ],
+        "returns": "Portfolio instance"
+      },
+      "from_random_signals": {
+        "description": "Generate portfolio from random entry/exit signals (for testing)",
+        "use_case": "Testing strategy robustness, Monte Carlo simulations",
+        "returns": "Portfolio instance"
+      }
+    },
+
+    "core_properties": {
+      "cash": "Cash balance evolution over time (method)",
+      "assets": "Asset holdings over time (method)",
+      "value": "Portfolio total value over time (method)",
+      "returns": "Period-over-period returns (method)",
+      "orders": "Order records (Orders class instance)",
+      "trades": "Trade records (Trades class instance)",
+      "entry_trades": "Entry trade records (EntryTrades instance)",
+      "exit_trades": "Exit trade records (ExitTrades instance)",
+      "positions": "Position records (Positions instance)",
+      "drawdowns": "Drawdown events (Drawdowns instance)",
+      "logs": "Simulation logs (if log=True)",
+      "close": "Close price series used in simulation",
+      "init_cash": "Initial cash amount",
+      "cash_sharing": "Whether groups share cash"
+    },
+
+    "return_metrics": {
+      "total_return": "Cumulative percentage gain",
+      "annualized_return": "Annualized growth rate (CAGR)",
+      "cumulative_returns": "Compound growth curve over time",
+      "daily_returns": "Returns bucketed by day",
+      "annual_returns": "Returns bucketed by year"
+    },
+
+    "risk_metrics": {
+      "annualized_volatility": "Standard deviation of returns (annualized)",
+      "downside_risk": "Volatility of negative returns only",
+      "max_drawdown": "Largest peak-to-trough decline",
+      "drawdown": "Continuous drawdown series",
+      "value_at_risk": "VaR calculation",
+      "cond_value_at_risk": "CVaR (Expected Shortfall)"
+    },
+
+    "risk_adjusted_metrics": {
+      "sharpe_ratio": "Risk-adjusted return metric",
+      "deflated_sharpe_ratio": "Haircut Sharpe with multiple testing penalty",
+      "sortino_ratio": "Downside-focused Sharpe variant",
+      "calmar_ratio": "Return-to-max-drawdown ratio",
+      "omega_ratio": "Probability-weighted return ratio",
+      "information_ratio": "Excess return vs benchmark",
+      "common_sense_ratio": "Common Sense Ratio"
+    },
+
+    "benchmark_metrics": {
+      "beta": "Systematic risk vs benchmark",
+      "alpha": "Risk-adjusted excess return",
+      "capture": "Return capture ratio",
+      "up_capture": "Upside capture ratio",
+      "down_capture": "Downside capture ratio",
+      "tail_ratio": "Tail risk ratio"
+    },
+
+    "trade_analysis_metrics": {
+      "total_profit": "Net P&L across all trades",
+      "final_value": "Ending portfolio value",
+      "win_rate": "Percentage of profitable trades",
+      "profit_factor": "Gross profit / gross loss ratio",
+      "expectancy": "Average trade outcome",
+      "sqn": "System Quality Number"
+    },
+
+    "plotting_methods": {
+      "plot_value": "Portfolio valuation curve over time",
+      "plot_returns": "Return distribution visualization",
+      "plot_drawdowns": "Drawdown period visualization",
+      "plot_underwater": "Cumulative underwater chart",
+      "plot_positions": "Open position visualization",
+      "plot_trades": "Trade entry/exit point markers",
+      "plot_cash_flow": "Cash movement visualization",
+      "plot_gross_exposure": "Total market exposure over time",
+      "plot": "General plotting method"
+    },
+
+    "stats_method": {
+      "signature": "stats(column, metrics, agg_func, group_by, settings, tags)",
+      "description": "Comprehensive performance analysis with customizable metrics",
+      "parameters": {
+        "column": "Select specific column/group",
+        "metrics": "List of metrics to calculate (default: all)",
+        "agg_func": "Aggregation function across columns",
+        "group_by": "Override grouping logic",
+        "settings": "Custom parameters for metrics",
+        "tags": "Filter metrics by category ('trades', 'returns', 'drawdowns', etc.)"
+      },
+      "features": [
+        "Preset comprehensive metrics",
+        "Custom metric definitions supported",
+        "Automatic aggregation",
+        "Tag-based filtering",
+        "Extensible via settings"
+      ]
+    },
+
+    "configuration_features": {
+      "group_by": "Aggregate columns into portfolio groups (positions, names, NumPy array)",
+      "cash_sharing": "Share capital across grouped columns (requires group_by)",
+      "fillna_close": "Forward-fill NaN prices (deprecated, use ffill_val_price)",
+      "ffill_val_price": "Forward-fill NaN valuation prices (bool, default: True)",
+      "log": "Capture detailed simulation logs (bool)",
+      "freq": "Set time frequency for annualization ('D', 'H', etc.)",
+      "init_cash": "Starting capital (numeric, 'auto', 'autoalign')",
+      "call_seq": "Custom order execution sequence",
+      "broadcast_kwargs": "Broadcasting configuration",
+      "wrapper_kwargs": "ArrayWrapper configuration"
+    },
+
+    "special_features": {
+      "broadcasting": "All inputs broadcast automatically across dimensions",
+      "numba_acceleration": "Core simulation in compiled Numba for speed",
+      "memory_efficiency": "Efficient broadcasting without memory overhead",
+      "defaults_from_settings": "None values pull from vbt.settings['portfolio']",
+      "logs": "Detailed execution logs for debugging (when log=True)",
+      "flexible_sizing": "Multiple size types and target-based sizing",
+      "stop_orders": "Built-in stop-loss and take-profit in from_signals()",
+      "cash_management": "Sophisticated cash sharing and locking"
+    }
+  },
+
+  "record_classes_complete_api": {
+    "Orders": {
+      "extends": "Records",
+      "description": "Captures information on filled orders from portfolio simulation",
+      "access": "portfolio.orders",
+      "field_properties": {
+        "id": "Order identifier",
+        "col": "Column mapping",
+        "idx": "Timestamp index in data",
+        "size": "Order quantity (signed: positive=buy, negative=sell)",
+        "price": "Execution price",
+        "fees": "Transaction costs",
+        "side": "Buy (0) or Sell (1) indicator"
+      },
+      "reference_data": {
+        "close": "Reference price series (optional)"
+      },
+      "filtering_properties": {
+        "buy": "Filter to buy orders (side == 0)",
+        "sell": "Filter to sell orders (side == 1)"
+      },
+      "methods": {
+        "plot": "Visualize orders with price and buy/sell markers",
+        "stats": "Generate summary statistics (24+ metrics)",
+        "plots": "Create multiple visualization subplots",
+        "indexing_func": "Pandas-based indexing operations",
+        "records_readable": "Convert to readable DataFrame"
+      },
+      "available_metrics": [
+        "Total records",
+        "Total buy/sell orders",
+        "Size statistics (min, max, average by side)",
+        "Price averages (buy and sell separately)",
+        "Fee analysis (total, min, max, average by side)"
+      ]
+    },
+
+    "Trades": {
+      "extends": "Ranges",
+      "description": "Base class for trade-like records (entry trades, exit trades, positions)",
+      "access": "portfolio.trades",
+      "field_properties": {
+        "entry_idx": "Entry timestamp index",
+        "entry_price": "Average entry price",
+        "entry_fees": "Fees paid at entry",
+        "exit_idx": "Exit timestamp index",
+        "exit_price": "Average exit price",
+        "exit_fees": "Fees paid at exit",
+        "size": "Trade position size",
+        "pnl": "Profit/loss amount",
+        "returns": "Return percentage",
+        "direction": "Long (0) or Short (1)",
+        "parent_id": "Associated position identifier",
+        "close": "Close price series"
+      },
+      "classification_properties": {
+        "long": "Filter to long trades only (direction == 0)",
+        "short": "Filter to short trades only (direction == 1)",
+        "winning": "Profitable trades (pnl > 0)",
+        "losing": "Unprofitable trades (pnl <= 0)",
+        "winning_streak": "Consecutive winning trades",
+        "losing_streak": "Consecutive losing trades"
+      },
+      "analysis_methods": {
+        "win_rate": "Percentage of winning trades",
+        "profit_factor": "Ratio of gross profit to gross loss",
+        "expectancy": "Average trade outcome (expected value)",
+        "sqn": "System Quality Number for strategy evaluation"
+      },
+      "visualization_methods": {
+        "plot": "Generate trade visualization on price chart",
+        "plot_pnl": "Create profit/loss chart",
+        "plots": "Build complete subplot analysis"
+      },
+      "stats_and_reporting": {
+        "stats": "Comprehensive performance metrics",
+        "metrics": "Available performance indicators",
+        "stats_defaults": "Default metric configurations",
+        "plots_defaults": "Default plot configurations"
+      },
+      "utility_methods": {
+        "indexing_func": "Custom indexing implementation",
+        "field_config": "Trade field definitions and mappings"
+      },
+      "configuration": {
+        "trades_type": "Switch between EntryTrades, ExitTrades, Positions",
+        "incl_open": "Include open/unclosed trades (bool)"
+      }
+    },
+
+    "EntryTrades": {
+      "extends": "Trades",
+      "description": "Entry trade records - trades from entry orders",
+      "access": "portfolio.entry_trades",
+      "construction": "EntryTrades.from_orders() or Portfolio.entry_trades",
+      "definition": "Each entry order creates an entry trade record",
+      "relationships": "Can be aggregated into positions",
+      "use_case": "Analyze individual entry performance"
+    },
+
+    "ExitTrades": {
+      "extends": "Trades",
+      "description": "Exit trade records - trades from exit orders",
+      "access": "portfolio.exit_trades",
+      "construction": "ExitTrades.from_orders() or Portfolio.exit_trades",
+      "definition": "Each order that closes/reduces a position creates an exit trade",
+      "relationships": "Can be aggregated into positions",
+      "use_case": "Analyze individual exit performance and timing"
+    },
+
+    "Positions": {
+      "extends": "Trades",
+      "description": "Position records - aggregated from sequences of entry/exit trades",
+      "access": "portfolio.positions",
+      "construction": "Positions.from_trades() or Portfolio.positions",
+      "definition": "A position is created from a sequence of entry or exit trades",
+      "aggregation": "get_positions_nb() fills position records by aggregating trades",
+      "use_case": "High-level position analysis, full entry-to-exit lifecycle",
+      "note": "Positions, entry trades, and exit trades produce same aggregated results"
+    },
+
+    "Drawdowns": {
+      "extends": "Ranges",
+      "description": "Drawdown event records from time series",
+      "access": "portfolio.drawdowns or Drawdowns.from_ts(series)",
+      "field_properties": {
+        "peak_idx": "Index of highest point before decline",
+        "peak_val": "Value at peak",
+        "valley_idx": "Index of lowest point in drawdown",
+        "valley_val": "Value at valley (lowest point)",
+        "end_idx": "Index of drawdown conclusion",
+        "end_val": "Value at drawdown end",
+        "status": "Active (0) or Recovered (1)"
+      },
+      "computed_properties": {
+        "decline_duration": "Time from peak to valley",
+        "recovery_duration": "Time from valley to recovery"
+      },
+      "filtering_properties": {
+        "active": "Currently recovering drawdowns (status == 0)",
+        "recovered": "Completed/recovered drawdowns (status == 1)"
+      },
+      "active_drawdown_metrics": {
+        "active_drawdown": "Drawdown percentage of current active drawdown",
+        "active_duration": "Duration of active drawdown",
+        "active_recovery": "Recovery percentage from active drawdown",
+        "active_recovery_return": "Return during active recovery phase",
+        "active_recovery_duration": "Time in active recovery"
+      },
+      "aggregate_metrics": {
+        "max_drawdown": "Maximum drawdown (MDD) - largest decline",
+        "avg_drawdown": "Average drawdown (ADD)",
+        "max_recovery_return": "Best recovery percentage",
+        "avg_recovery_return": "Average recovery return",
+        "coverage": "Percentage of time in drawdown",
+        "duration_ratios": "Recovery speed vs decline speed"
+      },
+      "methods": {
+        "from_ts": "Build drawdown records from time series",
+        "plot": "Visualize drawdowns with peaks, valleys, decline/recovery zones",
+        "stats": "Comprehensive drawdown statistics",
+        "indexing_func": "Indexing operations"
+      },
+      "important_warning": "Returns BOTH recovered AND active drawdowns - may skew results. Filter by 'recovered' attribute when needed.",
+      "visualization_features": [
+        "Time series with marked peaks and valleys",
+        "Color-coded decline and recovery zones",
+        "Top N drawdowns by magnitude",
+        "Active vs recovered phase indicators"
+      ]
+    },
+
+    "Logs": {
+      "description": "Detailed simulation logging for debugging",
+      "access": "portfolio.logs (when log=True in simulation)",
+      "purpose": "Debug strategy logic and track state changes",
+      "contents": [
+        "Order execution details",
+        "State changes during simulation",
+        "Rejection reasons",
+        "Cash and position updates"
+      ],
+      "enabling": "Set log=True in Portfolio.from_* methods"
+    }
+  },
+
+  "key_concepts_and_architecture": {
+    "vectorized_backtesting": {
+      "core_principle": "Process entire arrays/matrices at once instead of element-by-element iteration",
+      "advantages": [
+        "Test thousands of parameter combinations in seconds",
+        "Leverage NumPy's C-optimized operations",
+        "Numba JIT compilation for custom logic",
+        "Memory efficient broadcasting",
+        "80-100x faster than pandas equivalents"
+      ],
+      "example": "Test 10,000 moving average window combinations across 5 assets simultaneously"
+    },
+
+    "broadcasting": {
+      "description": "Automatic expansion of arrays to compatible shapes for vectorized operations",
+      "features": [
+        "Broadcasts inputs, parameters, and outputs",
+        "Works across any dimension",
+        "No memory overhead with proper implementation",
+        "Enables hyperparameter grid search",
+        "Portfolio.from_signals broadcasts 50+ parameters efficiently"
+      ],
+      "example": "Single price array broadcasts with array of 100 parameter values"
+    },
+
+    "numba_acceleration": {
+      "purpose": "JIT compile Python functions to machine code for C-like performance",
+      "usage": [
+        "All core simulation loops (simulate_nb, flex_simulate_nb)",
+        "Indicator calculations",
+        "Rolling/groupby/resample operations",
+        "Custom order functions (order_func_nb)",
+        "Metric calculations"
+      ],
+      "requirements": [
+        "Functions must be Numba-compatible (limited Python features)",
+        "Type inference or explicit typing",
+        "Cannot use pandas operations inside Numba functions"
+      ],
+      "performance": "Near C speed while maintaining Python readability"
+    },
+
+    "two_data_representations": {
+      "matrix_form": {
+        "description": "Dense 2D arrays (pandas DataFrame / NumPy array)",
+        "use_for": "Price data, indicators, signals, continuous metrics",
+        "advantages": "Vectorized operations, easy visualization",
+        "disadvantages": "Memory intensive for sparse data"
+      },
+      "record_form": {
+        "description": "Sparse event records (structured NumPy arrays)",
+        "use_for": "Orders, trades, positions, drawdowns, logs",
+        "advantages": "Memory efficient, fast event queries, automatic aggregation",
+        "disadvantages": "Requires conversion for some operations",
+        "classes": "Orders, Trades, EntryTrades, ExitTrades, Positions, Drawdowns, Logs"
+      }
+    },
+
+    "array_wrapper": {
+      "purpose": "Bridge between NumPy (computation) and pandas (interface)",
+      "workflow": [
+        "1. Extract NumPy array from pandas Series/DataFrame",
+        "2. Perform fast NumPy/Numba computations",
+        "3. Use ArrayWrapper to restore pandas index/columns/metadata",
+        "4. Return pandas object to user"
+      ],
+      "benefits": [
+        "Speed of NumPy with convenience of pandas",
+        "Preserves index/column information",
+        "Handles frequency for time-based calculations",
+        "Supports grouping and aggregation"
+      ]
+    },
+
+    "signal_generation": {
+      "approaches": [
+        "1. Indicator crossovers (MA.run().ma_crossed_above())",
+        "2. Custom logic with boolean arrays",
+        "3. Signal generators (OHLCSTX, STX, RAND, RPROB)",
+        "4. Chained signals for multiple entry/exit cycles",
+        "5. Stop-based signals (stop-loss, take-profit, trailing stops)"
+      ],
+      "operations": [
+        "Comparison: above, below, equal",
+        "Crossovers: crossed_above, crossed_below",
+        "Logic: AND, OR, XOR for combining signals",
+        "Custom functions for complex conditions"
+      ]
+    },
+
+    "portfolio_simulation_pipeline": {
+      "steps": [
+        "1. Define inputs: price data, signals/orders, parameters",
+        "2. Broadcasting: expand all inputs to compatible shapes",
+        "3. Simulation: Numba-compiled loop processes each bar",
+        "4. Order generation: from signals, predefined, or custom function",
+        "5. Order execution: size validation, fee calculation, cash management",
+        "6. State update: cash, positions, portfolio value",
+        "7. Record keeping: store orders, trades, logs",
+        "8. Post-processing: aggregate into trades, positions, drawdowns",
+        "9. Return Portfolio object with all records and metrics"
+      ]
+    },
+
+    "configuration_system": {
+      "structure": "Nested hierarchical configs per package/module/class",
+      "access": "vbt.settings['portfolio']['init_cash']",
+      "features": [
+        "Frozen keys (can modify values, not add/remove keys)",
+        "Inheritance from parent configs",
+        "None parameters auto-pull from settings",
+        "Global defaults ensure consistency",
+        "Per-class overrides supported"
+      ],
+      "key_settings": [
+        "portfolio.* - Portfolio simulation defaults",
+        "returns.* - Return calculation settings",
+        "plotting.* - Visualization defaults",
+        "indicators.* - Indicator configurations"
+      ]
+    },
+
+    "stats_builder_pattern": {
+      "purpose": "Flexible, extensible statistics computation framework",
+      "features": [
+        "Preset metrics for common use cases",
+        "Custom metric definitions",
+        "Tag-based filtering (returns, trades, drawdowns)",
+        "Aggregation across columns/groups",
+        "Settings-based configuration",
+        "Lazy evaluation for performance"
+      ],
+      "usage": "portfolio.stats(metrics=['sharpe_ratio', 'max_drawdown'], tags='returns')"
+    },
+
+    "plotting_architecture": {
+      "framework": "Plotly for interactive visualizations",
+      "features": [
+        "Interactive charts (zoom, pan, hover)",
+        "Multiple subplots",
+        "Candlestick charts for OHLCV",
+        "Trade markers on price charts",
+        "Drawdown underwater charts",
+        "Customizable via settings"
+      ],
+      "limitations": "No multi-index support in Plotly",
+      "customization": "Access via vbt.settings['plotting'] or method parameters"
+    },
+
+    "accessor_pattern": {
+      "purpose": "Extend pandas with domain-specific functionality",
+      "accessors": {
+        "vbt": "GenericAccessor - rolling, groupby, resample, split",
+        "vbt.returns": "ReturnsAccessor - financial metrics",
+        "vbt.ohlcv": "OHLCV data accessors",
+        "vbt.signals": "Signal operations"
+      },
+      "benefits": [
+        "Familiar pandas-like API",
+        "Method chaining support",
+        "Type-appropriate operations",
+        "Integrates with pandas workflows"
+      ]
+    },
+
+    "hyperparameter_optimization": {
+      "approach": "Brute-force grid search via broadcasting",
+      "example": "Test all combinations of 100 windows × 50 thresholds × 10 assets = 50,000 strategies",
+      "performance": "Seconds to minutes (vs hours/days with traditional backtesting)",
+      "methods": [
+        "Indicator.run() with parameter arrays",
+        "Portfolio.from_signals() broadcasts all parameters",
+        "Use stats() to find best combination",
+        "Filter by metrics, sort, select top performers"
+      ],
+      "limitations": [
+        "Memory constraints with very large grids",
+        "Not suitable for sequential dependencies",
+        "Combinatorial explosion with many parameters"
+      ]
+    }
+  },
+
+  "common_workflows_and_patterns": {
+    "basic_backtest": {
+      "steps": [
+        "1. Download data: data = vbt.YFData.download('AAPL', start='2020-01-01')",
+        "2. Generate signals: fast_ma = vbt.MA.run(close, 10); slow_ma = vbt.MA.run(close, 50)",
+        "3. Create entries/exits: entries = fast_ma.ma_crossed_above(slow_ma); exits = fast_ma.ma_crossed_below(slow_ma)",
+        "4. Run simulation: pf = vbt.Portfolio.from_signals(close, entries, exits, fees=0.001, freq='D')",
+        "5. Analyze: pf.stats(); pf.plot().show()"
+      ]
+    },
+
+    "parameter_optimization": {
+      "steps": [
+        "1. Define parameter ranges: windows = np.arange(10, 100, 10)",
+        "2. Run indicator with all parameters: ma = vbt.MA.run(close, windows)",
+        "3. Generate signals for all combinations",
+        "4. Simulate all strategies: pf = vbt.Portfolio.from_signals(...)",
+        "5. Compare metrics: pf.sharpe_ratio().sort_values(ascending=False)",
+        "6. Select best: best_params = pf.sharpe_ratio().idxmax()"
+      ]
+    },
+
+    "custom_indicator": {
+      "steps": [
+        "1. Define calculation function (can be Numba)",
+        "2. Create factory: MyInd = vbt.IndicatorFactory(class_name='MyInd', input_names=['close'], param_names=['window'], output_names=['value']).from_apply_func(my_func)",
+        "3. Run indicator: result = MyInd.run(close, window=[10, 20, 30])",
+        "4. Generate signals: entries = result.value_crossed_above(threshold)",
+        "5. Backtest as normal"
+      ]
+    },
+
+    "complex_strategy": {
+      "approach": "Use from_order_func for maximum control",
+      "steps": [
+        "1. Define Numba order function: @njit def order_func_nb(c, ...):",
+        "2. Implement logic: check conditions, calculate sizes, return orders",
+        "3. Optional: define pre_segment_func_nb for initialization",
+        "4. Run: pf = vbt.Portfolio.from_order_func(close, order_func_nb, ...)",
+        "5. Debug with logs: pf = ...from_order_func(..., log=True); pf.logs"
+      ]
+    },
+
+    "portfolio_rebalancing": {
+      "approaches": [
+        "1. Periodic: Use from_order_func with segment callbacks",
+        "2. Threshold-based: Check allocations, rebalance when drift exceeds threshold",
+        "3. Cash sharing: Set cash_sharing=True, group_by for multi-asset portfolios"
+      ]
+    },
+
+    "walk_forward_analysis": {
+      "steps": [
+        "1. Split data: splits = data.vbt.rolling_split(window_len=252, set_lens=(1,1))",
+        "2. For each split: optimize on train, test on validation",
+        "3. Aggregate results across all windows",
+        "4. Analyze degradation from train to validation"
+      ]
+    }
+  },
+
+  "performance_considerations": {
+    "speed_optimizations": [
+      "Use Numba functions for custom logic",
+      "Minimize Python loops - use vectorized operations",
+      "Leverage caching in indicators",
+      "Use from_orders when possible (fastest)",
+      "Batch parameter combinations with broadcasting",
+      "Use flexible=False unless multiple orders needed"
+    ],
+
+    "memory_optimizations": [
+      "Broadcasting is memory-efficient (shared data)",
+      "Use records for sparse data (orders, trades)",
+      "Limit parameter grid size",
+      "Use appropriate dtypes (float32 vs float64)",
+      "Clear intermediate results when done"
+    ],
+
+    "common_bottlenecks": [
+      "Python loops instead of vectorization",
+      "Excessive logging (log=True on large simulations)",
+      "Very large parameter grids",
+      "Plotting thousands of series",
+      "Non-Numba custom functions in from_order_func"
+    ]
+  },
+
+  "limitations_and_gotchas": {
+    "known_limitations": [
+      "No multi-asset portfolio optimization in free version (PRO only)",
+      "Limited short selling controls (improve in PRO)",
+      "No built-in regime detection",
+      "Plotly doesn't support multi-indexes",
+      "Yahoo Finance data quality issues",
+      "TA-Lib installation complexity (requires C library)",
+      "Free version in maintenance mode (PRO gets new features)"
+    ],
+
+    "common_pitfalls": [
+      "Forgetting to set freq parameter (affects annualization)",
+      "Not filtering active drawdowns (skews metrics)",
+      "Confusing size_type parameters (Amount vs TargetAmount)",
+      "Broadcasting errors from incompatible shapes",
+      "Lookahead bias in signal generation",
+      "Not accounting for fees/slippage",
+      "Using accumulate=True unintentionally",
+      "Mixing vectorized and iterative code"
+    ],
+
+    "data_quality_warnings": [
+      "Yahoo Finance: unstable, may have gaps/noise",
+      "Always validate downloaded data",
+      "Check for missing values (ffill_val_price helps)",
+      "Verify timezone handling (especially crypto vs stocks)",
+      "Be aware of survivorship bias"
+    ]
+  },
+
+  "migration_and_compatibility": {
+    "version_changes": {
+      "note": "Free version in maintenance mode - API stable",
+      "deprecations": "fillna_close deprecated, use ffill_val_price",
+      "python_support": "Added Python 3.11, 3.12 support in recent versions"
+    },
+
+    "upgrading_to_pro": {
+      "benefits": [
+        "500+ indicators",
+        "Portfolio optimization",
+        "Parallelization",
+        "Limit orders",
+        "Advanced cross-validation",
+        "Active development"
+      ],
+      "compatibility": "PRO builds on free version - similar API with extensions",
+      "migration": "Most free version code works in PRO with enhancements"
+    }
+  },
+
+  "community_and_support": {
+    "documentation": {
+      "free_version": "https://vectorbt.dev/",
+      "pro_version": "https://vectorbt.pro/",
+      "api_reference": "https://vectorbt.dev/api/",
+      "examples": "Jupyter notebooks in GitHub repository"
+    },
+
+    "community_resources": {
+      "github": "https://github.com/polakowo/vectorbt",
+      "discussions": "GitHub Discussions for questions",
+      "gitter": "https://gitter.im/vectorbt/community",
+      "issues": "GitHub Issues for bugs"
+    },
+
+    "learning_resources": [
+      "Official documentation and tutorials",
+      "Jupyter notebooks in examples/ directory",
+      "Community tutorials (Greyhound Analytics, AlgoTrading101)",
+      "Stack Overflow questions",
+      "Medium articles and blog posts"
+    ],
+
+    "repository_stats": {
+      "stars": "6.3k+",
+      "commits": "933+",
+      "status": "Mature, stable (maintenance mode for free version)",
+      "last_update": "December 2025"
+    }
+  },
+
+  "citations": [
+    {
+      "id": 1,
+      "citation": "Polakow, O. vectorbt - Find your trading edge, using the fastest engine for backtesting, algorithmic trading, and research. GitHub, 2025. https://github.com/polakowo/vectorbt",
+      "type": "repository"
+    },
+    {
+      "id": 2,
+      "citation": "vectorbt Documentation. vectorbt.dev, 2025. https://vectorbt.dev/",
+      "type": "documentation"
+    },
+    {
+      "id": 3,
+      "citation": "VectorBT PRO - Next-generation engine for backtesting, algorithmic trading, and quantitative research. vectorbt.pro, 2025. https://vectorbt.pro/",
+      "type": "commercial_product"
+    },
+    {
+      "id": 4,
+      "citation": "vectorbt 0.28.2. Python Package Index (PyPI), December 2025. https://pypi.org/project/vectorbt/",
+      "type": "package_registry"
+    },
+    {
+      "id": 5,
+      "citation": "vectorbt Portfolio API Documentation. vectorbt.dev/api/portfolio/base/, 2025. https://vectorbt.dev/api/portfolio/base/",
+      "type": "api_reference"
+    },
+    {
+      "id": 6,
+      "citation": "vectorbt Indicators API Documentation. vectorbt.dev/api/indicators/, 2025. https://vectorbt.dev/api/indicators/",
+      "type": "api_reference"
+    },
+    {
+      "id": 7,
+      "citation": "vectorbt Returns API Documentation. vectorbt.dev/api/returns/, 2025. https://vectorbt.dev/api/returns/",
+      "type": "api_reference"
+    },
+    {
+      "id": 8,
+      "citation": "vectorbt Signals API Documentation. vectorbt.dev/api/signals/, 2025. https://vectorbt.dev/api/signals/",
+      "type": "api_reference"
+    },
+    {
+      "id": 9,
+      "citation": "Greyhound Analytics. Create a Custom Indicator in Vectorbt. Blog, 2025. https://greyhoundanalytics.com/blog/create-a-custom-indicator-in-vectorbt/",
+      "type": "tutorial"
+    },
+    {
+      "id": 10,
+      "citation": "Greyhound Analytics. Using Multiple Indicators in Vectorbt. Blog, 2025. https://greyhoundanalytics.com/blog/using-multiple-indicators-in-vectorbt/",
+      "type": "tutorial"
+    },
+    {
+      "id": 11,
+      "citation": "AlgoTrading101. VectorBT - An Introductory Guide. Blog, 2025. https://algotrading101.com/learn/vectorbt-guide/",
+      "type": "tutorial"
+    },
+    {
+      "id": 12,
+      "citation": "Future of VectorBT - GitHub Discussion #619. GitHub, 2025. https://github.com/polakowo/vectorbt/discussions/619",
+      "type": "community_discussion"
+    }
+  ]
+}
