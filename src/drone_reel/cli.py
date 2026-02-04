@@ -786,6 +786,7 @@ def create(
 
         # Create intelligent per-clip reframers based on scene content
         clip_reframers = []
+        clip_reframe_modes = []  # Track which mode each clip uses for stabilization decisions
         if not no_reframe:
             from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
             import random
@@ -835,6 +836,7 @@ def create(
                         focal_clamp_x=(0.4, 0.6),  # Very tight bounds - barely moves from center
                         focal_clamp_y=(0.4, 0.6),  # Minimal vertical movement
                     )
+                    clip_reframe_modes.append("SMART")
                 elif camera_moving:
                     # Camera already moving - stable center crop, no additional movement
                     settings = ReframeSettings(
@@ -842,6 +844,7 @@ def create(
                         mode=ReframeMode.CENTER,
                         output_width=output_w,
                     )
+                    clip_reframe_modes.append("CENTER")
                 else:
                     # Landscape panorama - very subtle Ken Burns scaled by duration
                     # Shorter clips get less pan to avoid looking rushed
@@ -858,6 +861,7 @@ def create(
                         ken_burns_pan_direction=(pan_x, pan_y),
                         ken_burns_ease_curve="ease_in_out",
                     )
+                    clip_reframe_modes.append("KEN_BURNS")
 
                 clip_reframers.append(Reframer(settings))
 
@@ -875,6 +879,20 @@ def create(
             scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes
         ]
 
+        # OPTION A FIX: Force light stabilization for non-CENTER reframe modes
+        # Reframing with KEN_BURNS or SMART can introduce micro-jitter even on stable footage
+        # Boost shake scores for these clips to ensure at least light stabilization is applied
+        REFRAME_JITTER_BOOST = 20.0  # Boost score to ensure light stabilization (>= 15)
+        reframe_boosted_clips = 0
+        if stabilize and clip_reframe_modes and not stabilize_all:
+            for i, mode in enumerate(clip_reframe_modes):
+                if i < len(selected_shake_scores) and mode in ("SMART", "KEN_BURNS"):
+                    original_score = selected_shake_scores[i]
+                    if original_score < stable_threshold:
+                        # Boost to ensure light stabilization is applied
+                        selected_shake_scores[i] = max(original_score, REFRAME_JITTER_BOOST)
+                        reframe_boosted_clips += 1
+
         # Display shake scores when stabilization is enabled (Feature C)
         if stabilize:
             console.print("\n[bold]Clip Shake Analysis:[/bold]")
@@ -882,6 +900,13 @@ def create(
             clips_to_skip = 0
             for i, (scene, shake_score) in enumerate(zip(selected_scenes, selected_shake_scores), 1):
                 source_name = scene.source_file.name[:25]
+                # Check if this clip was boosted due to reframe mode
+                reframe_mode = clip_reframe_modes[i-1] if clip_reframe_modes and i-1 < len(clip_reframe_modes) else "CENTER"
+                original_score = scene_shake_map.get(id(scene), 50.0)
+                was_boosted = (reframe_mode in ("SMART", "KEN_BURNS") and
+                              original_score < stable_threshold and
+                              shake_score >= REFRAME_JITTER_BOOST)
+
                 if stabilize_all:
                     status = "[yellow]FULL[/yellow]"
                     clips_to_stabilize += 1
@@ -890,6 +915,8 @@ def create(
                     clips_to_skip += 1
                 elif shake_score < 30:
                     status = "[cyan]LIGHT[/cyan]"
+                    if was_boosted:
+                        status += f" [dim](+{reframe_mode})[/dim]"
                     clips_to_stabilize += 1
                 else:
                     status = "[yellow]FULL[/yellow]"
@@ -899,7 +926,10 @@ def create(
             if stabilize_all:
                 console.print(f"\n[cyan]Summary:[/cyan] Stabilizing all {len(selected_scenes)} clips (--stabilize-all)")
             else:
-                console.print(f"\n[cyan]Summary:[/cyan] {clips_to_stabilize} to stabilize, {clips_to_skip} stable (threshold: {stable_threshold:.0f})")
+                summary = f"[cyan]Summary:[/cyan] {clips_to_stabilize} to stabilize, {clips_to_skip} stable (threshold: {stable_threshold:.0f})"
+                if reframe_boosted_clips > 0:
+                    summary += f" [dim]({reframe_boosted_clips} boosted for reframe jitter)[/dim]"
+                console.print(summary)
             console.print()
 
         # Handle --stabilize-all: force full stabilization on all clips
