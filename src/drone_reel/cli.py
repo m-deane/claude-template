@@ -148,7 +148,20 @@ def main(ctx, version):
 @click.option(
     "--stabilize",
     is_flag=True,
-    help="Apply video stabilization to reduce camera shake",
+    help="Apply adaptive video stabilization (skips stable clips)",
+)
+@click.option(
+    "--stabilize-all",
+    "stabilize_all",
+    is_flag=True,
+    help="Apply full stabilization to ALL clips (ignores shake scores)",
+)
+@click.option(
+    "--stable-threshold",
+    "stable_threshold",
+    type=float,
+    default=15.0,
+    help="Shake score below which clips are considered stable (default: 15). Lower = more clips get stabilized.",
 )
 def create(
     input_path: Path,
@@ -167,8 +180,13 @@ def create(
     quality: str,
     resolution: str,
     stabilize: bool,
+    stabilize_all: bool,
+    stable_threshold: float,
 ):
     """Create a reel from drone footage."""
+    # --stabilize-all implies --stabilize
+    if stabilize_all:
+        stabilize = True
     config = load_config()
 
     exporter = None
@@ -742,7 +760,10 @@ def create(
         }
 
         if stabilize:
-            console.print("[cyan]Stabilization:[/cyan] Enabled - will reduce camera shake")
+            if stabilize_all:
+                console.print("[cyan]Stabilization:[/cyan] Full mode - stabilizing ALL clips")
+            else:
+                console.print(f"[cyan]Stabilization:[/cyan] Adaptive mode (stable threshold: {stable_threshold:.0f})")
 
         if preset:
             processor_kwargs["output_fps"] = preset.fps
@@ -853,6 +874,55 @@ def create(
         selected_shake_scores = [
             scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes
         ]
+
+        # Display shake scores when stabilization is enabled (Feature C)
+        if stabilize:
+            console.print("\n[bold]Clip Shake Analysis:[/bold]")
+            clips_to_stabilize = 0
+            clips_to_skip = 0
+            for i, (scene, shake_score) in enumerate(zip(selected_scenes, selected_shake_scores), 1):
+                source_name = scene.source_file.name[:25]
+                if stabilize_all:
+                    status = "[yellow]FULL[/yellow]"
+                    clips_to_stabilize += 1
+                elif shake_score < stable_threshold:
+                    status = "[green]SKIP[/green]"
+                    clips_to_skip += 1
+                elif shake_score < 30:
+                    status = "[cyan]LIGHT[/cyan]"
+                    clips_to_stabilize += 1
+                else:
+                    status = "[yellow]FULL[/yellow]"
+                    clips_to_stabilize += 1
+                console.print(f"  {i:2d}. {source_name:<25} shake: {shake_score:5.1f} → {status}")
+
+            if stabilize_all:
+                console.print(f"\n[cyan]Summary:[/cyan] Stabilizing all {len(selected_scenes)} clips (--stabilize-all)")
+            else:
+                console.print(f"\n[cyan]Summary:[/cyan] {clips_to_stabilize} to stabilize, {clips_to_skip} stable (threshold: {stable_threshold:.0f})")
+            console.print()
+
+        # Handle --stabilize-all: force full stabilization on all clips
+        if stabilize_all:
+            selected_shake_scores = [100.0] * len(selected_scenes)  # Force full stabilization
+
+        # Pass stable_threshold to video processor via shake_scores adjustment
+        # The stabilizer uses shake_score to decide: <15 skip, 15-30 light, >30 full
+        # If user sets different threshold, we adjust scores accordingly
+        if stabilize and not stabilize_all and stable_threshold != 15.0:
+            # Remap scores so clips below stable_threshold appear as "stable" to stabilizer
+            # stabilizer skips if shake_score < 15, so we scale scores:
+            # - Clips with original score < stable_threshold → score < 15 (skip)
+            # - Clips with original score >= stable_threshold → keep proportional
+            adjusted_shake_scores = []
+            for score in selected_shake_scores:
+                if score < stable_threshold:
+                    # Map to below 15 (stabilizer's skip threshold)
+                    adjusted_shake_scores.append(score * (14.9 / stable_threshold) if stable_threshold > 0 else 0)
+                else:
+                    # Keep original score
+                    adjusted_shake_scores.append(score)
+            selected_shake_scores = adjusted_shake_scores
 
         video_processor.stitch_clips(
             segments,
