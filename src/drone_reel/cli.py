@@ -879,18 +879,18 @@ def create(
             scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes
         ]
 
-        # OPTION A FIX: Force light stabilization for non-CENTER reframe modes
+        # OPTION A FIX: Force FULL stabilization for non-CENTER reframe modes
         # Reframing with KEN_BURNS or SMART can introduce micro-jitter even on stable footage
-        # Boost shake scores for these clips to ensure at least light stabilization is applied
-        REFRAME_JITTER_BOOST = 20.0  # Boost score to ensure light stabilization (>= 15)
+        # Boost shake scores for ALL these clips to ensure FULL stabilization is applied
+        REFRAME_JITTER_BOOST = 35.0  # Boost score to ensure FULL stabilization (>= 30)
         reframe_boosted_clips = 0
         if stabilize and clip_reframe_modes and not stabilize_all:
             for i, mode in enumerate(clip_reframe_modes):
                 if i < len(selected_shake_scores) and mode in ("SMART", "KEN_BURNS"):
                     original_score = selected_shake_scores[i]
-                    if original_score < stable_threshold:
-                        # Boost to ensure light stabilization is applied
-                        selected_shake_scores[i] = max(original_score, REFRAME_JITTER_BOOST)
+                    if original_score < REFRAME_JITTER_BOOST:
+                        # Boost ALL Ken Burns/SMART clips to FULL stabilization
+                        selected_shake_scores[i] = REFRAME_JITTER_BOOST
                         reframe_boosted_clips += 1
 
         # Display shake scores when stabilization is enabled (Feature C)
@@ -915,11 +915,11 @@ def create(
                     clips_to_skip += 1
                 elif shake_score < 30:
                     status = "[cyan]LIGHT[/cyan]"
-                    if was_boosted:
-                        status += f" [dim](+{reframe_mode})[/dim]"
                     clips_to_stabilize += 1
                 else:
                     status = "[yellow]FULL[/yellow]"
+                    if was_boosted:
+                        status += f" [dim](+{reframe_mode})[/dim]"
                     clips_to_stabilize += 1
                 console.print(f"  {i:2d}. {source_name:<25} shake: {shake_score:5.1f} → {status}")
 
