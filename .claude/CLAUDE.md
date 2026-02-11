@@ -224,6 +224,62 @@ Generic responses not tailored to project context
 - User feedback collection
 - System health verification
 
+## INSIGHTS-DRIVEN QUALITY GATES
+
+### Build Verification After Multi-File Edits
+After implementing changes via parallel agents or multi-file edits, ALWAYS run a full build/compile check and fix any errors before reporting completion. Never declare a task done until the build passes.
+> *Rationale: Parallel agent work frequently produces build errors, type mismatches, and lint issues that require manual cleanup. This is the single most common friction pattern.*
+
+### Codebase-Wide Bug Pattern Fixing
+When fixing a bug in a function or step, grep the entire codebase for the same pattern in sibling/similar functions and fix ALL instances. Do not fix only the reported instance.
+> *Rationale: Initial fixes are often incomplete because the same bug exists in related functions (e.g., step_ewm, step_expanding, step_lead), causing recurring errors that require multiple debugging rounds.*
+
+### Stay Focused — No Over-Delivery
+Do NOT over-deliver with unsolicited research, feature ideation, or verbose explanations. Stay focused on exactly what was asked. If the user wants more, they will ask.
+> *Rationale: Excessive output, unprompted feature ideation, and unsolicited improvements waste time and derail sessions.*
+
+### Large File Guard Before Git Push
+Before pushing to GitHub, check for large files (>50MB) using `find . -size +50M -not -path './.git/*'` and add them to .gitignore. Never attempt to push video files or large binary assets.
+> *Rationale: Pushing files that exceed GitHub's size limits can waste hours of session time on failed push attempts.*
+
+### Verify Fixes With Reproduction Steps
+When declaring a bug "fixed", always verify the fix by running the exact reproduction steps the user described. Do not mark as fixed based on code inspection alone.
+> *Rationale: Declaring bugs fixed without verification leads to multiple debugging rounds when the user discovers the bug persists.*
+
+## PARALLEL AGENT QUALITY PROTOCOL
+
+### Self-Healing Agent Workflow
+When spawning parallel agents for multi-feature implementation, each agent MUST:
+1. Implement the assigned feature
+2. Run the project's build command and linter
+3. If ANY errors exist, fix them and re-run until clean
+4. Run tests for affected modules
+5. Only report completion when build + lint + tests all pass with zero errors
+6. If unable to resolve an error after 3 attempts, report the specific blocker
+
+After all agents complete, run a final integration build and test suite across the full project. Fix any cross-agent conflicts (import collisions, type mismatches, duplicate declarations) before reporting results.
+
+### Test-Driven Bug Fix Protocol
+When fixing bugs, follow this exact sequence:
+1. **REPRODUCE**: Write a minimal test that fails and demonstrates the exact bug
+2. **SCAN FOR SIBLINGS**: Grep the entire codebase for ALL functions/classes using the same pattern as the buggy code
+3. **EXPAND TESTS**: Write failing tests for each sibling instance with the same vulnerability
+4. **FIX ALL**: Implement fixes for the original bug AND every sibling
+5. **VALIDATE**: Run the full test suite and iterate until ALL tests pass
+6. **REPORT**: Show before/after for each fix and confirm the full test suite result
+
+## SESSION BEST PRACTICES
+
+### Focused Sessions
+Break complex work into focused, single-purpose sessions for better outcomes. Sessions with mixed goals (fix bugs + git operations + documentation) tend toward partial achievement. Scope each session to one clear deliverable.
+
+### Verification Before Completion
+Never declare work "done" without running the actual verification steps. This includes:
+- Running the build/compile step
+- Executing relevant tests
+- Reproducing the original issue to confirm it's resolved
+- Checking for regressions in related functionality
+
 ## CUSTOM PROJECT INSTRUCTIONS - [Add your specific project requirements, unique constraints, business logic, or special considerations here]
 
 ---

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "echo '🔍 Post-edit build check triggered — customize the command below for your project build tool.'"
+      }
+    ],
+    "preCommit": [
+      {
+        "command": "find . -size +50M -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | head -5"
+      }
+    ]
+  }
+}
