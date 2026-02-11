@@ -241,6 +241,116 @@ These agents can be invoked via the Task tool:
 
 ---
 
+## Hooks Configuration
+
+The template includes a `.claude/settings.json` with pre-configured hooks for common quality gates.
+
+### Post-Edit Build Verification Hook
+
+Automatically runs a build/type check after every Edit or Write operation:
+
+```json
+{
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "npx tsc --noEmit 2>&1 | head -20"
+      }
+    ]
+  }
+}
+```
+
+**Customize for your stack:**
+- **TypeScript**: `npx tsc --noEmit 2>&1 | head -20`
+- **Python**: `python -m py_compile ${file} 2>&1 | head -20`
+- **Go**: `go build ./... 2>&1 | head -20`
+- **Rust**: `cargo check 2>&1 | head -20`
+
+### Pre-Commit Large File Guard
+
+Prevents accidentally committing files over 50MB (GitHub's limit):
+
+```json
+{
+  "hooks": {
+    "preCommit": [
+      {
+        "command": "find . -size +50M -not -path './.git/*' -not -path './node_modules/*' | head -5"
+      }
+    ]
+  }
+}
+```
+
+### Headless Mode
+
+Run Claude Code non-interactively from scripts for automated tasks like overnight reviews:
+
+```bash
+# Run a full codebase review overnight
+claude -p "Review the codebase for P0/P1 issues. Fix all issues found. Run the full test suite after each fix." \
+  --allowedTools "Edit,Read,Write,Bash,Grep" \
+  --output-format json > review-results.json
+```
+
+This is useful for long-running review/fix cycles that don't need interactive input.
+
+---
+
+## Session Best Practices
+
+### 1. Break Mega-Sessions Into Focused Tasks
+
+Sessions with mixed goals (fix bugs + git operations + documentation) tend toward partial achievement. Scope each session to one clear deliverable for better outcomes.
+
+**Example prompt:**
+```
+Let's focus on one thing this session: fix the filtering bug in the Dash viewer.
+Don't work on anything else until this specific bug is verified fixed with a test.
+```
+
+### 2. Require Verification Before "Done" Declarations
+
+Explicitly ask Claude to prove fixes work before moving on. This prevents multi-round debugging cycles.
+
+**Example prompt:**
+```
+Fix the filtering bug. After making changes, run the app and test filtering for
+'Product_D' specifically. Show me the actual output. Do NOT say it's fixed until
+you've verified the filtered results only contain Product_D.
+```
+
+### 3. Add .gitignore Guard for Large Files Early
+
+Set up large file protection at project start to avoid wasted multi-hour pushes.
+
+**Example prompt:**
+```
+Before we do anything else, check this repo for files over 50MB and add them to
+.gitignore. Also set up a .gitattributes for Git LFS if we have video files.
+Show me what you found and what you added.
+```
+
+### 4. Use Parallel Agents With Validation Gates
+
+When using parallel agents for multi-feature implementation, require each agent to self-validate:
+
+**Example prompt:**
+```
+Implement features using parallel agents. CRITICAL: Each agent MUST:
+1) Implement the feature
+2) Run build and lint
+3) Fix errors and re-run until clean
+4) Run tests for affected modules
+5) Only report completion when build + lint + tests pass with zero errors
+```
+
+Or use the built-in `/parallel-agents` command which encodes this workflow.
+
+---
+
 ## Best Practices
 
 ### 1. Keep Project Context Updated

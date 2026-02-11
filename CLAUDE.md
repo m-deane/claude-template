@@ -13,10 +13,11 @@ This is a **Claude Code project template** - a reusable starting point for new p
 ├── CLAUDE.md               # Core behavioral directives
 ├── TEMPLATE_GUIDE.md       # Customization instructions
 ├── example_prompt.md       # Project requirements template
+├── settings.json           # Hooks configuration (post-edit, pre-commit)
 ├── agents/                 # 16 specialized agents
-├── commands/               # 14 slash commands
+├── commands/               # 17 slash commands
 ├── scripts/                # Utility scripts
-└── skills/                 # MCP skills (webapp-testing, mcp-builder)
+└── skills/                 # Skills (webapp-testing, mcp-builder, custom-skill-example)
 
 .claude_plans/              # Project planning documents
 .claude_prompts/            # Workflow prompt templates
@@ -38,6 +39,9 @@ tests/                      # Test files placeholder
 | `/dependency-update` | Check/update dependencies |
 | `/architecture-review` | Review architecture patterns |
 | `/create-architecture-documentation` | Generate architecture docs |
+| `/parallel-agents [features]` | Self-healing parallel agent implementation with build gates |
+| `/test-driven-fix [bug]` | Test-driven bug fix with codebase-wide sibling scanning |
+| `/autonomous-review [scope]` | Full autonomous review pipeline with parallel audit and fixes |
 
 ## Key Agents
 
@@ -69,6 +73,20 @@ The template enforces these behavioral patterns:
 - **Direct implementation** - Skip hedging language and excessive explanation
 - **File organization** - Use `.claude_plans/` for planning, `tests/` for tests
 - **Testing discipline** - Run tests after each checkpoint
+- **Build verification** - Always run build/compile after multi-file edits before declaring done
+- **Codebase-wide fixes** - Grep for sibling patterns when fixing bugs, fix all instances
+- **No over-delivery** - Stay focused on what was asked, no unsolicited extras
+- **Large file guard** - Check for >50MB files before pushing to GitHub
+- **Verify before done** - Run reproduction steps to confirm fixes, not just code inspection
+
+## Hooks (from .claude/settings.json)
+
+The template includes pre-configured hooks:
+
+- **Post-Edit Build Check** - Runs build verification after every Edit/Write operation (customize command for your stack)
+- **Pre-Commit Large File Guard** - Scans for files >50MB before committing to prevent failed GitHub pushes
+
+See `.claude/TEMPLATE_GUIDE.md` for customization examples per language/framework.
 
 ## Adding New Commands
 
