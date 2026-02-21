@@ -46,6 +46,11 @@ dev = [
     "black>=23.0.0",
     "ruff>=0.1.0",
 ]
+docs = [
+    "pdoc>=14.0.0",
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+]
 
 [project.scripts]
 drone-reel = "drone_reel.cli:main"
@@ -65,4 +70,4 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=src/drone_reel --cov-report=term-missing"
+addopts = "-v --cov=src/drone_reel --cov-report=term-missing --cov-fail-under=70"

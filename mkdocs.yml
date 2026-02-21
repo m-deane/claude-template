@@ -1,0 +1,64 @@
+site_name: drone-reel Documentation
+site_description: AI-powered CLI tool to create Instagram-style reels from drone footage
+site_url: https://github.com/your-username/drone-reel
+
+repo_name: drone-reel
+repo_url: https://github.com/your-username/drone-reel
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: index.md
+    - Quick Start: index.md
+  - CLI Reference: cli-reference.md
+  - Python API: api-reference.md
+  - Presets:
+    - Color Presets: presets/color-presets.md
+    - Transitions: presets/transitions.md
+  - Examples:
+    - Overview: examples/README.md
+  - API Reference (Generated): api/index.html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username/drone-reel

@@ -1,0 +1,394 @@
+{
+  "research_metadata": {
+    "date": "2026-01-25",
+    "focus": "Viral drone video patterns for Instagram Reels and TikTok",
+    "sources_analyzed": 45,
+    "platforms_researched": ["Instagram", "TikTok", "YouTube"]
+  },
+  "technical_specifications": {
+    "aspect_ratio": {
+      "recommended": "9:16",
+      "resolution": "1080x1920",
+      "alternative": "16:9 for YouTube/horizontal platforms"
+    },
+    "video_length": {
+      "optimal_range_seconds": [15, 30],
+      "instagram_max_seconds": 90,
+      "tiktok_max_seconds": 600,
+      "engagement_drop_after_seconds": 30
+    },
+    "frame_rate": {
+      "recommended_export": 30,
+      "shooting_options": [30, 60],
+      "avoid": 24,
+      "rationale": "Instagram and TikTok optimize for 30fps"
+    },
+    "export_settings": {
+      "format": "MP4",
+      "codec": "H.265",
+      "bitrate": "high",
+      "resolution": "1080p minimum"
+    }
+  },
+  "cinematic_techniques": {
+    "popular_movements": [
+      {
+        "name": "Orbit Shots",
+        "description": "Drone circles around subject or location",
+        "viral_technique": "Capture 2+ clips orbiting same direction, combine with speed ramp and motion blur",
+        "engagement_level": "high",
+        "difficulty": "medium"
+      },
+      {
+        "name": "Reveal Shots",
+        "description": "Ascending, descending, pushing in, or pulling out to reveal scale",
+        "types": ["vertical", "horizontal", "pull-back"],
+        "engagement_level": "very_high",
+        "difficulty": "low"
+      },
+      {
+        "name": "Hyperlapse",
+        "description": "Time compression creating narrative through motion",
+        "use_cases": ["event progression", "location transformation", "day-to-night"],
+        "trend_status": "top_trend_2026",
+        "difficulty": "medium-high"
+      },
+      {
+        "name": "FPV Fly-Through",
+        "description": "Gravity-defying stunts and tight space navigation",
+        "engagement_level": "very_high",
+        "use_cases": ["real_estate", "experiential_content"],
+        "difficulty": "high"
+      },
+      {
+        "name": "Top-Down",
+        "description": "Directly overhead perspective",
+        "best_for": ["abstract patterns", "urban environments", "coastlines"],
+        "difficulty": "low"
+      },
+      {
+        "name": "Tracking Shots",
+        "description": "Following moving subjects smoothly",
+        "difficulty": "high",
+        "requires": "AI tracking or advanced flight skills"
+      }
+    ],
+    "speed_ramps": {
+      "definition": "Gradual change in video clip speed for dramatic effect",
+      "engagement_impact_percent": 22,
+      "pattern": "normal_speed -> fast -> slow",
+      "best_practices": [
+        "Works best with natural movement (pans, tilts, drone motion)",
+        "Customize curves to match music beats",
+        "Add motion blur for smooth transitions",
+        "Accent with whoosh sound effects (deeper bass)"
+      ],
+      "automation_priority": "high"
+    },
+    "transitions": [
+      {
+        "type": "Speed Ramp Transition",
+        "method": "Transition between regular and slow motion",
+        "sync_to": "music beats or drops"
+      },
+      {
+        "type": "Orbit Transition",
+        "method": "Match end of one orbit to beginning of another",
+        "effect": "Continuous circular motion across scenes"
+      },
+      {
+        "type": "Cut on Motion",
+        "method": "Cut during movement for seamless transitions",
+        "benefit": "Natural eye tracking reduces jarring"
+      },
+      {
+        "type": "Whip Pan",
+        "method": "Fast horizontal camera movement between clips",
+        "best_for": "Travel montages, location changes"
+      }
+    ]
+  },
+  "color_grading": {
+    "popular_styles": [
+      {
+        "name": "Teal and Orange",
+        "status": "Still popular in 2026",
+        "method": "Shift blues toward teal, yellows/greens toward orange",
+        "adjustments": [
+          "No contrast change",
+          "Slight magenta shift to balance green tint",
+          "Add warmth to midtones only (not highlights) if too cold"
+        ]
+      },
+      {
+        "name": "Moody/Dramatic",
+        "characteristics": "Subtle desaturation, cooler shadows",
+        "use_case": "Dramatic tension"
+      },
+      {
+        "name": "Vibrant/Bright",
+        "characteristics": "High saturation, bright tones",
+        "use_case": "Social media optimization"
+      },
+      {
+        "name": "Warm/Intimate",
+        "characteristics": "Warmer tones throughout",
+        "use_case": "Connection and intimacy"
+      }
+    ],
+    "lut_workflow": [
+      "Normalize Log (D-Log/D-Log M/HLG) to Rec.709",
+      "Apply creative LUT at low intensity (50-70%)",
+      "Make targeted fixes (highlights, cyan, greens)",
+      "Keep LUT blending reversible for easy style swapping"
+    ],
+    "automation_priority": "medium"
+  },
+  "hook_strategies": {
+    "critical_window_seconds": 3,
+    "retention_statistics": {
+      "watch_3_seconds_continue_10_seconds_percent": 65,
+      "watch_3_seconds_continue_30_seconds_percent": 45,
+      "decision_time_seconds": 2
+    },
+    "effective_hooks": [
+      "Jaw-dropping camera movement",
+      "Hard-to-reach location reveal",
+      "Unexpected twist or surprise",
+      "FPV gravity-defying stunt",
+      "Dramatic reveal shot"
+    ],
+    "hook_framework": [
+      "Open with movement (cut, gesture, scene change)",
+      "Add on-screen text (reinforce message visually)",
+      "Deliver cliffhanger (tease what's coming)",
+      "Use strong visual motif",
+      "Cut out fluff (no slow intros)"
+    ],
+    "technical_elements": [
+      "Subtitles and bold colors",
+      "Quick cuts or zoom-ins",
+      "Trending audio from start",
+      "Motion blur or speed ramps",
+      "High contrast or vibrant colors"
+    ],
+    "share_amplification_percent": 1200,
+    "automation_priority": "very_high"
+  },
+  "music_sync": {
+    "engagement_increase_percent": 40,
+    "importance": "critical",
+    "characteristics": [
+      "Trending audio (constantly shifting)",
+      "Emotional resonance",
+      "Rhythmic satisfaction with clear beats",
+      "Paired with all viral reels"
+    ],
+    "implementation_strategy": [
+      "Select music first",
+      "Create selects reel",
+      "Lay in music and cut to beat",
+      "Use automated beat detection",
+      "Manual fine-tuning for critical moments"
+    ],
+    "automation_tools": [
+      "DJI LightCut (Auto Sound Sync)",
+      "CapCut (Auto Beat Sync)",
+      "Adobe Premiere (Beat markers)",
+      "Filmora (Auto Beat Sync)"
+    ],
+    "automation_priority": "very_high"
+  },
+  "lighting_timing": {
+    "golden_hour": {
+      "timing": "30-60 minutes after sunrise / before sunset",
+      "benefits": [
+        "Long shadows define terrain",
+        "Vivid colors",
+        "Soft warm lighting",
+        "Photogenic natural appearance"
+      ],
+      "sunrise_advantage": "Fog and mist for atmosphere",
+      "sunset_advantage": "Silhouettes, increased contrast and saturation",
+      "flying_technique": "Fly lower for maximum effect",
+      "preparation": "Be ready 20 minutes before sunrise",
+      "multi_angle": "Shoot from all directions (shadows change appearance)"
+    },
+    "blue_hour": {
+      "timing": "Just before sunrise or after sunset",
+      "best_for": ["Urban environments", "Architectural photography"],
+      "mood": "Atmospheric and moody"
+    },
+    "night": {
+      "subjects": ["City lights", "Light trails", "Illuminated landmarks"],
+      "effect": "Dramatic unique perspectives"
+    },
+    "midday": {
+      "generally": "Avoid (harsh shadows, flat lighting)",
+      "exception": "Top-down abstract patterns"
+    },
+    "automation_priority": "medium"
+  },
+  "content_patterns": {
+    "best_subjects": [
+      {
+        "category": "Natural Landscapes",
+        "examples": ["Coastlines", "Mountain ranges", "Forests", "Waterfalls", "Desert formations"]
+      },
+      {
+        "category": "Urban Environments",
+        "examples": ["City skylines", "Architectural landmarks", "Geometric patterns", "Traffic and light trails"]
+      },
+      {
+        "category": "Unique Perspectives",
+        "examples": ["Hard-to-reach locations", "Unusual angles", "Hidden spaces", "Scale comparisons"]
+      }
+    ],
+    "trending_2026": [
+      "360-degree panoramic tours",
+      "FPV indoor-to-outdoor transitions",
+      "Hyperlapse of events/transformations",
+      "Vertical reveals of landmarks"
+    ]
+  },
+  "top_creators": [
+    {
+      "handle": "@thedronecreative",
+      "name": "Matthew Brennan",
+      "platform": ["Instagram", "TikTok"],
+      "followers_instagram": 136000,
+      "location": "Dubai",
+      "specialty": "Video creation with orbit transitions and speed ramps",
+      "influence_level": "macro"
+    },
+    {
+      "handle": "@beverlyhillsaerials",
+      "platform": "Instagram",
+      "followers": 179400,
+      "credentials": "3x Emmy Award Winner",
+      "specialty": "Film, TV, Commercial, Live Broadcast"
+    },
+    {
+      "handle": "@basso2012",
+      "platform": "Instagram",
+      "followers": 54200,
+      "credentials": "DGCA Authorized UAV Pilot",
+      "specialty": "Professional Aerial Cinematography"
+    },
+    {
+      "handle": "@simeonpratt",
+      "platform": "Instagram",
+      "followers": 25600,
+      "role": "Director/Cinematographer/Photographer"
+    }
+  ],
+  "automation_features": {
+    "tier_1_immediate": [
+      {
+        "feature": "Optimal Length Enforcement",
+        "target": "15-30 seconds",
+        "difficulty": "low",
+        "impact": "high",
+        "priority": 1
+      },
+      {
+        "feature": "Aspect Ratio Optimization",
+        "target": "9:16 vertical",
+        "difficulty": "low",
+        "impact": "high",
+        "priority": 2
+      },
+      {
+        "feature": "Export Settings",
+        "specs": "30 FPS, 1080x1920, H.265",
+        "difficulty": "low",
+        "impact": "high",
+        "priority": 3
+      },
+      {
+        "feature": "Auto Color Grading",
+        "method": "Basic LUT application",
+        "difficulty": "low",
+        "impact": "high",
+        "priority": 4
+      }
+    ],
+    "tier_2_near_term": [
+      {
+        "feature": "Automated Beat Sync",
+        "method": "AI audio analysis, cut placement on beats",
+        "difficulty": "medium",
+        "impact": "very_high",
+        "engagement_increase_percent": 40,
+        "priority": 5
+      },
+      {
+        "feature": "Speed Ramp Automation",
+        "method": "Detect similar movements, apply velocity curves",
+        "difficulty": "medium",
+        "impact": "high",
+        "watch_time_increase_percent": 22,
+        "priority": 6
+      },
+      {
+        "feature": "Golden Hour Detection",
+        "method": "Color temperature and saturation analysis",
+        "difficulty": "medium",
+        "impact": "medium",
+        "priority": 7
+      },
+      {
+        "feature": "Transition Selection",
+        "method": "Auto-match transitions to movement types",
+        "difficulty": "medium",
+        "impact": "high",
+        "priority": 8
+      }
+    ],
+    "tier_3_long_term": [
+      {
+        "feature": "Smart Hook Generation",
+        "method": "ML-based visual interest detection",
+        "difficulty": "high",
+        "impact": "very_high",
+        "retention_increase_percent": 65,
+        "priority": 9
+      },
+      {
+        "feature": "Movement Type Detection",
+        "method": "ML classification and smart sequencing",
+        "difficulty": "high",
+        "impact": "high",
+        "priority": 10
+      }
+    ]
+  },
+  "key_metrics": {
+    "first_3_seconds_retention_percent": 65,
+    "beat_sync_engagement_increase_percent": 40,
+    "speed_ramp_watch_time_increase_percent": 22,
+    "optimal_length_seconds": [15, 30],
+    "hook_share_amplification_percent": 1200,
+    "recommended_fps": 30,
+    "aspect_ratio": "9:16",
+    "resolution": "1080x1920"
+  },
+  "implementation_workflow": {
+    "ideal_user_experience": [
+      "User drops drone clips into tool",
+      "User chooses music or tool suggests trending audio",
+      "Auto-analysis: movement types, golden hour detection, visual interest",
+      "Auto-assembly: select best clips, order by engagement, apply beat sync, add transitions, apply color grading",
+      "Preview: user reviews auto-generated edit",
+      "Refinement: user adjusts if needed",
+      "Export: one-click with platform-optimized settings"
+    ],
+    "automation_principles": [
+      "Speed: Complete edit in under 5 minutes",
+      "Quality: Professional output without manual effort",
+      "Flexibility: Allow user overrides",
+      "Intelligence: Learn from user preferences",
+      "Platform awareness: Pre-configured for Instagram/TikTok"
+    ]
+  }
+}

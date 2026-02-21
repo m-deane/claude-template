@@ -91,6 +91,7 @@ class SceneDetector:
         threshold: float = 27.0,
         min_scene_length: float = 1.0,
         max_scene_length: float = 10.0,
+        analysis_scale: float = 0.5,
     ):
         """
         Initialize the scene detector.
@@ -99,10 +100,12 @@ class SceneDetector:
             threshold: Sensitivity for scene detection (lower = more scenes)
             min_scene_length: Minimum scene duration in seconds
             max_scene_length: Maximum scene duration in seconds
+            analysis_scale: Scale factor for frame analysis (0.25-1.0, lower=faster)
         """
         self.threshold = threshold
         self.min_scene_length = min_scene_length
         self.max_scene_length = max_scene_length
+        self.analysis_scale = max(0.25, min(1.0, analysis_scale))
 
     def detect_scenes(self, video_path: Path) -> list[SceneInfo]:
         """
@@ -710,16 +713,26 @@ class SceneDetector:
             if not ret:
                 continue
 
+            # Downscale for analysis (scoring is scale-invariant)
+            if self.analysis_scale < 1.0:
+                analysis_frame = cv2.resize(
+                    frame, (0, 0),
+                    fx=self.analysis_scale, fy=self.analysis_scale,
+                    interpolation=cv2.INTER_AREA,
+                )
+            else:
+                analysis_frame = frame
+
             # Calculate all metrics
-            sharpness = self._calculate_sharpness(frame)
-            color_score = self._calculate_color_variance(frame)
-            brightness_score = self._calculate_brightness_balance(frame)
-            composition_score = self._calculate_composition(frame)
-            subject_score, visual_density = self._calculate_subject_score(frame)
+            sharpness = self._calculate_sharpness(analysis_frame)
+            color_score = self._calculate_color_variance(analysis_frame)
+            brightness_score = self._calculate_brightness_balance(analysis_frame)
+            composition_score = self._calculate_composition(analysis_frame)
+            subject_score, visual_density = self._calculate_subject_score(analysis_frame)
 
             motion_score = 50.0
             if prev_gray is not None:
-                motion_score = self._calculate_motion_optical_flow(prev_gray, frame)
+                motion_score = self._calculate_motion_optical_flow(prev_gray, analysis_frame)
 
             hook_score, _ = self._calculate_hook_potential(
                 frame, subject_score, motion_score, color_score, composition_score
@@ -739,7 +752,7 @@ class SceneDetector:
             subject_scores.append(subject_score)
             hook_potentials.append(hook_score)
 
-            prev_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            prev_gray = cv2.cvtColor(analysis_frame, cv2.COLOR_BGR2GRAY)
 
         cap.release()
 
@@ -1046,6 +1059,8 @@ class SceneDetector:
             motion_energies = []  # Track motion energy per frame
             is_golden_samples = []
             depth_samples = []
+            hook_potentials = []
+            subject_scores = []
 
             mid_frame_idx = len(sample_frames) // 2
             dominant_colors = []
@@ -1056,13 +1071,29 @@ class SceneDetector:
                 if not ret:
                     continue
 
-                curr_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # Downscale for analysis (scoring is scale-invariant)
+                if self.analysis_scale < 1.0:
+                    analysis_frame = cv2.resize(
+                        frame, (0, 0),
+                        fx=self.analysis_scale, fy=self.analysis_scale,
+                        interpolation=cv2.INTER_AREA,
+                    )
+                else:
+                    analysis_frame = frame
+
+                curr_gray = cv2.cvtColor(analysis_frame, cv2.COLOR_BGR2GRAY)
 
                 if idx == mid_frame_idx:
-                    dominant_colors = self.extract_dominant_colors(frame)
+                    dominant_colors = self.extract_dominant_colors(analysis_frame)
 
-                is_golden_samples.append(self.detect_golden_hour(frame))
-                depth_samples.append(self.calculate_depth_score(frame))
+                is_golden_samples.append(self.detect_golden_hour(analysis_frame))
+                depth_samples.append(self.calculate_depth_score(analysis_frame))
+
+                # Compute hook potential metrics at sampled frames
+                subj_score, _ = self._calculate_subject_score(analysis_frame)
+                color_var = self._calculate_color_variance(analysis_frame)
+                comp_score = self._calculate_composition(analysis_frame)
+                subject_scores.append(subj_score)
 
                 if prev_gray is not None:
                     flow = cv2.calcOpticalFlowFarneback(
@@ -1084,8 +1115,14 @@ class SceneDetector:
                     motion_directions.append(direction)
 
                     # Calculate motion energy from optical flow
-                    motion_score = self._calculate_motion_optical_flow(prev_gray, frame)
+                    motion_score = self._calculate_motion_optical_flow(prev_gray, analysis_frame)
                     motion_energies.append(motion_score)
+
+                    # Compute hook potential using available metrics
+                    hook_score, _ = self._calculate_hook_potential(
+                        analysis_frame, subj_score, motion_score, color_var, comp_score
+                    )
+                    hook_potentials.append(hook_score)
 
                 prev_gray = curr_gray
 
@@ -1116,6 +1153,20 @@ class SceneDetector:
             # Calculate average motion energy (0-100 scale)
             avg_motion_energy = np.mean(motion_energies) if motion_energies else 0.0
 
+            # Calculate hook potential and tier from sampled data
+            avg_hook = float(np.mean(hook_potentials)) if hook_potentials else 0.0
+            avg_subject = float(np.mean(subject_scores)) if subject_scores else 0.0
+            if avg_hook >= 80:
+                hook_tier = HookPotential.MAXIMUM
+            elif avg_hook >= 65:
+                hook_tier = HookPotential.HIGH
+            elif avg_hook >= 45:
+                hook_tier = HookPotential.MEDIUM
+            elif avg_hook >= 25:
+                hook_tier = HookPotential.LOW
+            else:
+                hook_tier = HookPotential.POOR
+
             enhanced_scene = EnhancedSceneInfo(
                 start_time=scene.start_time,
                 end_time=scene.end_time,
@@ -1130,6 +1181,9 @@ class SceneDetector:
                 is_golden_hour=is_golden,
                 dominant_colors=dominant_colors,
                 depth_score=depth_score,
+                subject_score=avg_subject,
+                hook_potential=avg_hook,
+                hook_tier=hook_tier,
             )
 
             enhanced_scenes.append(enhanced_scene)

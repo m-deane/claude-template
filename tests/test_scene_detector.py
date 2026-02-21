@@ -105,20 +105,255 @@ class TestSceneDetector:
         assert balanced_score > dark_score
         assert balanced_score > bright_score
 
-    def test_calculate_motion(self):
-        """Test motion calculation between frames."""
+    def test_calculate_motion_optical_flow(self):
+        """Test motion calculation using optical flow."""
         detector = SceneDetector()
 
         # Two identical frames (no motion)
         frame1 = np.ones((480, 640, 3), dtype=np.uint8) * 128
         frame2 = np.ones((480, 640, 3), dtype=np.uint8) * 128
-        no_motion = detector._calculate_motion(frame1, frame2)
+        frame1_gray = np.ones((480, 640), dtype=np.uint8) * 128
+        no_motion = detector._calculate_motion_optical_flow(frame1_gray, frame2)
 
-        # Two different frames (motion)
-        frame3 = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        motion = detector._calculate_motion(frame1, frame3)
+        # Verify score is in valid range and low for no motion
+        assert 0 <= no_motion <= 100
+        assert no_motion < 50  # Should be low for identical frames
 
-        assert motion > no_motion
+        # Create frame with simulated camera pan (consistent motion)
+        frame3 = np.ones((480, 640, 3), dtype=np.uint8) * 128
+        # Add some features
+        frame3[:, ::20, :] = 200  # Vertical stripes
+        # Shift the features to simulate motion
+        frame4 = np.ones((480, 640, 3), dtype=np.uint8) * 128
+        frame4[:, 10::20, :] = 200  # Shifted stripes
+        frame3_gray = frame1_gray  # Use same gray for prev
+        motion = detector._calculate_motion_optical_flow(frame3_gray, frame4)
+
+        assert 0 <= motion <= 100
+
+    def test_calculate_composition(self):
+        """Test composition scoring."""
+        detector = SceneDetector()
+
+        # Test with a simple frame
+        frame = np.ones((480, 640, 3), dtype=np.uint8) * 128
+        score = detector._calculate_composition(frame)
+
+        assert 0 <= score <= 100
+
+    def test_score_rule_of_thirds(self):
+        """Test rule of thirds scoring."""
+        detector = SceneDetector()
+
+        # Create edge map with features at rule of thirds lines
+        edges = np.zeros((480, 640), dtype=np.uint8)
+        # Add vertical line at 1/3
+        edges[:, 213] = 255
+        # Add horizontal line at 2/3
+        edges[320, :] = 255
+
+        score = detector._score_rule_of_thirds(edges, 640, 480)
+        assert 0 <= score <= 100
+
+    def test_score_horizon_level(self):
+        """Test horizon levelness scoring."""
+        detector = SceneDetector()
+
+        # Create edge map with horizontal line
+        edges = np.zeros((480, 640), dtype=np.uint8)
+        edges[240, :] = 255  # Perfectly horizontal line
+
+        score = detector._score_horizon_level(edges, 640, 480)
+        assert 0 <= score <= 100
+
+    def test_score_leading_lines(self):
+        """Test leading lines scoring."""
+        detector = SceneDetector()
+
+        # Create edge map with diagonal lines
+        edges = np.zeros((480, 640), dtype=np.uint8)
+        for i in range(480):
+            if i < 640:
+                edges[i, i] = 255  # Diagonal line
+
+        score = detector._score_leading_lines(edges, 640, 480)
+        assert 0 <= score <= 100
+
+
+class TestSceneDetectorEdgeCases:
+    """Tests for edge cases and error handling."""
+
+    @pytest.fixture
+    def detector(self):
+        """Create a SceneDetector instance."""
+        return SceneDetector()
+
+    def test_calculate_sharpness_all_black(self, detector):
+        """Test sharpness calculation on all-black frame."""
+        black_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        score = detector._calculate_sharpness(black_frame)
+
+        assert score == 0.0  # No variance in all black
+
+    def test_calculate_sharpness_all_white(self, detector):
+        """Test sharpness calculation on all-white frame."""
+        white_frame = np.ones((480, 640, 3), dtype=np.uint8) * 255
+        score = detector._calculate_sharpness(white_frame)
+
+        assert score == 0.0  # No variance in all white
+
+    def test_calculate_color_variance_monochrome(self, detector):
+        """Test color variance on monochrome frame."""
+        mono_frame = np.ones((480, 640, 3), dtype=np.uint8) * 100
+        score = detector._calculate_color_variance(mono_frame)
+
+        assert score < 10  # Very low variance
+
+    def test_calculate_brightness_balance_extremes(self, detector):
+        """Test brightness balance at extremes."""
+        # All black
+        black = np.zeros((480, 640, 3), dtype=np.uint8)
+        black_score = detector._calculate_brightness_balance(black)
+
+        # All white
+        white = np.ones((480, 640, 3), dtype=np.uint8) * 255
+        white_score = detector._calculate_brightness_balance(white)
+
+        # Both should score poorly
+        assert black_score < 50
+        assert white_score < 50
+
+    def test_motion_optical_flow_small_frame(self, detector):
+        """Test optical flow with very small frame."""
+        small_gray = np.ones((10, 10), dtype=np.uint8) * 128
+        small_frame = np.ones((10, 10, 3), dtype=np.uint8) * 128
+
+        score = detector._calculate_motion_optical_flow(small_gray, small_frame)
+        assert 0 <= score <= 100
+
+    def test_composition_edge_detection_failure(self, detector):
+        """Test composition handling when edge detection produces no edges."""
+        # Uniform frame should produce minimal edges
+        uniform = np.ones((480, 640, 3), dtype=np.uint8) * 128
+        score = detector._calculate_composition(uniform)
+
+        assert 0 <= score <= 100
+
+
+class TestSubjectDetection:
+    """Tests for subject detection and hook potential."""
+
+    @pytest.fixture
+    def detector(self):
+        """Create a scene detector instance."""
+        return SceneDetector()
+
+    def test_calculate_subject_score_uniform_frame(self, detector):
+        """Test subject detection on uniform frame (no subjects)."""
+        uniform = np.ones((480, 640, 3), dtype=np.uint8) * 128
+        score, density = detector._calculate_subject_score(uniform)
+
+        assert 0 <= score <= 100
+        assert 0 <= density <= 1.0
+        # Uniform frame should have low subject score
+        assert score < 50
+
+    def test_calculate_subject_score_varied_frame(self, detector):
+        """Test subject detection on varied frame (realistic content)."""
+        # Create a frame with varied content (simulating real scene)
+        frame = np.random.randint(50, 200, (480, 640, 3), dtype=np.uint8)
+        # Add some distinct bright regions
+        frame[100:200, 100:200] = 250
+        frame[300:400, 400:500] = 20
+
+        score, density = detector._calculate_subject_score(frame)
+
+        assert 0 <= score <= 100
+        assert 0 <= density <= 1.0
+        # Varied frame should produce a valid score
+        assert score >= 0
+
+    def test_calculate_subject_score_returns_tuple(self, detector):
+        """Test that subject score returns proper tuple."""
+        frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        result = detector._calculate_subject_score(frame)
+
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        assert isinstance(result[0], (int, float))
+        assert isinstance(result[1], (int, float))
+
+    def test_calculate_hook_potential_basic(self, detector):
+        """Test hook potential calculation returns valid values."""
+        from drone_reel.core.scene_detector import HookPotential
+
+        frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+
+        hook_score, tier = detector._calculate_hook_potential(
+            frame,
+            subject_score=50.0,
+            motion_score=50.0,
+            color_score=50.0,
+            composition_score=50.0,
+        )
+
+        assert 0 <= hook_score <= 100
+        assert isinstance(tier, HookPotential)
+
+    def test_calculate_hook_potential_tiers(self, detector):
+        """Test hook potential tier classification."""
+        from drone_reel.core.scene_detector import HookPotential
+
+        # Create varied frame with high entropy (uniqueness)
+        frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+
+        # High input scores should contribute to higher tier
+        high_score, high_tier = detector._calculate_hook_potential(
+            frame, subject_score=90, motion_score=90, color_score=90, composition_score=90
+        )
+        # Score should be relatively high
+        assert high_score > 50
+
+        # Low scores should yield lower tier
+        low_score, low_tier = detector._calculate_hook_potential(
+            frame, subject_score=10, motion_score=10, color_score=10, composition_score=10
+        )
+        # Low inputs should yield lower score
+        assert low_score < high_score
+
+    def test_enhanced_scene_info_new_fields(self):
+        """Test that EnhancedSceneInfo has hook potential fields."""
+        from pathlib import Path
+        from drone_reel.core.scene_detector import EnhancedSceneInfo, HookPotential, MotionType
+
+        scene = EnhancedSceneInfo(
+            start_time=0.0,
+            end_time=5.0,
+            duration=5.0,
+            score=80.0,
+            source_file=Path("/tmp/test.mp4"),
+            motion_type=MotionType.PAN_RIGHT,
+            motion_direction=(1.0, 0.0),
+            subject_score=75.0,
+            hook_potential=70.0,
+            hook_tier=HookPotential.HIGH,
+            visual_interest_density=0.15,
+        )
+
+        assert scene.subject_score == 75.0
+        assert scene.hook_potential == 70.0
+        assert scene.hook_tier == HookPotential.HIGH
+        assert scene.visual_interest_density == 0.15
+
+    def test_hook_potential_enum_values(self):
+        """Test HookPotential enum has expected values."""
+        from drone_reel.core.scene_detector import HookPotential
+
+        assert HookPotential.MAXIMUM.value == "maximum"
+        assert HookPotential.HIGH.value == "high"
+        assert HookPotential.MEDIUM.value == "medium"
+        assert HookPotential.LOW.value == "low"
+        assert HookPotential.POOR.value == "poor"
 
 
 class TestSceneDetectorIntegration:

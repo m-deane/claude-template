@@ -165,8 +165,8 @@ class ColorGrader:
         ),
         ColorPreset.DRONE_AERIAL: ColorAdjustments(
             brightness=5,
-            contrast=12,
-            saturation=8,
+            contrast=14,
+            saturation=10,
             temperature=8,
             vibrance=15,
             shadows=10,
@@ -181,6 +181,7 @@ class ColorGrader:
         lut_path: Optional[Path] = None,
         tone_curve: Optional[ToneCurve] = None,
         use_gpu: bool = False,
+        intensity: float = 1.0,
     ):
         """
         Initialize the color grader.
@@ -191,12 +192,29 @@ class ColorGrader:
             lut_path: Optional path to .cube LUT file
             tone_curve: Optional tone curve for RGB channels
             use_gpu: Enable GPU acceleration if available
+            intensity: Scale factor for color adjustments (0.0-1.0, default 1.0)
         """
         self.preset = preset
+        self.intensity = max(0.0, min(1.0, intensity))
         if adjustments:
             self.adjustments = adjustments
         else:
             self.adjustments = self.PRESET_ADJUSTMENTS.get(preset, ColorAdjustments())
+
+        if self.intensity != 1.0:
+            self.adjustments = ColorAdjustments(
+                brightness=self.adjustments.brightness * self.intensity,
+                contrast=self.adjustments.contrast * self.intensity,
+                saturation=self.adjustments.saturation * self.intensity,
+                temperature=self.adjustments.temperature * self.intensity,
+                tint=self.adjustments.tint * self.intensity,
+                shadows=self.adjustments.shadows * self.intensity,
+                highlights=self.adjustments.highlights * self.intensity,
+                vibrance=self.adjustments.vibrance * self.intensity,
+                fade=self.adjustments.fade * self.intensity,
+                grain=self.adjustments.grain * self.intensity,
+                selective_color=self.adjustments.selective_color,
+            )
 
         self.lut: Optional[np.ndarray] = None
         if lut_path:
@@ -278,11 +296,13 @@ class ColorGrader:
         lut_size = lut.shape[0]
         scale = (lut_size - 1) / 255.0
 
-        b, g, r = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
+        # Clamp input to valid range before scaling
+        frame_clamped = np.clip(frame, 0, 255)
+        b, g, r = frame_clamped[:, :, 0], frame_clamped[:, :, 1], frame_clamped[:, :, 2]
 
-        b_scaled = np.clip(b * scale, 0, lut_size - 1.001)
-        g_scaled = np.clip(g * scale, 0, lut_size - 1.001)
-        r_scaled = np.clip(r * scale, 0, lut_size - 1.001)
+        b_scaled = np.clip(b * scale, 0, lut_size - 1 - 1e-6)
+        g_scaled = np.clip(g * scale, 0, lut_size - 1 - 1e-6)
+        r_scaled = np.clip(r * scale, 0, lut_size - 1 - 1e-6)
 
         b0, g0, r0 = b_scaled.astype(np.int32), g_scaled.astype(np.int32), r_scaled.astype(np.int32)
         b1, g1, r1 = np.minimum(b0 + 1, lut_size - 1), np.minimum(g0 + 1, lut_size - 1), np.minimum(r0 + 1, lut_size - 1)
@@ -310,7 +330,7 @@ class ColorGrader:
 
         result = c0 * (1 - r_frac[:, :, np.newaxis]) + c1 * r_frac[:, :, np.newaxis]
 
-        return result * 255.0
+        return np.clip(result * 255.0, 0, 255)
 
     def _build_tone_curve_luts(self, tone_curve: ToneCurve) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -386,15 +406,16 @@ class ColorGrader:
         sat = hsv[:, :, 1]
         lum = lab[:, :, 0]
 
+        # OpenCV uint8 HSV: hue is 0-180 (not 0-360), saturation 0-255
         color_ranges = {
-            'red': (0, 15, 345, 360, selective.red_hue, selective.red_sat, selective.red_lum),
-            'orange': (16, 45, None, None, selective.orange_hue, selective.orange_sat, selective.orange_lum),
-            'yellow': (46, 75, None, None, selective.yellow_hue, selective.yellow_sat, selective.yellow_lum),
-            'green': (76, 165, None, None, selective.green_hue, selective.green_sat, selective.green_lum),
-            'cyan': (166, 195, None, None, selective.cyan_hue, selective.cyan_sat, selective.cyan_lum),
-            'blue': (196, 255, None, None, selective.blue_hue, selective.blue_sat, selective.blue_lum),
-            'purple': (256, 285, None, None, selective.purple_hue, selective.purple_sat, selective.purple_lum),
-            'magenta': (286, 344, None, None, selective.magenta_hue, selective.magenta_sat, selective.magenta_lum),
+            'red': (0, 8, 173, 180, selective.red_hue, selective.red_sat, selective.red_lum),
+            'orange': (9, 23, None, None, selective.orange_hue, selective.orange_sat, selective.orange_lum),
+            'yellow': (24, 38, None, None, selective.yellow_hue, selective.yellow_sat, selective.yellow_lum),
+            'green': (39, 83, None, None, selective.green_hue, selective.green_sat, selective.green_lum),
+            'cyan': (84, 98, None, None, selective.cyan_hue, selective.cyan_sat, selective.cyan_lum),
+            'blue': (99, 128, None, None, selective.blue_hue, selective.blue_sat, selective.blue_lum),
+            'purple': (129, 143, None, None, selective.purple_hue, selective.purple_sat, selective.purple_lum),
+            'magenta': (144, 172, None, None, selective.magenta_hue, selective.magenta_sat, selective.magenta_lum),
         }
 
         for color_name, params in color_ranges.items():
@@ -406,7 +427,8 @@ class ColorGrader:
                 mask = (hue >= start1) & (hue <= end1)
 
             if hue_adj != 0:
-                hsv[:, :, 0][mask] = np.clip(hue[mask] + hue_adj / 2, 0, 360)
+                # hue_adj is -180..180 degrees, /2 converts to 0-180 HSV scale
+                hsv[:, :, 0][mask] = np.clip(hue[mask] + hue_adj / 2, 0, 180)
 
             if sat_adj != 0:
                 sat_factor = 1 + sat_adj / 100
@@ -443,10 +465,16 @@ class ColorGrader:
             return self._grade_frame_cpu(frame)
 
     def _grade_frame_cpu(self, frame: np.ndarray) -> np.ndarray:
-        """CPU implementation of frame grading."""
-        result = frame.astype(np.float32)
-        applied_adjustments = False  # Track if any color adjustments were made
+        """CPU implementation of frame grading.
 
+        Batches color space conversions to avoid redundant BGR->HSV->BGR and
+        BGR->LAB->BGR round-trips. Saturation + vibrance + teal_orange share
+        a single HSV pass; shadows + highlights share a single LAB pass.
+        """
+        result = frame.astype(np.float32)
+        applied_adjustments = False
+
+        # Phase 0: LUT and tone curves (direct pixel mapping)
         if self.lut is not None:
             result = self._apply_lut(result, self.lut)
             applied_adjustments = True
@@ -455,6 +483,19 @@ class ColorGrader:
             result = self.apply_curve(result)
             applied_adjustments = True
 
+        # Phase 0.5: Automatic shadow lift (LAB space, before preset adjustments).
+        # Only active when a non-NONE preset is in use and intensity is non-zero,
+        # so the NONE/identity path is unaffected.
+        if self.intensity > 0 and self.preset != ColorPreset.NONE:
+            result_norm = result / 255.0
+            lab_tmp = cv2.cvtColor(result_norm.astype(np.float32), cv2.COLOR_BGR2LAB)
+            lab_tmp = self._auto_shadow_lift(lab_tmp)
+            result = np.clip(
+                cv2.cvtColor(lab_tmp, cv2.COLOR_LAB2BGR) * 255.0, 0, 255
+            )
+            applied_adjustments = True
+
+        # Phase 1: Direct BGR operations (no color space conversion needed)
         if self.adjustments.brightness != 0:
             result = self._adjust_brightness(result, self.adjustments.brightness)
             applied_adjustments = True
@@ -471,22 +512,26 @@ class ColorGrader:
             result = self._adjust_tint(result, self.adjustments.tint)
             applied_adjustments = True
 
-        if self.adjustments.saturation != 0:
-            result = self._adjust_saturation(result, self.adjustments.saturation)
+        # Phase 2: Batched HSV operations (single BGR->HSV->BGR round-trip)
+        needs_hsv = (
+            self.adjustments.saturation != 0
+            or self.adjustments.vibrance != 0
+            or self.preset == ColorPreset.TEAL_ORANGE
+        )
+        if needs_hsv:
+            result = self._apply_hsv_batch(result)
             applied_adjustments = True
 
-        if self.adjustments.vibrance != 0:
-            result = self._adjust_vibrance(result, self.adjustments.vibrance)
+        # Phase 3: Batched LAB operations (single BGR->LAB->BGR round-trip)
+        needs_lab = (
+            self.adjustments.shadows != 0
+            or self.adjustments.highlights != 0
+        )
+        if needs_lab:
+            result = self._apply_lab_batch(result)
             applied_adjustments = True
 
-        if self.adjustments.shadows != 0:
-            result = self._adjust_shadows(result, self.adjustments.shadows)
-            applied_adjustments = True
-
-        if self.adjustments.highlights != 0:
-            result = self._adjust_highlights(result, self.adjustments.highlights)
-            applied_adjustments = True
-
+        # Phase 4: Remaining operations
         if self.adjustments.fade > 0:
             result = self._apply_fade(result, self.adjustments.fade)
             applied_adjustments = True
@@ -499,10 +544,6 @@ class ColorGrader:
             result = self._apply_grain(result, self.adjustments.grain)
             applied_adjustments = True
 
-        if self.preset == ColorPreset.TEAL_ORANGE:
-            result = self._apply_teal_orange_grade(result)
-            applied_adjustments = True
-
         # Apply subtle dithering to mask banding in gradients (only if adjustments were made)
         if applied_adjustments:
             result = self._apply_dither(result)
@@ -511,6 +552,103 @@ class ColorGrader:
         self._frame_index += 1
 
         return result
+
+    def _apply_hsv_batch(self, frame: np.ndarray) -> np.ndarray:
+        """Apply saturation, vibrance, and teal_orange in a single HSV pass.
+
+        Replaces individual _adjust_saturation + _adjust_vibrance +
+        _apply_teal_orange_grade calls that each did their own BGR->HSV->BGR
+        conversion.
+        """
+        frame_normalized = frame / 255.0
+        hsv = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2HSV)
+
+        if self.adjustments.saturation != 0:
+            factor = 1 + self.adjustments.saturation / 100
+            hsv[:, :, 1] = np.clip(hsv[:, :, 1] * factor, 0, 1)
+
+        if self.adjustments.vibrance != 0:
+            saturation = hsv[:, :, 1]
+            mask = 1 - saturation
+            adjustment = mask * (self.adjustments.vibrance / 100) * 0.5
+            hsv[:, :, 1] = np.clip(saturation + adjustment, 0, 1)
+
+        if self.preset == ColorPreset.TEAL_ORANGE:
+            hue = hsv[:, :, 0]
+            orange_mask = ((hue >= 0) & (hue <= 60)) | ((hue >= 300) & (hue <= 360))
+            teal_mask = (hue >= 150) & (hue <= 210)
+            hsv[:, :, 1][orange_mask] = np.clip(hsv[:, :, 1][orange_mask] * 1.2, 0, 1)
+            hsv[:, :, 1][teal_mask] = np.clip(hsv[:, :, 1][teal_mask] * 1.15, 0, 1)
+            mid_tones = ~orange_mask & ~teal_mask
+            hsv[:, :, 0][mid_tones] = np.where(
+                hsv[:, :, 0][mid_tones] < 180, 30, 180
+            )
+
+        result = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return result * 255.0
+
+    def _auto_shadow_lift(self, frame_lab: np.ndarray) -> np.ndarray:
+        """Lift underexposed shadows in float32 LAB space (L channel 0-100).
+
+        Analyzes mean luminance of the frame. If the frame has underexposed
+        regions (mean L < 80), pixels in the bottom 30% of the luminance
+        range (L < 30) are brightened by up to 15 units using a smooth curve
+        that tapers off towards midtones, leaving highlights untouched.
+
+        Args:
+            frame_lab: Float32 LAB frame with L channel in 0-100 range.
+
+        Returns:
+            LAB frame with shadow pixels lifted; original array modified in place.
+        """
+        l_channel = frame_lab[:, :, 0]
+        mean_l = float(l_channel.mean())
+
+        if mean_l >= 80.0:
+            # Frame is well-exposed; no adjustment needed.
+            return frame_lab
+
+        # Shadow threshold: bottom 30% of the 0-100 L range = pixels with L < 30.
+        shadow_threshold = 30.0
+        lift_amount = 15.0
+
+        shadow_pixels = l_channel < shadow_threshold
+
+        # Smooth weight: 1.0 at L=0, tapering to 0.0 at L=shadow_threshold.
+        # Using a quadratic curve so the lift is gentle near the threshold.
+        weight = ((shadow_threshold - l_channel) / shadow_threshold) ** 2
+        weight = np.where(shadow_pixels, weight, 0.0)
+
+        l_channel_lifted = np.clip(l_channel + weight * lift_amount, 0.0, 100.0)
+        frame_lab[:, :, 0] = l_channel_lifted
+
+        return frame_lab
+
+    def _apply_lab_batch(self, frame: np.ndarray) -> np.ndarray:
+        """Apply shadows and highlights in a single LAB pass.
+
+        Replaces individual _adjust_shadows + _adjust_highlights calls that
+        each did their own BGR->LAB->BGR conversion.
+        """
+        frame_normalized = frame / 255.0
+        lab = cv2.cvtColor(frame_normalized.astype(np.float32), cv2.COLOR_BGR2LAB)
+        l_channel = lab[:, :, 0]
+
+        if self.adjustments.shadows != 0:
+            shadow_mask = 1 - (l_channel / 100)
+            shadow_mask = shadow_mask ** 2
+            shadow_adj = shadow_mask * (self.adjustments.shadows / 100) * 25
+            l_channel = np.clip(l_channel + shadow_adj, 0, 100)
+
+        if self.adjustments.highlights != 0:
+            highlight_mask = l_channel / 100
+            highlight_mask = highlight_mask ** 2
+            highlight_adj = highlight_mask * (self.adjustments.highlights / 100) * 25
+            l_channel = np.clip(l_channel + highlight_adj, 0, 100)
+
+        lab[:, :, 0] = l_channel
+        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        return np.clip(result * 255.0, 0, 255)
 
     def _grade_frame_gpu(self, frame: np.ndarray) -> np.ndarray:
         """
@@ -740,11 +878,15 @@ class ColorGrader:
 
         Args:
             frame: Input frame (float32, 0-255)
-            strength: Dithering strength (default 1.5 = subtle but effective)
+            strength: Dithering strength (default 1.5, clamped to 0-10)
 
         Returns:
             Frame with dithering applied
         """
+        strength = max(0.0, min(strength, 10.0))
+        if strength == 0.0:
+            return frame
+
         h, w = frame.shape[:2]
 
         # 4x4 Bayer matrix for ordered dithering (normalized to -0.5 to 0.5)

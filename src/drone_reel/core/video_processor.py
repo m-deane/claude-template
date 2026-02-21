@@ -5,6 +5,7 @@ Handles clip extraction, stitching, and applying various transitions
 between clips using MoviePy.
 """
 
+import gc
 import os
 import platform
 import subprocess
@@ -124,11 +125,12 @@ class VideoProcessor:
         Auto-detect optimal number of CPU cores for encoding.
 
         Returns:
-            Number of threads to use (leaves 1 core free for system)
+            Number of threads to use (capped at half of cores to prevent
+            oversubscription when multiple renders run concurrently)
         """
         try:
             cpu_count = os.cpu_count() or 4
-            return max(1, cpu_count - 1)
+            return max(1, min(cpu_count - 1, cpu_count // 2))
         except Exception:
             return 4
 
@@ -202,42 +204,46 @@ class VideoProcessor:
         """
         source_clip = VideoFileClip(str(segment.scene.source_file))
 
-        end_time = min(
-            segment.effective_start + segment.effective_duration, source_clip.duration
-        )
-        subclip = source_clip.subclipped(segment.effective_start, end_time)
-
-        if reframer:
-            # Reset reframer tracking for this new clip
-            reframer.reset_tracking()
-
-            # Calculate total frames for this clip
-            fps = subclip.fps or 30
-            total_frames = int(subclip.duration * fps)
-
-            def reframe_filter(get_frame, t):
-                """Apply reframing to each frame."""
-                frame = get_frame(t)
-                frame_index = int(t * fps)
-                return reframer.reframe_frame(frame, frame_index, total_frames)
-
-            subclip = subclip.transform(reframe_filter)
-
-            # Update clip size to match reframer output
-            output_w, output_h = reframer.calculate_output_dimensions(
-                source_clip.w, source_clip.h
+        try:
+            end_time = min(
+                segment.effective_start + segment.effective_duration, source_clip.duration
             )
-            subclip = subclip.with_duration(subclip.duration)
+            subclip = source_clip.subclipped(segment.effective_start, end_time)
 
-        elif target_size:
-            # Legacy resize (may stretch - use reframer for proper aspect ratio)
-            subclip = subclip.resized(target_size)
+            if reframer:
+                # Reset reframer tracking for this new clip
+                reframer.reset_tracking()
 
-        # Store reference to source clip so it stays open while subclip is used
-        # The source will be closed when the subclip is closed
-        subclip._source_clip_ref = source_clip
+                # Calculate total frames for this clip
+                fps = subclip.fps or 30
+                total_frames = int(subclip.duration * fps)
 
-        return subclip
+                def reframe_filter(get_frame, t):
+                    """Apply reframing to each frame."""
+                    frame = get_frame(t)
+                    frame_index = int(t * fps)
+                    return reframer.reframe_frame(frame, frame_index, total_frames)
+
+                subclip = subclip.transform(reframe_filter)
+
+                # Update clip size to match reframer output
+                output_w, output_h = reframer.calculate_output_dimensions(
+                    source_clip.w, source_clip.h
+                )
+                subclip = subclip.with_duration(subclip.duration)
+
+            elif target_size:
+                # Legacy resize (may stretch - use reframer for proper aspect ratio)
+                subclip = subclip.resized(target_size)
+
+            # Store reference to source clip so it stays open while subclip is used
+            # The source will be closed when the subclip is closed
+            subclip._source_clip_ref = source_clip
+
+            return subclip
+        except Exception:
+            source_clip.close()
+            raise
 
     def _extract_clip_parallel(
         self,
@@ -269,7 +275,9 @@ class VideoProcessor:
         reframer: Optional[Reframer] = None,
         reframers: Optional[list[Reframer]] = None,
         shake_scores: Optional[list[float]] = None,
-    ) -> Path:
+        speed_ramps: Optional[list[list]] = None,
+        return_clip: bool = False,
+    ) -> "Path | VideoFileClip":
         """
         Stitch multiple clip segments into a single video.
 
@@ -283,9 +291,12 @@ class VideoProcessor:
             reframer: Optional single Reframer for all clips
             reframers: Optional list of Reframers (one per clip) for intelligent per-clip reframing
             shake_scores: Optional list of shake scores (0-100) per clip for adaptive stabilization
+            speed_ramps: Optional list of SpeedRamp lists per clip for variable speed effects
+            return_clip: If True, return the composed clip instead of writing to disk.
+                The caller is responsible for writing and closing resources.
 
         Returns:
-            Path to the output video file
+            Path to the output video file, or a VideoFileClip if return_clip=True
         """
         if not segments:
             raise ValueError("No segments provided")
@@ -350,6 +361,7 @@ class VideoProcessor:
             # Apply adaptive stabilization if enabled
             if self.stabilize:
                 from drone_reel.core.stabilizer import stabilize_clip
+                pre_stab_clips = list(clips)
                 stabilized_clips = []
                 stabilized_count = 0
                 skipped_count = 0
@@ -376,6 +388,42 @@ class VideoProcessor:
                     if progress_callback:
                         progress_callback(0.3 + (i + 1) / total_segments * 0.15)
                 clips = stabilized_clips
+
+                # Free replaced clips to reclaim memory before encoding
+                for i, old_clip in enumerate(pre_stab_clips):
+                    if old_clip is not clips[i]:
+                        try:
+                            old_clip.close()
+                        except Exception:
+                            pass
+                del pre_stab_clips
+                gc.collect()
+
+            # Apply speed ramps if provided
+            if speed_ramps:
+                from drone_reel.core.speed_ramper import SpeedRamper
+                ramper = SpeedRamper()
+                pre_ramp_clips = list(clips)
+                ramped_clips = []
+                for i, clip in enumerate(clips):
+                    if i < len(speed_ramps) and speed_ramps[i]:
+                        try:
+                            ramped = ramper.apply_multiple_ramps(clip, speed_ramps[i])
+                            ramped_clips.append(ramped)
+                        except Exception:
+                            ramped_clips.append(clip)
+                    else:
+                        ramped_clips.append(clip)
+                clips = ramped_clips
+
+                # Free replaced clips
+                for i, old_clip in enumerate(pre_ramp_clips):
+                    if old_clip is not clips[i]:
+                        try:
+                            old_clip.close()
+                        except Exception:
+                            pass
+                del pre_ramp_clips
 
             processed_clips = []
             for i, (clip, segment) in enumerate(zip(clips, segments)):
@@ -407,18 +455,50 @@ class VideoProcessor:
                 audio = audio.with_effects([afx.AudioFadeOut(fade_duration)])
                 final_clip = final_clip.with_audio(audio)
 
+            # Return clip for further in-memory processing (caller handles write + cleanup)
+            if return_clip:
+                if progress_callback:
+                    progress_callback(0.7)
+                # Store clips list on final_clip so caller can clean up later
+                final_clip._stitch_source_clips = clips
+                final_clip._stitch_audio = audio
+                return final_clip
+
             output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Build ffmpeg_params with color space metadata, faststart, and bitrate caps
+            ffmpeg_params = [
+                "-pix_fmt", "yuv420p",
+                "-colorspace", "bt709",
+                "-color_primaries", "bt709",
+                "-color_trc", "bt709",
+                "-movflags", "+faststart",
+            ]
+
+            # Add maxrate/bufsize for VBV bitrate enforcement
+            if self.video_bitrate:
+                numeric_str = self.video_bitrate.rstrip("MmKk")
+                try:
+                    numeric_val = float(numeric_str)
+                    unit = self.video_bitrate[len(numeric_str):].upper()
+                    maxrate_val = numeric_val * 1.5
+                    bufsize_val = numeric_val * 2
+                    maxrate_str = f"{maxrate_val:.0f}{unit}"
+                    bufsize_str = f"{bufsize_val:.0f}{unit}"
+                    ffmpeg_params += ["-maxrate", maxrate_str, "-bufsize", bufsize_str]
+                except (ValueError, IndexError):
+                    pass  # Skip bitrate caps if parsing fails
 
             final_clip.write_videofile(
                 str(output_path),
                 fps=self.output_fps,
                 codec=self.output_codec,
-                audio_codec=self.output_audio_codec,
+                audio_codec="aac",
                 preset=self.preset,
                 threads=self.threads,
                 bitrate=self.video_bitrate,
                 audio_bitrate=self.audio_bitrate,
-                ffmpeg_params=["-pix_fmt", "yuv420p"],  # Ensure compatibility
+                ffmpeg_params=ffmpeg_params,
                 logger=None,
             )
 
@@ -431,26 +511,29 @@ class VideoProcessor:
             raise RuntimeError(f"Failed to stitch clips: {str(e)}") from e
 
         finally:
-            for clip in clips:
+            # Skip ALL cleanup in return_clip mode - caller manages lifecycle.
+            # CompositeVideoClip.close() sets self.bg = None, which breaks
+            # subsequent get_frame() calls on the returned clip.
+            if not return_clip:
+                for clip in clips:
+                    try:
+                        if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                            clip._source_clip_ref.close()
+                        clip.close()
+                    except Exception:
+                        pass
+
+                if audio:
+                    try:
+                        audio.close()
+                    except Exception:
+                        pass
+
                 try:
-                    # Close source clip reference if it exists
-                    if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
-                        clip._source_clip_ref.close()
-                    clip.close()
+                    if "final_clip" in locals():
+                        final_clip.close()
                 except Exception:
                     pass
-
-            if audio:
-                try:
-                    audio.close()
-                except Exception:
-                    pass
-
-            try:
-                if "final_clip" in locals():
-                    final_clip.close()
-            except Exception:
-                pass
 
     def _concatenate_with_transitions(
         self,
@@ -953,12 +1036,14 @@ class VideoProcessor:
     def get_video_info(self, video_path: Path) -> dict:
         """Get information about a video file."""
         clip = VideoFileClip(str(video_path))
-        info = {
-            "duration": clip.duration,
-            "fps": clip.fps,
-            "size": clip.size,
-            "width": clip.w,
-            "height": clip.h,
-        }
-        clip.close()
+        try:
+            info = {
+                "duration": clip.duration,
+                "fps": clip.fps,
+                "size": clip.size,
+                "width": clip.w,
+                "height": clip.h,
+            }
+        finally:
+            clip.close()
         return info

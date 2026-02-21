@@ -16,3 +16,19 @@ dist/
 build/
 __pycache__/
 *.pyc
+
+# OS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Media files (large)
+.drone_clips/
+output/
+
+# IDE / tool config
+.serena/
+.claude/frame_analysis/
+.claude/ralph-loop.local.md
+.upgrade_complete.txt

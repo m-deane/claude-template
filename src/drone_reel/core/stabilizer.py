@@ -79,6 +79,7 @@ def stabilize_clip(
 
     for i in range(n_frames):
         frame = clip.get_frame(i / fps)
+
         # Handle both uint8 (0-255) and float (0-1) frame formats
         is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
         if is_float:

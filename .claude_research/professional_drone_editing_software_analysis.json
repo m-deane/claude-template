@@ -1,0 +1,1008 @@
+{
+  "search_summary": {
+    "platforms_searched": ["web", "github", "technical_documentation"],
+    "software_analyzed": 4,
+    "docs_reviewed": 40,
+    "technical_implementations_found": 12,
+    "date_conducted": "2026-01-25"
+  },
+  "professional_software": [
+    {
+      "name": "DJI Fly",
+      "citation": "DJI. 'DJI Fly App & Video Edit.' DJI FORUM, 2024. https://forum.dji.com/thread-209598-1-1.html",
+      "platform": "mobile_ios_android",
+      "target_users": "consumer_drone_pilots",
+      "key_features": [
+        "One-Tap Auto Edit with AI clip selection",
+        "QuickShot automated flight patterns (Dronie, Rocket, Helix, Circle, Boomerang)",
+        "MasterShots multi-angle automated capture",
+        "AI-powered highlight detection from footage analysis",
+        "Pre-made templates with auto music sync",
+        "Automatic transitions and filters",
+        "Requires minimum 5 clips for optimal auto-edit results"
+      ],
+      "auto_edit_features": {
+        "scene_detection": {
+          "method": "AI analysis of footage quality and composition",
+          "highlight_markers": "Optional manual flagging or automatic detection",
+          "clip_selection": "Automatic best moment extraction"
+        },
+        "music_sync": {
+          "method": "Template-based beat matching",
+          "library": "Built-in soundtrack library with pre-matched templates",
+          "automation_level": "Fully automatic beat alignment"
+        },
+        "transitions": {
+          "types": ["crossfade", "cut", "zoom"],
+          "application": "Automatic based on template selection",
+          "customization": "Limited - template-driven"
+        },
+        "color_grading": {
+          "method": "Pre-built filters and LUTs",
+          "presets": "Cinematic filters optimized for aerial footage",
+          "automation": "One-tap application"
+        }
+      },
+      "quickshot_algorithms": {
+        "dronie": {
+          "pattern": "Backward and upward flight with subject tracking",
+          "parameters": {
+            "distance_range": "10m-120m (controller), 10m-60m (wifi)",
+            "default_distance": "40m",
+            "camera_behavior": "Locked on subject"
+          },
+          "output": "Reveals surrounding landscape dramatically"
+        },
+        "rocket": {
+          "pattern": "Vertical ascent with downward camera tilt",
+          "parameters": {
+            "height_options": [40, 60, 80, 100, 120],
+            "unit": "feet",
+            "camera_behavior": "Transitions to bird's eye view"
+          },
+          "output": "Crane-style vertical reveal"
+        },
+        "helix": "Spiral ascent around subject",
+        "circle": "Orbital flight maintaining subject center",
+        "boomerang": "Elliptical path returning to start"
+      },
+      "technical_implementation": {
+        "ai_backend": "Proprietary DJI AI for highlight detection",
+        "processing_speed": "~40% faster than manual editing (reported)",
+        "output_format": "Social media ready clips",
+        "automation_level": "High - minimal user input required"
+      },
+      "python_automation_potential": {
+        "scene_detection": "Replicable using OpenCV histogram analysis + ML models",
+        "flight_pattern_simulation": "Camera path algorithms for post-production zoom/pan effects",
+        "auto_music_sync": "Librosa for beat detection + MoviePy for clip alignment",
+        "template_system": "JSON-based template definitions with parameter ranges"
+      }
+    },
+    {
+      "name": "DJI Mimo",
+      "citation": "DJI. 'Introducing DJI Mimo 2.0.' DJI Hasselblad, 2024. https://dji-retail.co.uk/blogs/news/introducing-dji-mimo-2-0",
+      "platform": "mobile_ios_android",
+      "target_users": "gimbal_and_action_camera_users",
+      "key_features": [
+        "AI Editor with automatic clip selection and music matching",
+        "Story Mode with professional templates",
+        "QuickShot modes (inherited from DJI ecosystem)",
+        "Intelligent scene analysis for highlight detection",
+        "Speech-to-text for automatic subtitles",
+        "Speed ramping with variable speed control",
+        "Multi-resolution export (720p, 1080p, 4K)"
+      ],
+      "auto_edit_features": {
+        "ai_editor": {
+          "functionality": "Analyzes footage, selects best clips, applies transitions, adds music",
+          "input_requirement": "Raw footage from DJI devices or imports",
+          "output": "Polished video with music and transitions"
+        },
+        "scene_analysis": {
+          "method": "Intelligent scene analysis to find highlights",
+          "template_application": "Ready-made templates applied automatically",
+          "editing_time_reduction": "Approximately 40% compared to manual assembly"
+        },
+        "text_overlays": {
+          "subtitles": "Automatic via speech-to-text",
+          "stickers": "Customizable overlay library",
+          "animations": "Pre-built animation presets"
+        },
+        "speed_effects": {
+          "speed_ramping": "Variable speed transitions",
+          "slow_motion": "Frame interpolation support",
+          "time_lapse": "Frame dropping with smooth transitions"
+        }
+      },
+      "technical_implementation": {
+        "ai_capabilities": [
+          "Automated highlight detection using scene analysis",
+          "Music synchronization with beat detection",
+          "Speech recognition for subtitle generation"
+        ],
+        "editing_tools": [
+          "Multi-track timeline",
+          "Effects and filters library",
+          "Transition presets",
+          "Color grading tools"
+        ]
+      },
+      "python_automation_potential": {
+        "speech_to_text": "Whisper API or Google Speech-to-Text integration",
+        "speed_ramping": "OpenCV optical flow for smooth frame interpolation",
+        "auto_subtitles": "Whisper transcription + MoviePy TextClip positioning",
+        "story_mode_templates": "Predefined editing sequences with parameterized timing"
+      }
+    },
+    {
+      "name": "LumaFusion",
+      "citation": "LumaTouch. 'LumaFusion: Pro Video Editing.' Google Play Store, 2025. https://play.google.com/store/apps/details?id=com.luma_touch.lumafusion",
+      "platform": "mobile_ios_android",
+      "target_users": "professional_mobile_editors",
+      "pricing": "$30 one-time purchase (no subscription)",
+      "key_features": [
+        "6 video/audio tracks for multi-layer editing",
+        "4K UHD video editing and export",
+        "Advanced color grading with professional tools",
+        "Support for various formats including slow-motion and time-lapse",
+        "Precision timeline controls",
+        "Motion blur and stabilization",
+        "LUT support for color grading",
+        "Keyframe animation system"
+      ],
+      "drone_specific_features": {
+        "stabilization": "Built-in video stabilization for shaky drone footage",
+        "color_grading": {
+          "tools": ["Highlight bloom/glow effect", "Sharpening", "Vignettes", "LUT application"],
+          "workflow": "Fine-tune color profile of DJI videos",
+          "precision": "Professional-grade color wheels and curves"
+        },
+        "format_support": {
+          "resolutions": ["1080p", "4K UHD"],
+          "frame_rates": "Variable including high frame rate slow-motion",
+          "codecs": "Wide codec support for different drone manufacturers"
+        },
+        "effects": {
+          "motion_blur": "Cinematic motion blur application",
+          "sharpening": "Detail enhancement for aerial shots",
+          "vignette": "Edge darkening for focus"
+        }
+      },
+      "workflow_characteristics": {
+        "automation_level": "Low - manual professional editing",
+        "precision_control": "High - frame-level accuracy",
+        "multi_track": "Up to 6 simultaneous video/audio tracks",
+        "customization": "Extensive - professional-grade controls"
+      },
+      "popularity_factors": [
+        "One-time $30 payment with lifetime updates",
+        "Desktop-class features on mobile devices",
+        "Multi-track editing capabilities",
+        "Professional color grading tools",
+        "4K export support",
+        "No cloud dependency - offline editing",
+        "Precision controls for advanced users"
+      ],
+      "python_automation_potential": {
+        "multi_track_compositing": "MoviePy CompositeVideoClip for layer management",
+        "lut_application": "OpenCV/Pillow for LUT color transformation",
+        "stabilization": "Gyroflow Python bindings or OpenCV stabilization",
+        "motion_blur": "Frame blending algorithms with OpenCV",
+        "keyframe_animation": "Interpolation libraries (scipy.interpolate) for parameter tweening"
+      }
+    },
+    {
+      "name": "CapCut",
+      "citation": "CapCut. 'CapCut Trending Templates 2026: Viral TikTok, Reels & Slow Motion Edits.' Filmora Blog, 2026. https://filmora.wondershare.com/video-editor-review/capcut-trending-ai-templates-guide.html",
+      "platform": "mobile_desktop_web",
+      "target_users": "social_media_content_creators",
+      "key_features": [
+        "Viral template library with 2026 trending effects",
+        "Drone-specific templates for aerial footage",
+        "Automatic beat synchronization",
+        "AI-powered effects and transitions",
+        "Drag-and-drop template customization",
+        "Automated color grading",
+        "Advanced stabilization for drone footage",
+        "Cinematic color grading presets"
+      ],
+      "viral_template_system": {
+        "template_categories": [
+          "Cinematic drone reveals",
+          "Slow-motion aesthetic edits",
+          "Trending Reels templates",
+          "Split-screen effects",
+          "Glitch transitions",
+          "Beat-synced montages"
+        ],
+        "automation_features": {
+          "beat_sync": "Automatic clip synchronization with music beats",
+          "transition_timing": "Auto-placed transitions at beat markers",
+          "color_grading": "One-tap cinematic color application",
+          "effect_application": "Template-driven effect sequences"
+        },
+        "customization": {
+          "drag_and_drop": "Replace template clips with user footage",
+          "adjustable_parameters": "Duration, color intensity, effect strength",
+          "text_editing": "Custom text with predefined animations"
+        }
+      },
+      "drone_video_features": {
+        "stabilization": "Advanced stabilization algorithms",
+        "color_grading": "Cinematic presets for aerial footage",
+        "trimming": "Intuitive clip trimming interface",
+        "templates": {
+          "drone_specific": "Templates optimized for aerial movement patterns",
+          "dynamic_sequences": "Pre-built sequences for drone clips",
+          "customizable_transitions": "Aerial-appropriate transition library"
+        }
+      },
+      "viral_effects_2026": {
+        "trending_effects": [
+          "Glitch transitions",
+          "Slow-motion dramatic reveals",
+          "Split-screen multi-angle",
+          "Zoom-in emphasis",
+          "RGB color split",
+          "Motion tracking text"
+        ],
+        "social_optimization": {
+          "aspect_ratios": ["9:16 (Reels/TikTok)", "1:1 (Instagram)", "16:9 (YouTube)"],
+          "export_presets": "Platform-specific output settings",
+          "viral_indicators": "Template popularity metrics"
+        }
+      },
+      "technical_implementation": {
+        "beat_detection": "AI-powered music analysis for beat markers",
+        "template_extraction": {
+          "method": "Extract cut maps from viral videos",
+          "components": ["Beat markers", "Shot durations", "Text timing"],
+          "reusability": "Apply extracted templates to new footage"
+        },
+        "automation_tools": {
+          "nemo_integration": "TikTok link analysis for template extraction",
+          "auto_sync": "Clips synchronized with transitions and music automatically"
+        }
+      },
+      "python_automation_potential": {
+        "template_system": "JSON template definitions with timing arrays",
+        "beat_detection": "Librosa for music analysis and beat marker extraction",
+        "viral_effect_replication": {
+          "glitch": "Frame corruption algorithms with numpy",
+          "split_screen": "Multiple clip positioning with MoviePy",
+          "rgb_split": "Channel separation and offset with OpenCV",
+          "zoom_emphasis": "Keyframe-based scale animation"
+        },
+        "tiktok_template_extraction": "Video analysis to reverse-engineer cut timing patterns",
+        "auto_grading": "Batch LUT application based on aerial scene detection"
+      }
+    },
+    {
+      "name": "Adobe Premiere Rush",
+      "citation": "Adobe. 'Adobe Premiere Rush: Quick & Easy Video Editing for Creators.' Lenovo US, 2024. https://www.lenovo.com/us/en/glossary/adobe-premiere-rush/",
+      "platform": "mobile_tablet_desktop",
+      "target_users": "content_creators_mobile_first",
+      "key_features": [
+        "Cross-device editing with Creative Cloud sync",
+        "Drag-and-drop interface for quick editing",
+        "Built-in transitions and effects library",
+        "Color filters and correction tools",
+        "Audio mixing with noise reduction",
+        "Speed controls (time-lapse and slow-motion)",
+        "Direct voice-over recording",
+        "Text overlay templates"
+      ],
+      "quick_edit_features": {
+        "trim_and_sequence": {
+          "method": "Drag-and-drop timeline editing",
+          "precision": "Frame-level trimming",
+          "reordering": "Simple clip sequence changes"
+        },
+        "speed_effects": {
+          "time_lapse": "Speed up footage for condensed sequences",
+          "slow_motion": "Slow down dramatic moments",
+          "implementation": "Simple speed multiplier controls"
+        },
+        "audio_tools": {
+          "noise_reduction": "Background noise removal",
+          "volume_balancing": "Music volume adjustment for voiceovers",
+          "voice_recording": "In-app voiceover capture",
+          "mixing": "Multi-track audio level controls"
+        },
+        "color_grading": {
+          "filters": "Pre-built color filter library",
+          "correction": "Basic color correction tools",
+          "presets": "Quick-apply color styles"
+        }
+      },
+      "mobile_optimization": {
+        "interface": "Clean, simplified mobile-first UI",
+        "workflow": "Record, cut, sequence, color-correct, add audio in streamlined flow",
+        "social_media": "Optimized for Instagram and TikTok output",
+        "sync": "Projects sync across phone, tablet, desktop"
+      },
+      "drone_footage_usage": {
+        "applicability": "General-purpose editor suitable for drone footage",
+        "workflow": "Import drone clips → trim → apply effects → color grade → export",
+        "tools": "Stabilization, color correction, speed ramping available",
+        "limitations": "Less specialized than drone-specific apps like DJI Fly"
+      },
+      "creative_cloud_integration": {
+        "sync": "Projects accessible across all devices",
+        "photoshop_connection": "Import graphics from Photoshop",
+        "premiere_pro_upgrade": "Projects can be opened in Premiere Pro for advanced editing",
+        "asset_sharing": "Cloud-based asset library"
+      },
+      "python_automation_potential": {
+        "simplified_timeline": "Linear editing workflow easily replicated with MoviePy",
+        "preset_system": "Template-based effect application",
+        "speed_controls": "Simple frame rate manipulation with MoviePy speedx",
+        "noise_reduction": "Audio processing with pydub and noisereduce libraries",
+        "cross_platform_export": "Multiple format output with ffmpeg-python"
+      }
+    }
+  ],
+  "technical_insights": {
+    "common_patterns": [
+      "Template-based editing systems reduce decision paralysis",
+      "AI highlight detection focuses on motion analysis and composition scoring",
+      "Beat synchronization relies on librosa-style audio analysis",
+      "Mobile-first design prioritizes one-tap automation over manual controls",
+      "Social media optimization built into export presets",
+      "Multi-pass processing: scene detection → clip selection → music sync → transition application",
+      "Gyroscope data increasingly used for stabilization",
+      "LUT-based color grading provides consistent cinematic looks"
+    ],
+    "scene_detection_algorithms": {
+      "histogram_difference": {
+        "description": "Compare color histograms between consecutive frames",
+        "threshold": "Significant histogram changes indicate scene boundaries",
+        "implementation": "OpenCV cv2.calcHist() and comparison",
+        "python_library": "opencv-python",
+        "use_case": "Fast cut detection"
+      },
+      "sum_of_absolute_differences": {
+        "description": "Pixel-by-pixel frame comparison",
+        "calculation": "Sum absolute differences between corresponding pixels",
+        "threshold": "Large SAD values indicate scene change",
+        "implementation": "numpy array subtraction and abs().sum()",
+        "performance": "Faster but less robust than histogram methods"
+      },
+      "edge_change_ratio": {
+        "description": "Compare edge-detected frames to focus on content changes",
+        "process": "Apply edge detection (Canny) then compare edge images",
+        "advantage": "Reduces sensitivity to lighting changes",
+        "implementation": "cv2.Canny() followed by frame comparison",
+        "use_case": "Robust scene boundary detection"
+      },
+      "advanced_ml_approaches": {
+        "transformer_models": "TELNet (Transformer Encoding Linker Network) for scene boundary detection",
+        "self_supervised": "ShotCoL algorithm with 13% improvement in average precision",
+        "deep_learning": "3D CNN feature extraction for temporal analysis",
+        "python_frameworks": ["PyTorch", "TensorFlow"],
+        "implementation_complexity": "High - requires training data and GPU resources"
+      },
+      "python_implementation_example": "PySceneDetect library provides production-ready scene detection"
+    },
+    "beat_sync_algorithms": {
+      "beat_detection": {
+        "method": "Audio onset detection and tempo analysis",
+        "library": "librosa.beat.beat_track()",
+        "output": "Array of beat timestamps in seconds",
+        "accuracy": "Within 50ms of actual beats for most music"
+      },
+      "music_analysis": {
+        "features": ["Tempo (BPM)", "Beat positions", "Bar boundaries", "Musical structure"],
+        "librosa_functions": [
+          "librosa.beat.beat_track() for BPM and beats",
+          "librosa.onset.onset_detect() for precise timing",
+          "librosa.feature.tempogram() for tempo visualization"
+        ]
+      },
+      "sync_strategies": {
+        "cut_on_beat": "Place video cuts at beat timestamps",
+        "transition_duration": "Align transition midpoint with beat",
+        "dynamic_matching": "Stretch/compress clips to fit beat intervals",
+        "visual_envelope": "Match visual intensity to music dynamics"
+      },
+      "automated_tools": {
+        "filmora_auto_montage": "Analyzes beat points and applies video effects automatically",
+        "canva_beat_sync": "One-click soundtrack matching to footage",
+        "beatsync_app": "Smart beat detection syncs effects to music beats",
+        "beatedit_plugin": "Detects and marks beats, places elements on timeline"
+      },
+      "python_implementation": {
+        "audio_analysis": "librosa for beat detection and music feature extraction",
+        "video_cutting": "MoviePy subclip() at beat timestamps",
+        "automation_workflow": [
+          "1. Extract audio from video with MoviePy",
+          "2. Detect beats with librosa.beat.beat_track()",
+          "3. Calculate clip durations based on beat intervals",
+          "4. Cut and concatenate clips at beat positions",
+          "5. Add crossfade transitions centered on beats"
+        ]
+      }
+    },
+    "color_grading_for_aerial": {
+      "lut_fundamentals": {
+        "definition": "Look-Up Table - color remapping preset file",
+        "format": ".cube or .3dl files",
+        "function": "Maps input RGB values to output RGB values",
+        "application": "Instant color transformation without manual grading"
+      },
+      "drone_specific_luts": {
+        "popular_packs": [
+          "120 Cinematic DJI Drone LUT Pack (pixflow.net)",
+          "70+ Drone LUTs Bundle (aaapresets.com)",
+          "GoPro FPV Drone LUT Pack (guywithdrones.com)",
+          "Free Drone LUTs (fixthephoto.com - 136 free options)"
+        ],
+        "themes": [
+          "Sunset/golden hour enhancement",
+          "Ocean/coastal color boost",
+          "Forest/green landscape richness",
+          "Urban/architectural contrast",
+          "Cinematic desaturation",
+          "Vintage film looks"
+        ],
+        "brand_specific": {
+          "dji": "Optimized for D-Log and D-Cinelike color profiles",
+          "parrot": "Tailored to Parrot color science",
+          "autel": "Autel-specific calibration",
+          "gopro": "GoPro Protune and flat color profile compatible"
+        }
+      },
+      "workflow_best_practices": {
+        "shooting_format": "Capture in Log format (D-Log, D-Cinelike) for maximum grading latitude",
+        "lut_application": "Apply LUT at low intensity (50-70%), then fine-tune",
+        "rec709_conversion": "Convert Log to Rec.709 base before applying creative LUT",
+        "manual_adjustments": "Tweak exposure, highlights, greens, skin tones after LUT",
+        "consistency": "Use same LUT family across project for visual cohesion"
+      },
+      "software_compatibility": {
+        "professional": ["Adobe Premiere Pro", "DaVinci Resolve", "Final Cut Pro", "After Effects"],
+        "mobile": ["LumaFusion", "DJI Mimo", "CapCut"],
+        "format": ".cube files are universal standard"
+      },
+      "python_implementation": {
+        "lut_parsing": "colour-science library for .cube file parsing",
+        "application": "OpenCV for per-pixel color transformation",
+        "batch_processing": "Apply LUT to entire video with MoviePy + cv2",
+        "example_libraries": [
+          "pillow-lut for PIL/Pillow image LUT application",
+          "colour (colour-science.org) for professional color workflows",
+          "OpenCV for real-time LUT application"
+        ],
+        "workflow": [
+          "1. Parse .cube LUT file to 3D lookup table",
+          "2. For each frame: extract RGB values",
+          "3. Map RGB through LUT transformation",
+          "4. Write transformed frame to output video"
+        ]
+      }
+    },
+    "speed_ramping": {
+      "optical_flow_fundamentals": {
+        "purpose": "Generate intermediate frames for smooth slow-motion",
+        "methods": [
+          "Farneback optical flow (dense)",
+          "Lucas-Kanade (sparse)",
+          "Deep learning-based (RAFT, PWC-Net)"
+        ],
+        "output": "Motion vectors between frames for interpolation"
+      },
+      "python_libraries": {
+        "opencv": {
+          "functions": [
+            "cv2.calcOpticalFlowFarneback() for dense flow",
+            "cv2.calcOpticalFlowPyrLK() for sparse tracking"
+          ],
+          "performance": "CPU-based, moderate speed"
+        },
+        "pyflow": {
+          "description": "Python wrapper for Ce Liu's Coarse2Fine optical flow",
+          "github": "github.com/pathak22/pyflow",
+          "performance": "High accuracy, slower processing"
+        },
+        "nvidia_optical_flow": {
+          "api": "NvidiaHWOpticalFlow in OpenCV",
+          "hardware": "NVIDIA Turing GPU acceleration",
+          "performance": "Real-time capable with GPU",
+          "accuracy": "Quarter-pixel precision"
+        }
+      },
+      "speed_ramping_implementation": {
+        "variable_speed": "Change playback speed smoothly over time",
+        "techniques": [
+          "Frame blending for speed-up (skip frames with crossfade)",
+          "Optical flow interpolation for slow-down (generate in-between frames)",
+          "Time remapping with easing curves for smooth acceleration/deceleration"
+        ],
+        "commercial_tools": [
+          "BCC Optical Flow plugin",
+          "DaVinci Resolve Speed Ramp",
+          "Twixtor (industry standard)"
+        ]
+      },
+      "python_automation_potential": {
+        "basic_speed_change": "MoviePy .speedx() method for simple speed multipliers",
+        "frame_interpolation": "RIFE (Real-Time Intermediate Flow Estimation) PyTorch implementation",
+        "smooth_ramping": "scipy.interpolate for easing curves on speed parameter",
+        "workflow": [
+          "1. Define speed curve (ease-in, ease-out)",
+          "2. Calculate required frames at each timestamp",
+          "3. Use optical flow to generate missing frames",
+          "4. Composite frames based on speed curve"
+        ],
+        "advanced_option": "FILM (Frame Interpolation for Large Motion) from Google Research"
+      }
+    },
+    "stabilization_algorithms": {
+      "gyroflow_architecture": {
+        "data_source": "Gyroscope and accelerometer metadata embedded in video files",
+        "supported_cameras": [
+          "GoPro (all models with gyro data)",
+          "Sony (select models)",
+          "Insta360",
+          "DJI drones (via blackbox logs)",
+          "RunCam",
+          "Custom IMU logs"
+        ],
+        "processing_pipeline": [
+          "1. Extract gyroscope data from video file or separate log",
+          "2. Synchronize IMU data with video frames",
+          "3. Calculate 3D camera orientation over time",
+          "4. Apply inverse transforms to stabilize footage",
+          "5. Correct lens distortion simultaneously"
+        ]
+      },
+      "python_implementation": {
+        "original_stack": "Python, OpenCV, PySide2",
+        "current_version": "Rewritten in Rust for performance (gyroflow/gyroflow)",
+        "python_bindings": "gyroflow-python for Python integration",
+        "legacy_code": "ElvinC/gyroflow (inactive but educational)"
+      },
+      "stabilization_features": {
+        "horizon_leveling": "Automatically level horizon using gyro orientation data",
+        "smoothing_algorithms": "Multiple customizable algorithms for different shake patterns",
+        "lens_correction": "Undistortion presets for common lenses and cameras",
+        "rolling_shutter": "Correction for rolling shutter artifacts"
+      },
+      "alternative_approaches": {
+        "feature_tracking": "OpenCV goodFeaturesToTrack() + optical flow",
+        "transform_estimation": "Calculate affine transforms between frames",
+        "smooth_trajectory": "Low-pass filter on camera path",
+        "video_stabilization": "cv2.VideoStabilization in OpenCV",
+        "commercial": "Adobe Warp Stabilizer algorithm (proprietary)"
+      },
+      "python_automation_potential": {
+        "gyroflow_integration": "Use gyroflow-python bindings for gyro-based stabilization",
+        "opencv_stabilization": "cv2.videostab module for feature-based stabilization",
+        "custom_implementation": [
+          "1. Detect feature points in frames",
+          "2. Track features across frames with optical flow",
+          "3. Estimate frame-to-frame transforms",
+          "4. Smooth camera trajectory with moving average or Kalman filter",
+          "5. Apply inverse transforms to stabilize"
+        ],
+        "performance": "GPU acceleration essential for 4K drone footage"
+      }
+    },
+    "text_overlay_animation": {
+      "moviepy_capabilities": {
+        "TextClip_class": "moviepy.video.VideoClip.TextClip",
+        "parameters": [
+          "txt (string content)",
+          "font (typeface)",
+          "fontsize (point size)",
+          "color (RGB or name)",
+          "bg_color (background)",
+          "size (clip dimensions)",
+          "method (label or caption)"
+        ],
+        "positioning": [
+          "Fixed: ('center', 'top'), ('left', 'bottom'), etc.",
+          "Absolute: (x, y) pixel coordinates",
+          "Dynamic: lambda t: (x(t), y(t)) for animated position"
+        ]
+      },
+      "animation_techniques": {
+        "position_animation": "Use lambda functions with time parameter: lambda t: (100 + t*50, 200)",
+        "fade_effects": {
+          "fade_in": "clip.fadein(duration)",
+          "fade_out": "clip.fadeout(duration)",
+          "crossfade": "clip.crossfadein(duration)"
+        },
+        "composite": "CompositeVideoClip([video, text]) to overlay",
+        "duration_control": "text.with_duration(5) for 5-second display"
+      },
+      "subtitle_workflow": {
+        "speech_to_text": [
+          "Whisper API (OpenAI) for transcription",
+          "Google Speech-to-Text",
+          "AssemblyAI",
+          "pydub for audio extraction + vosk for offline STT"
+        ],
+        "subtitle_timing": "Parse SRT/VTT files or use timestamps from STT API",
+        "auto_positioning": "Bottom-center with padding for readability",
+        "styling": "Background box, stroke/outline for contrast"
+      },
+      "viral_caption_styles": {
+        "word_highlighting": "Emphasize each word as spoken (TikTok/Reels style)",
+        "bouncing_text": "Scale animation synced to audio peaks",
+        "color_flash": "Color changes on beat or emphasis",
+        "motion_tracking": "Text follows subject (requires tracking data)"
+      },
+      "python_automation_potential": {
+        "basic_overlay": "MoviePy TextClip + CompositeVideoClip for static text",
+        "animated_captions": "Position functions with easing curves (scipy.interpolate)",
+        "auto_subtitles": [
+          "1. Extract audio with MoviePy",
+          "2. Transcribe with Whisper",
+          "3. Parse timestamps from Whisper output",
+          "4. Generate TextClip for each subtitle segment",
+          "5. Composite all subtitle clips onto video"
+        ],
+        "viral_effects": {
+          "word_emphasis": "Change fontsize/color based on word timing",
+          "beat_sync_text": "Trigger text animations on beat markers from librosa",
+          "tracking": "Manual keyframe definition or OpenCV tracking integration"
+        }
+      }
+    },
+    "highlight_detection_algorithms": {
+      "rule_based_approaches": {
+        "motion_analysis": "Detect high-motion scenes using optical flow magnitude",
+        "audio_intensity": "Identify loud moments or music peaks as highlights",
+        "scene_variety": "Prioritize visually diverse scenes over repetitive footage",
+        "duration_filtering": "Exclude very short or very long clips",
+        "implementation": "OpenCV for motion, librosa for audio, custom scoring function"
+      },
+      "ml_based_approaches": {
+        "autohighlight": {
+          "github": "dshin13/autohighlight",
+          "capability": "Train custom AI video summarizer on your dataset",
+          "pretrained": "Soccer match summarization model included",
+          "framework": "Python 3.6.5, deep learning architecture"
+        },
+        "cross_category_highlight": {
+          "paper": "Cross-category Video Highlight Detection via Set-based Learning (ICCV 2021)",
+          "github": "ChrisAllenMing/Cross_Category_Video_Highlight",
+          "framework": "PyTorch",
+          "advantage": "Works across different video categories"
+        },
+        "smolvlm2": {
+          "description": "Vision-language model for highlight generation",
+          "workflow": [
+            "1. Process video frames with vision encoder",
+            "2. Analyze content for dramatic/highlight-worthy moments",
+            "3. Split video into short segments",
+            "4. Score each segment for highlight potential",
+            "5. Stitch together highest-scoring scenes"
+          ],
+          "implementation": "PyImageSearch tutorial available"
+        },
+        "spot_model": {
+          "name": "Spatial Perceptual Optimized TimeSformer",
+          "architecture": "CNN encoder + Transformer (TimeSformer)",
+          "capability": "Learn local and global features simultaneously",
+          "application": "Highlight extraction with spatial awareness"
+        }
+      },
+      "scoring_strategies": {
+        "transcript_analysis": "Score segments based on keyword density and relevance",
+        "multi_modal": "Combine visual changes, audio clarity, transcript keywords",
+        "map_ranking": "Mean Average Precision models to rank segments",
+        "time_series": "Create score series across video timeline, select peaks"
+      },
+      "python_libraries": {
+        "pytorchvideo": {
+          "features": [
+            "Video classification",
+            "Event detection",
+            "Optical flow",
+            "Human action localization",
+            "Self-supervised learning"
+          ],
+          "use_case": "Pre-trained models for video understanding tasks"
+        },
+        "custom_implementation": [
+          "OpenCV for motion and scene analysis",
+          "librosa for audio feature extraction",
+          "scikit-learn for scoring and ranking",
+          "PyTorch/TensorFlow for deep learning models"
+        ]
+      },
+      "python_automation_potential": {
+        "simple_approach": [
+          "1. Detect motion with optical flow magnitude",
+          "2. Extract audio loudness over time",
+          "3. Combine motion + audio scores",
+          "4. Select top N% of clips above threshold",
+          "5. Ensure minimum spacing between highlights"
+        ],
+        "advanced_approach": [
+          "1. Train or use pre-trained highlight detection model",
+          "2. Process video through model to get frame-level scores",
+          "3. Apply temporal smoothing to scores",
+          "4. Extract peak regions as highlights",
+          "5. Adjust for minimum/maximum highlight duration"
+        ],
+        "drone_specific": [
+          "Detect dramatic camera movements (rapid pans, altitude changes)",
+          "Identify scenic moments (low motion, high visual complexity)",
+          "Recognize subjects of interest (people, vehicles, landmarks)",
+          "Score based on composition (rule of thirds, leading lines)"
+        ]
+      }
+    }
+  },
+  "implementation_recommendations": [
+    {
+      "scenario": "Auto-edit drone footage for Instagram Reels",
+      "recommended_solution": "Template-based editing system with beat sync and auto color grading",
+      "components": {
+        "scene_detection": "PySceneDetect for shot boundary detection",
+        "highlight_selection": "Motion + audio scoring algorithm",
+        "music_sync": "librosa beat detection + MoviePy clip alignment",
+        "color_grading": "Apply drone-specific LUT with OpenCV",
+        "transitions": "MoviePy crossfadein/crossfadeout on beat markers",
+        "export": "1080x1920 (9:16), H.264, 30fps, 5-10Mbps bitrate"
+      },
+      "rationale": "Replicates DJI Fly and CapCut automation patterns with open-source Python stack",
+      "complexity": "Medium - combines multiple libraries but well-documented",
+      "performance": "Process 5-min 4K drone video in 3-5 minutes on modern CPU"
+    },
+    {
+      "scenario": "Stabilize shaky drone footage with gyroscope data",
+      "recommended_solution": "Gyroflow Python bindings for gyro-based stabilization",
+      "components": {
+        "gyro_extraction": "Extract IMU data from DJI .srt or embedded metadata",
+        "sync": "Align gyro timestamps with video frames",
+        "stabilization": "gyroflow-python for gyro-based stabilization",
+        "lens_correction": "Apply lens profile from Gyroflow database",
+        "export": "Same format as input, preserving quality"
+      },
+      "rationale": "Gyro-based stabilization superior to feature-tracking for drone footage",
+      "complexity": "Low - gyroflow-python handles complexity",
+      "performance": "GPU-accelerated, near real-time for 4K footage"
+    },
+    {
+      "scenario": "Generate automatic subtitles for drone travel vlogs",
+      "recommended_solution": "Whisper transcription + MoviePy caption overlay",
+      "components": {
+        "audio_extraction": "MoviePy AudioFileClip.write_audiofile()",
+        "transcription": "OpenAI Whisper API or whisper-python library",
+        "timing": "Parse Whisper timestamps for each word/segment",
+        "caption_generation": "MoviePy TextClip for each subtitle with timing",
+        "styling": "Bottom-center, white text, semi-transparent black background",
+        "composite": "Overlay all caption clips on video"
+      },
+      "rationale": "Matches DJI Mimo speech-to-text functionality with state-of-the-art accuracy",
+      "complexity": "Medium - requires API integration or local Whisper model",
+      "performance": "Transcription: 1x-5x real-time depending on Whisper model size"
+    },
+    {
+      "scenario": "Apply viral CapCut-style glitch transitions",
+      "recommended_solution": "Custom frame corruption with numpy and MoviePy",
+      "components": {
+        "transition_points": "Beat markers from librosa or manual keyframes",
+        "glitch_effect": [
+          "RGB channel separation and offset",
+          "Random pixel block displacement",
+          "Frame duplication/skipping",
+          "Chromatic aberration simulation"
+        ],
+        "implementation": "NumPy array manipulation on frames",
+        "composite": "Insert glitched frames at transition points with MoviePy"
+      },
+      "rationale": "Custom effect implementation provides full control over viral aesthetics",
+      "complexity": "Medium-High - requires frame-level manipulation",
+      "performance": "Fast for short transitions (< 1 second), can precompute effect frames"
+    },
+    {
+      "scenario": "Batch color grade 50 drone clips with cinematic LUT",
+      "recommended_solution": "Parallel LUT application with multiprocessing",
+      "components": {
+        "lut_parsing": "colour-science library to load .cube LUT file",
+        "video_processing": "OpenCV to read frames, apply LUT, write output",
+        "parallelization": "multiprocessing.Pool to process multiple clips simultaneously",
+        "progress_tracking": "tqdm progress bar for batch processing",
+        "metadata_preservation": "ffmpeg to copy metadata and audio streams"
+      },
+      "rationale": "Efficient batch processing matches professional workflows at no cost",
+      "complexity": "Medium - requires understanding of parallel processing",
+      "performance": "Near-linear scaling with CPU cores, process 50 clips in parallel"
+    },
+    {
+      "scenario": "Replicate DJI QuickShot Dronie camera movement in post",
+      "recommended_solution": "Ken Burns effect with zoom and pan animation",
+      "components": {
+        "zoom_out": "Scale frame from 1.0 to 0.6 over duration",
+        "pan": "Move crop region to simulate backward movement",
+        "subject_tracking": "Keep subject centered using manual keyframes or tracking",
+        "implementation": "MoviePy resize() with time-based lambda function",
+        "smoothing": "Easing functions (ease-out) for natural deceleration"
+      },
+      "rationale": "Simulates drone flight pattern when original flight unavailable",
+      "complexity": "Low - MoviePy built-in transforms",
+      "performance": "Real-time playback possible, rendering depends on resolution",
+      "limitation": "Cannot add true parallax, works best with wide landscape shots"
+    },
+    {
+      "scenario": "Auto-generate 15-second highlight reel from 30-min flight",
+      "recommended_solution": "Multi-criteria highlight detection with ML scoring",
+      "components": {
+        "motion_detection": "Optical flow magnitude to find dynamic scenes",
+        "audio_analysis": "Identify music peaks or ambient sound changes",
+        "scene_diversity": "Select visually distinct clips to avoid repetition",
+        "duration_balance": "Ensure clips fit 15-second target with transitions",
+        "scoring_fusion": "Weighted combination of motion, audio, diversity scores",
+        "top_k_selection": "Select top 4-6 clips totaling ~13 seconds (leaving room for transitions)"
+      },
+      "rationale": "Multi-modal scoring approach proven in academic research and commercial tools",
+      "complexity": "High - requires tuning weights and thresholds for drone footage",
+      "performance": "Process 30-min video in 5-10 minutes with CPU, faster with GPU"
+    }
+  ],
+  "community_insights": {
+    "popular_solutions": [
+      "DJI Fly for quick social media edits directly from drone",
+      "LumaFusion for professional mobile editing with precision",
+      "CapCut for viral template-based content creation",
+      "DaVinci Resolve (desktop) for advanced color grading",
+      "Gyroflow for gyro-based stabilization (free, open-source)"
+    ],
+    "controversial_topics": [
+      "AI auto-edit quality vs manual creative control debate",
+      "Subscription models (Adobe) vs one-time purchase (LumaFusion)",
+      "Mobile editing limitations compared to desktop workflows",
+      "Over-reliance on templates reducing creativity",
+      "Heavy LUT application vs subtle color grading"
+    ],
+    "expert_opinions": [
+      "Shoot in Log format (D-Log) for maximum color grading flexibility",
+      "Apply LUTs at 50-70% intensity, then fine-tune manually",
+      "Beat sync works best with music that has clear, consistent tempo",
+      "Gyro-based stabilization superior to software stabilization for drone footage",
+      "Template systems democratize video editing but can create homogeneous content",
+      "1.5-2 second clip duration optimal for beat-synced montages",
+      "Automatic highlight detection needs human curation for best results",
+      "Export settings matter: 9:16 aspect ratio and H.264 codec critical for social platforms"
+    ],
+    "emerging_trends": [
+      "AI-powered highlight detection becoming standard feature",
+      "Real-time collaborative editing on mobile devices",
+      "Integration of gyroscope/IMU data for better stabilization",
+      "Automatic speech-to-text subtitle generation",
+      "Template marketplaces for viral effects",
+      "Cloud-based processing for resource-intensive tasks",
+      "Cross-platform project sync (mobile, tablet, desktop)",
+      "ML-based color matching across clips"
+    ]
+  },
+  "instagram_reels_specifications": {
+    "aspect_ratio": "9:16 (vertical)",
+    "resolution": "1080x1920 pixels",
+    "format": "MP4",
+    "video_codec": "H.264",
+    "audio_codec": "AAC",
+    "frame_rate": "30fps (recommended for compatibility)",
+    "bitrate": {
+      "video": "5000-10000 kbps (5-10 Mbps)",
+      "audio": "128 kbps"
+    },
+    "sample_rate": "44.1kHz or 48kHz",
+    "duration": {
+      "maximum": "90 seconds",
+      "optimal": "15-30 seconds for engagement"
+    },
+    "export_tips": [
+      "Match frame rate to source footage to avoid re-encoding",
+      "Export at 1080p to prevent quality loss",
+      "Use H.264 codec for maximum compatibility",
+      "Stay within 5-15 Mbps bitrate range for best quality/size balance",
+      "Set project to 9:16 aspect ratio before editing to avoid cropping issues"
+    ]
+  },
+  "python_automation_stack": {
+    "core_libraries": {
+      "moviepy": {
+        "purpose": "Video editing, compositing, effects",
+        "version": "2.x (latest)",
+        "key_features": [
+          "Video/audio concatenation and compositing",
+          "Speed effects (speedx)",
+          "Text overlays (TextClip)",
+          "Transitions (crossfadein, fadeout)",
+          "Clip trimming and arrangement"
+        ],
+        "limitations": [
+          "CPU-intensive for complex effects",
+          "Limited built-in stabilization",
+          "No native beat detection"
+        ]
+      },
+      "opencv_python": {
+        "purpose": "Frame-level processing, stabilization, optical flow",
+        "key_features": [
+          "Frame reading/writing",
+          "Optical flow (Farneback, Lucas-Kanade)",
+          "Feature detection and tracking",
+          "Color space conversions",
+          "LUT application"
+        ],
+        "performance": "Fast with GPU acceleration (CUDA build)"
+      },
+      "librosa": {
+        "purpose": "Audio analysis and beat detection",
+        "key_features": [
+          "Beat tracking (beat_track)",
+          "Onset detection",
+          "Tempo analysis",
+          "Audio feature extraction"
+        ],
+        "use_cases": ["Beat synchronization", "Music analysis", "Audio-based scene detection"]
+      },
+      "pyscenedetect": {
+        "purpose": "Automatic scene detection and shot boundary analysis",
+        "algorithms": ["ContentDetector (histogram)", "ThresholdDetector", "AdaptiveDetector"],
+        "output": "Scene boundaries with timestamps and frame numbers",
+        "performance": "Optimized for speed, processes 1080p video at ~60fps on modern CPU"
+      },
+      "whisper": {
+        "purpose": "Speech-to-text transcription",
+        "models": ["tiny", "base", "small", "medium", "large"],
+        "accuracy": "State-of-the-art, supports 99 languages",
+        "output": "Timestamped transcriptions with word-level timing"
+      },
+      "colour_science": {
+        "purpose": "Professional color grading and LUT application",
+        "features": ["LUT parsing (.cube, .3dl)", "Color space conversions", "HDR tone mapping"],
+        "use_case": "Apply cinematic LUTs to drone footage"
+      },
+      "pillow": {
+        "purpose": "Image processing and frame manipulation",
+        "use_cases": ["Frame-level filters", "Text rendering", "Image overlays"]
+      },
+      "numpy": {
+        "purpose": "Array operations for frame data manipulation",
+        "use_cases": ["Custom effects", "Color channel manipulation", "Mathematical transforms"]
+      },
+      "scipy": {
+        "purpose": "Interpolation and signal processing",
+        "use_cases": ["Easing curves for animations", "Smooth parameter transitions", "Audio filtering"]
+      }
+    },
+    "optional_advanced": {
+      "gyroflow_python": {
+        "purpose": "Gyroscope-based video stabilization",
+        "bindings": "Python wrapper for Rust Gyroflow library",
+        "requirement": "Gyro/IMU data from camera or external log"
+      },
+      "pytorch": {
+        "purpose": "Deep learning for highlight detection and AI features",
+        "models": ["RIFE (frame interpolation)", "RAFT (optical flow)", "Custom highlight models"]
+      },
+      "ffmpeg_python": {
+        "purpose": "Low-level video encoding and format conversion",
+        "use_case": "Complex encoding pipelines and format handling"
+      }
+    },
+    "workflow_integration": {
+      "typical_pipeline": [
+        "1. Scene detection with PySceneDetect",
+        "2. Highlight scoring with OpenCV (motion) + librosa (audio)",
+        "3. Beat detection with librosa",
+        "4. Clip selection and arrangement based on scores and beats",
+        "5. LUT application with colour-science or OpenCV",
+        "6. Transition generation with MoviePy",
+        "7. Text overlay with MoviePy TextClip",
+        "8. Final export with MoviePy or ffmpeg-python"
+      ],
+      "parallelization": "Use multiprocessing for batch operations on independent clips",
+      "gpu_acceleration": "OpenCV compiled with CUDA for optical flow and frame processing"
+    }
+  }
+}

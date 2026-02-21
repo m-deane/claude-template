@@ -6,11 +6,11 @@ Usage:
     drone-reel --input ./clips/ --duration 30 --preset cinematic
 """
 
+import os
 from pathlib import Path
 from typing import Optional
 
 import click
-import numpy as np
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 from rich.table import Table
@@ -19,10 +19,13 @@ from rich.panel import Panel
 from drone_reel import __version__
 from drone_reel.core.beat_sync import BeatSync
 from drone_reel.core.color_grader import ColorGrader, ColorPreset, get_preset_names
-from drone_reel.core.reframer import Reframer, ReframeSettings, AspectRatio, ReframeMode
+from drone_reel.core.duration_adjuster import DurationAdjuster
+from drone_reel.core.reframe_selector import ReframeSelector, KenBurnsConfig
+from drone_reel.core.scene_analyzer import analyze_scenes_batch
 from drone_reel.core.scene_detector import SceneDetector
+from drone_reel.core.scene_filter import SceneFilter, FilterThresholds
+from drone_reel.core.scene_sequencer import SceneSequencer
 from drone_reel.core.sequence_optimizer import DiversitySelector
-from drone_reel.core.speed_ramper import SpeedRamper, SpeedRamp
 from drone_reel.core.video_processor import VideoProcessor, TransitionType
 from drone_reel.core.export_presets import Platform, PlatformExporter, PLATFORM_PRESETS
 from drone_reel.presets.transitions import get_transitions_for_energy
@@ -78,9 +81,9 @@ def main(ctx, version):
 )
 @click.option(
     "--duration", "-d",
-    type=float,
+    type=click.FloatRange(0.5, 600),
     default=45.0,
-    help="Target duration in seconds (default: 45)",
+    help="Target duration in seconds (0.5-600, default: 45)",
 )
 @click.option(
     "--color", "-c",
@@ -129,6 +132,13 @@ def main(ctx, version):
     help="Skip color grading",
 )
 @click.option(
+    "--color-intensity",
+    "color_intensity",
+    type=click.FloatRange(0.0, 1.0),
+    default=1.0,
+    help="Color grading intensity (0.0-1.0, default: 1.0). Viral reels work best at 0.4-0.7.",
+)
+@click.option(
     "--preview",
     is_flag=True,
     help="Preview mode - show plan without processing",
@@ -159,9 +169,61 @@ def main(ctx, version):
 @click.option(
     "--stable-threshold",
     "stable_threshold",
-    type=float,
+    type=click.FloatRange(0, 100),
     default=15.0,
-    help="Shake score below which clips are considered stable (default: 15). Lower = more clips get stabilized.",
+    help="Shake score threshold (0-100, default: 15). Lower = more clips get stabilized.",
+)
+@click.option(
+    "--speed-ramp",
+    "speed_ramp",
+    is_flag=True,
+    help="Enable variable speed effects (slow-mo at scenic moments, speed-up at transitions)",
+)
+@click.option(
+    "--caption",
+    type=str,
+    default=None,
+    help="Text caption overlay (displayed as lower-third for first 3 seconds)",
+)
+@click.option(
+    "--beat-mode",
+    "beat_mode",
+    type=click.Choice(["all", "downbeat"]),
+    default="all",
+    help="Beat sync mode: 'all' cuts on every beat, 'downbeat' cuts only on downbeats (less frenetic)",
+)
+@click.option(
+    "--viral",
+    is_flag=True,
+    help="Viral optimization preset: 15s duration, 60%% color intensity, speed ramping, Instagram Reels",
+)
+@click.option(
+    "--ken-burns",
+    "ken_burns_style",
+    type=click.Choice(["off", "conservative", "moderate", "cinematic"]),
+    default="off",
+    help="Ken Burns effect style for panoramic shots (off=CENTER crop, conservative=subtle, moderate=medium, cinematic=full effect)",
+)
+@click.option(
+    "--kb-zoom-end",
+    "kb_zoom_end",
+    type=click.FloatRange(1.0, 2.0),
+    default=None,
+    help="Ken Burns end zoom factor (1.0-2.0, where 1.1=10%% zoom). Overrides --ken-burns preset.",
+)
+@click.option(
+    "--kb-pan-x",
+    "kb_pan_x",
+    type=click.FloatRange(0.0, 0.3),
+    default=None,
+    help="Ken Burns horizontal pan (0.0-0.3, where 0.1=10%% of width). Overrides --ken-burns preset.",
+)
+@click.option(
+    "--kb-pan-y",
+    "kb_pan_y",
+    type=click.FloatRange(0.0, 0.2),
+    default=None,
+    help="Ken Burns vertical pan (0.0-0.2, where 0.05=5%% of height). Overrides --ken-burns preset.",
 )
 def create(
     input_path: Path,
@@ -176,17 +238,80 @@ def create(
     clips: Optional[int],
     no_reframe: bool,
     no_color: bool,
+    color_intensity: float,
     preview: bool,
     quality: str,
     resolution: str,
     stabilize: bool,
     stabilize_all: bool,
     stable_threshold: float,
+    speed_ramp: bool,
+    caption: Optional[str],
+    beat_mode: str,
+    viral: bool,
+    ken_burns_style: str,
+    kb_zoom_end: Optional[float],
+    kb_pan_x: Optional[float],
+    kb_pan_y: Optional[float],
 ):
     """Create a reel from drone footage."""
+    # Validate conflicting options
+    if no_reframe and reframe != "smart":
+        console.print("[red]Error:[/red] Cannot use --reframe with --no-reframe")
+        raise SystemExit(1)
+
     # --stabilize-all implies --stabilize
     if stabilize_all:
         stabilize = True
+
+    # --viral preset applies optimized defaults
+    if viral:
+        # Use Click's get_parameter_source to detect user-explicit values
+        ctx = click.get_current_context()
+        if ctx.get_parameter_source("duration") != click.core.ParameterSource.COMMANDLINE:
+            duration = 15.0
+        if ctx.get_parameter_source("platform") != click.core.ParameterSource.COMMANDLINE:
+            platform = "instagram_reels"
+        if ctx.get_parameter_source("color_intensity") != click.core.ParameterSource.COMMANDLINE:
+            color_intensity = 0.6
+        speed_ramp = True
+        viral_parts = []
+        viral_parts.append(f"{duration:.0f}s duration")
+        viral_parts.append(f"{int(color_intensity * 100)}% color intensity")
+        viral_parts.append("speed ramping")
+        if platform:
+            viral_parts.append(platform.replace("_", " "))
+        console.print(f"[cyan]Viral mode:[/cyan] {', '.join(viral_parts)}")
+
+    # Ken Burns preset definitions
+    KB_PRESETS = {
+        "off": None,  # Use CENTER mode instead
+        "conservative": {"zoom_end": 1.03, "pan_x": 0.02, "pan_y": 0.01},
+        "moderate": {"zoom_end": 1.05, "pan_x": 0.05, "pan_y": 0.02},
+        "cinematic": {"zoom_end": 1.10, "pan_x": 0.10, "pan_y": 0.05},
+    }
+
+    # Resolve Ken Burns settings (CLI overrides take precedence over presets)
+    kb_settings = None
+    if ken_burns_style != "off":
+        kb_settings = KB_PRESETS[ken_burns_style].copy()
+        # Apply individual CLI overrides
+        if kb_zoom_end is not None:
+            kb_settings["zoom_end"] = kb_zoom_end
+        if kb_pan_x is not None:
+            kb_settings["pan_x"] = kb_pan_x
+        if kb_pan_y is not None:
+            kb_settings["pan_y"] = kb_pan_y
+    elif kb_zoom_end is not None or kb_pan_x is not None or kb_pan_y is not None:
+        # Individual params specified without preset - use conservative as base
+        kb_settings = KB_PRESETS["conservative"].copy()
+        if kb_zoom_end is not None:
+            kb_settings["zoom_end"] = kb_zoom_end
+        if kb_pan_x is not None:
+            kb_settings["pan_x"] = kb_pan_x
+        if kb_pan_y is not None:
+            kb_settings["pan_y"] = kb_pan_y
+
     config = load_config()
 
     exporter = None
@@ -211,7 +336,13 @@ def create(
                     console.print(f"  - {warning}")
                 console.print()
 
-            aspect = f"{preset.aspect_ratio[0]}:{preset.aspect_ratio[1]}"
+            platform_aspect = f"{preset.aspect_ratio[0]}:{preset.aspect_ratio[1]}"
+            if aspect != "9:16" and aspect != platform_aspect:
+                console.print(
+                    f"[yellow]Note:[/yellow] --platform {platform} overrides "
+                    f"--aspect {aspect} with {platform_aspect}"
+                )
+            aspect = platform_aspect
         except ValueError as e:
             console.print(f"[red]Error:[/red] {e}")
             raise SystemExit(1)
@@ -267,10 +398,44 @@ def create(
         video_files = find_video_files(input_path)
 
     if not video_files:
-        console.print("[red]Error:[/red] No video files found in input path")
+        from drone_reel.utils.file_utils import VIDEO_EXTENSIONS
+        formats = ", ".join(sorted(VIDEO_EXTENSIONS))
+        console.print(f"[red]Error:[/red] No video files found in input path")
+        console.print(f"[dim]Supported formats: {formats}[/dim]")
         raise SystemExit(1)
 
     console.print(f"\n[green]Found {len(video_files)} video file(s)[/green]")
+
+    # Verify output path is writable before expensive processing
+    output_dir = output_path.parent
+    if not output_dir.exists():
+        try:
+            output_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            console.print(f"[red]Error:[/red] Cannot create output directory: {e}")
+            raise SystemExit(1)
+    elif not os.access(output_dir, os.W_OK):
+        console.print(f"[red]Error:[/red] Output directory is not writable: {output_dir}")
+        raise SystemExit(1)
+
+    # Resource preflight check
+    from drone_reel.utils.resource_guard import preflight_check
+    preflight_results = preflight_check(
+        output_path=output_path,
+        resolution_height=output_width,  # output_width is the larger dimension (height in vertical)
+        fps=config.output_fps,
+        clip_count=max(1, int(duration / 2.5)),  # Conservative estimate
+        stabilize=stabilize,
+        video_bitrate=video_bitrate,
+        duration=duration,
+    )
+    for result in preflight_results:
+        if result["level"] == "error":
+            console.print(f"[red]Error:[/red] {result['message']}")
+        else:
+            console.print(f"[yellow]Warning:[/yellow] {result['message']}")
+    if any(r["level"] == "error" for r in preflight_results):
+        raise SystemExit(1)
 
     with Progress(
         SpinnerColumn(),
@@ -291,10 +456,17 @@ def create(
 
         all_scenes = []
         for video_file in video_files:
-            # Use fast detection first
-            scenes = scene_detector.detect_scenes(video_file)
-            all_scenes.extend(scenes)
+            try:
+                scenes = scene_detector.detect_scenes(video_file)
+                all_scenes.extend(scenes)
+            except Exception as e:
+                console.print(f"[yellow]Warning:[/yellow] Skipping {video_file.name}: {e}")
             progress.advance(task)
+
+        if not all_scenes:
+            console.print("[red]Error:[/red] No valid scenes detected from any video file")
+            console.print("[dim]Tip: Check that video files are not corrupted and are at least 1 second long.[/dim]")
+            raise SystemExit(1)
 
         console.print(f"[green]Detected {len(all_scenes)} scenes[/green]")
 
@@ -317,11 +489,12 @@ def create(
                 min_clip_length=config.min_clip_length,
                 max_clip_length=config.max_clip_length,
                 prefer_downbeats=config.prefer_downbeats,
+                downbeat_only=(beat_mode == "downbeat"),
             )
 
             clip_durations = beat_sync.calculate_clip_durations(cut_points, duration)
         else:
-            # Generate evenly spaced cuts without music
+            # Generate evenly spaced cuts without music (will be refined by adaptive durations later)
             num_clips = clips or max(1, int(duration / 3))
             clip_durations = [duration / num_clips] * num_clips
 
@@ -353,173 +526,65 @@ def create(
         # Sort by score and get top candidates
         sorted_candidates = sorted(all_detected_scenes, key=lambda s: s.score, reverse=True)[:candidate_count]
 
-        # Calculate motion energy only for top candidates (efficient approach)
-        # Motion energy is computed via optical flow which is expensive
-        import cv2
         from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
 
-        def calculate_scene_motion_and_brightness(scene) -> tuple[float, float, float]:
-            """Calculate motion energy, brightness, and shake score for a scene.
-
-            Shake detection uses optical flow variance - shaky footage has erratic,
-            inconsistent motion vectors while smooth footage (even fast pans) has
-            consistent flow patterns.
-
-            Returns:
-                tuple of (motion_energy: 0-100, mean_brightness: 0-255, shake_score: 0-100)
-                shake_score: 0 = perfectly stable, 100 = extremely shaky
-            """
-            try:
-                cap = cv2.VideoCapture(str(scene.source_file))
-                fps = cap.get(cv2.CAP_PROP_FPS) or 30
-
-                start_frame = int(scene.start_time * fps)
-                end_frame = int(scene.end_time * fps)
-
-                # Sample 5 frame pairs evenly across scene
-                sample_interval = max(1, (end_frame - start_frame) // 6)
-                sample_frames = list(range(start_frame, end_frame, sample_interval))[:6]
-
-                motion_scores = []
-                brightness_values = []
-                flow_variances = []  # For shake detection
-                prev_gray = None
-                prev_mean_flow = None
-
-                for frame_num in sample_frames:
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-                    ret, frame = cap.read()
-                    if not ret:
-                        continue
-
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    # Resize for faster processing
-                    gray_small = cv2.resize(gray, (320, 180))
-
-                    # Track brightness
-                    brightness_values.append(float(np.mean(gray)))
-
-                    if prev_gray is not None:
-                        flow = cv2.calcOpticalFlowFarneback(
-                            prev_gray, gray_small, None,
-                            pyr_scale=0.5, levels=2, winsize=15,
-                            iterations=2, poly_n=5, poly_sigma=1.1, flags=0
-                        )
-                        magnitude = cv2.magnitude(flow[..., 0], flow[..., 1])
-                        motion_score = min(float(magnitude.mean()) / 3.0 * 100, 100.0)
-                        motion_scores.append(motion_score)
-
-                        # Shake detection: measure flow variance and direction consistency
-                        # Shaky footage has high spatial variance in flow vectors
-                        flow_std = float(np.std(magnitude))
-                        mean_flow = (float(np.mean(flow[..., 0])), float(np.mean(flow[..., 1])))
-
-                        # Also check for erratic direction changes between frames
-                        if prev_mean_flow is not None:
-                            direction_change = np.sqrt(
-                                (mean_flow[0] - prev_mean_flow[0])**2 +
-                                (mean_flow[1] - prev_mean_flow[1])**2
-                            )
-                            # Combine spatial variance and temporal direction change
-                            flow_variances.append(flow_std + direction_change * 2)
-
-                        prev_mean_flow = mean_flow
-
-                    prev_gray = gray_small
-
-                cap.release()
-                motion_energy = float(np.mean(motion_scores)) if motion_scores else 0.0
-                mean_brightness = float(np.mean(brightness_values)) if brightness_values else 127.0
-
-                # Calculate shake score (0-100)
-                # Normalize: typical stable footage ~0-5, shaky footage 10+
-                raw_shake = float(np.mean(flow_variances)) if flow_variances else 0.0
-                shake_score = min(raw_shake * 5.0, 100.0)  # Scale to 0-100
-
-                return (motion_energy, mean_brightness, shake_score)
-            except Exception:
-                return (0.0, 127.0, 0.0)
-
-        # Calculate motion energy, brightness, and shake for candidates
+        # Analyze motion energy, brightness, shake, motion type, and sharpness in single pass
         progress.add_task("[cyan]Analyzing motion energy...", total=len(sorted_candidates))
 
-        scene_motion_map = {}
-        scene_brightness_map = {}
-        scene_shake_map = {}
+        analysis_results = analyze_scenes_batch(sorted_candidates, include_sharpness=True)
+
+        scene_motion_map = {sid: r["motion_energy"] for sid, r in analysis_results.items()}
+        scene_brightness_map = {sid: r["brightness"] for sid, r in analysis_results.items()}
+        scene_shake_map = {sid: r["shake_score"] for sid, r in analysis_results.items()}
+
+        # Update EnhancedSceneInfo with computed motion types (fixes P0 issue #3)
         for scene in sorted_candidates:
-            motion_energy, brightness, shake_score = calculate_scene_motion_and_brightness(scene)
-            scene_motion_map[id(scene)] = motion_energy
-            scene_brightness_map[id(scene)] = brightness
-            scene_shake_map[id(scene)] = shake_score
+            r = analysis_results.get(id(scene))
+            if r and isinstance(scene, EnhancedSceneInfo):
+                scene.motion_type = r["motion_type"]
+                scene.motion_direction = r["motion_direction"]
+                scene.motion_energy = r["motion_energy"]
 
-        # Filtering thresholds
-        MIN_MOTION_ENERGY = 25.0   # 25/100 - minimum acceptable motion
-        IDEAL_MOTION_ENERGY = 45.0 # 45/100 - good motion level
-        MIN_BRIGHTNESS = 30.0      # Minimum brightness (0-255) - filter out nearly black frames
-        MAX_BRIGHTNESS = 245.0     # Maximum brightness (0-255) - filter out nearly white frames
-        MAX_SHAKE_SCORE = 40.0     # Maximum shake score (0-100) - filter out very shaky clips
-
-        # Separate scenes into motion tiers, but preserve high-subject scenes
-        high_motion_scenes = []
-        medium_motion_scenes = []
-        low_motion_scenes = []
-        high_subject_scenes = []  # Scenes with interesting subjects (boats, people, etc.)
-        dark_scenes_filtered = 0  # Track how many dark scenes were filtered
-        shaky_scenes_filtered = 0  # Track how many shaky scenes were filtered
-
-        SUBJECT_SCORE_THRESHOLD = 0.6  # Scenes with subjects above this are preserved
-
-        for scene in sorted_candidates:
-            motion_energy = scene_motion_map.get(id(scene), 0.0)
-            brightness = scene_brightness_map.get(id(scene), 127.0)
-            shake_score = scene_shake_map.get(id(scene), 0.0)
-
-            # Filter out too dark or too bright scenes first
-            if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
-                dark_scenes_filtered += 1
-                continue  # Skip this scene entirely
-
-            # Filter out very shaky/unstable clips
-            if shake_score > MAX_SHAKE_SCORE:
-                shaky_scenes_filtered += 1
-                continue  # Skip this scene entirely
-
-            # Check for high subject score (Fix #3: Include subject shots)
-            subject_score = getattr(scene, 'subject_score', 0.0) if hasattr(scene, 'subject_score') else 0.0
-            has_subject = subject_score >= SUBJECT_SCORE_THRESHOLD
-
-            if has_subject:
-                # High-subject scenes are always included regardless of motion
-                high_subject_scenes.append(scene)
-            elif motion_energy >= IDEAL_MOTION_ENERGY:
-                high_motion_scenes.append(scene)
-            elif motion_energy >= MIN_MOTION_ENERGY:
-                medium_motion_scenes.append(scene)
-            else:
-                low_motion_scenes.append(scene)
+        # Filter scenes using SceneFilter
+        scene_filter = SceneFilter()
+        filter_result = scene_filter.filter_scenes(
+            sorted_candidates, scene_motion_map, scene_brightness_map, scene_shake_map,
+        )
 
         # Report subject scenes found
-        if high_subject_scenes:
-            console.print(f"[cyan]Subject detection:[/cyan] {len(high_subject_scenes)} scenes with interesting subjects preserved")
+        if filter_result.high_subject_scenes:
+            console.print(f"[cyan]Subject detection:[/cyan] {len(filter_result.high_subject_scenes)} scenes with interesting subjects preserved")
 
-        # Prefer: high-subject, then high-motion, then medium-motion
-        prioritized_scenes = high_subject_scenes + high_motion_scenes + medium_motion_scenes
+        # Get prioritized scenes, adding low-motion if needed
+        prioritized_scenes = filter_result.with_low_motion_if_needed(num_clips_needed)
 
-        # If we don't have enough scenes, add low motion
-        if len(prioritized_scenes) < num_clips_needed:
-            prioritized_scenes.extend(low_motion_scenes)
-            if low_motion_scenes:
-                console.print(f"[yellow]Warning:[/yellow] Including {len(low_motion_scenes)} low-motion scenes to meet clip count")
-        else:
-            filter_msg = f"[green]Motion filtering:[/green] {len(high_motion_scenes)} high, {len(medium_motion_scenes)} medium, {len(low_motion_scenes)} filtered out"
-            if dark_scenes_filtered > 0:
-                filter_msg += f", [yellow]{dark_scenes_filtered} dark/bright[/yellow]"
-            if shaky_scenes_filtered > 0:
-                filter_msg += f", [red]{shaky_scenes_filtered} shaky[/red]"
+        if len(filter_result.prioritized) >= num_clips_needed:
+            filter_msg = (
+                f"[green]Motion filtering:[/green] {len(filter_result.high_motion_scenes)} high, "
+                f"{len(filter_result.medium_motion_scenes)} medium, "
+                f"{len(filter_result.low_motion_scenes)} filtered out"
+            )
+            if filter_result.dark_scenes_filtered > 0:
+                filter_msg += f", [yellow]{filter_result.dark_scenes_filtered} dark/bright[/yellow]"
+            if filter_result.shaky_scenes_filtered > 0:
+                filter_msg += f", [red]{filter_result.shaky_scenes_filtered} shaky[/red]"
             console.print(filter_msg)
+        elif filter_result.low_motion_scenes:
+            console.print(f"[yellow]Warning:[/yellow] Including {len(filter_result.low_motion_scenes)} low-motion scenes to meet clip count")
 
-        # Use diversity-aware selection on prioritized scenes
-        selected_scenes = diversity_selector.select(prioritized_scenes, count=num_clips_needed)
+        # Use diversity-aware selection on prioritized scenes, enforcing minimum scene count
+        selected_scenes = diversity_selector.select_with_minimum(
+            prioritized_scenes, count=num_clips_needed, target_duration=duration
+        )
+
+        # Progressive filter relaxation: if too few scenes, relax filters and retry
+        if len(selected_scenes) == 0 and len(sorted_candidates) > 0:
+            console.print("[yellow]Warning:[/yellow] All scenes filtered out. Relaxing filters...")
+            selected_scenes = diversity_selector.select_with_minimum(
+                sorted_candidates, count=num_clips_needed, target_duration=duration
+            )
+            if selected_scenes:
+                console.print(f"[green]Recovered {len(selected_scenes)} scenes after relaxing filters[/green]")
 
         if not selected_scenes:
             console.print("[red]Error:[/red] No usable scenes found in video files")
@@ -533,187 +598,63 @@ def create(
                 f"requested {num_clips_needed}"
             )
             # Scale up clip durations to fill target duration with fewer clips
-            # This ensures we get closer to requested duration even with limited scenes
             original_total = sum(clip_durations)
             clip_durations = clip_durations[:len(selected_scenes)]
             current_total = sum(clip_durations)
             if current_total > 0 and original_total > current_total:
-                # Scale each clip proportionally to fill the gap
-                scale_factor = min(original_total / current_total, 1.8)  # Cap at 1.8x (max ~5.4s clips)
+                scale_factor = min(original_total / current_total, 2.5)  # Allow up to 2.5x to avoid short reels
                 clip_durations = [d * scale_factor for d in clip_durations]
-                console.print(f"[cyan]Duration scaling:[/cyan] Extended clips by {scale_factor:.1f}x to reach target")
+                achieved = sum(clip_durations)
+                shortfall = (1 - achieved / duration) * 100
+                msg = f"[cyan]Duration scaling:[/cyan] Extended clips by {scale_factor:.1f}x"
+                if shortfall > 10:
+                    msg += f" [yellow](still {shortfall:.0f}% short of {duration:.0f}s target)[/yellow]"
+                console.print(msg)
 
-        # Reorder scenes: put highest hook_potential + motion clips first for strong opening
-        # Fix #2: Start with most dynamic/interesting shot
-        from drone_reel.core.scene_detector import EnhancedSceneInfo, HookPotential
+        # Reorder scenes for optimal pacing using SceneSequencer
+        sequencer = SceneSequencer()
+        selected_scenes = sequencer.sequence(selected_scenes, motion_map=scene_motion_map)
 
-        def get_opening_score(scene):
-            """
-            Score for opening clip selection (higher = better for opening).
-            Combines hook potential, motion energy, and subject interest.
-            """
-            score = 0.0
+        # Use sharpness already computed in the batch analysis pass (no extra file I/O)
+        scene_sharpness_map = {
+            id(scene): analysis_results.get(id(scene), {}).get("sharpness", 0.0)
+            for scene in selected_scenes
+        }
 
-            if isinstance(scene, EnhancedSceneInfo):
-                # Hook tier contribution (0-50 points)
-                tier_scores = {
-                    HookPotential.MAXIMUM: 50,
-                    HookPotential.HIGH: 40,
-                    HookPotential.MEDIUM: 25,
-                    HookPotential.LOW: 10,
-                    HookPotential.POOR: 0,
-                }
-                score += tier_scores.get(scene.hook_tier, 25)
+        # Adjust clip durations using DurationAdjuster
+        duration_adjuster = DurationAdjuster()
 
-                # Motion energy contribution (0-30 points)
-                motion = scene_motion_map.get(id(scene), 0.0)
-                score += min(motion, 100) * 0.3  # Cap at 30 points
+        # Use adaptive durations when scenes have hook_tier information (EnhancedSceneInfo)
+        if all(isinstance(s, EnhancedSceneInfo) for s in selected_scenes):
+            clip_durations = duration_adjuster.compute_adaptive_durations(
+                selected_scenes, target_duration=duration
+            )
+            auto_scale = None
+        else:
+            clip_durations, auto_scale = duration_adjuster.adjust_durations(
+                selected_scenes, clip_durations, scene_sharpness_map, duration,
+            )
 
-                # Subject score contribution (0-20 points)
-                subject = getattr(scene, 'subject_score', 0.0)
-                score += subject * 20
-
-            return score
-
-        def get_hook_priority(scene):
-            """Get hook priority for subsequent clips (lower = first)."""
-            if isinstance(scene, EnhancedSceneInfo):
-                tier_priority = {
-                    HookPotential.MAXIMUM: 0,
-                    HookPotential.HIGH: 1,
-                    HookPotential.MEDIUM: 2,
-                    HookPotential.LOW: 3,
-                    HookPotential.POOR: 4,
-                }
-                return (tier_priority.get(scene.hook_tier, 2), -scene.hook_potential)
-            return (2, 0)  # Default to MEDIUM priority
-
-        # Select BEST opening clip based on combined score (hook + motion + subject)
-        best_opener = max(selected_scenes, key=get_opening_score)
-        other_scenes = [s for s in selected_scenes if s is not best_opener]
-
-        # Sort remaining by hook potential
-        other_scenes = sorted(other_scenes, key=get_hook_priority)
-
-        # Rebuild list with best opener first
-        selected_scenes = [best_opener] + other_scenes
-
-        # Motion variety sequencing: avoid consecutive clips with same motion type
-        # Keep first scene (best hook) fixed, then reorder rest to maximize variety
-        from drone_reel.core.scene_detector import MotionType
-
-        def get_motion_type(scene):
-            if isinstance(scene, EnhancedSceneInfo):
-                return scene.motion_type
-            return MotionType.STATIC
-
-        if len(selected_scenes) > 2:
-            # Keep first scene (best hook), reorder rest for motion variety
-            reordered = [selected_scenes[0]]
-            remaining = selected_scenes[1:]
-
-            while remaining:
-                last_motion = get_motion_type(reordered[-1])
-                # Find a scene with different motion type
-                different_motion = [s for s in remaining if get_motion_type(s) != last_motion]
-
-                if different_motion:
-                    # Pick the one with best hook potential
-                    next_scene = min(different_motion, key=get_hook_priority)
-                else:
-                    # All have same motion - just pick best remaining
-                    next_scene = min(remaining, key=get_hook_priority)
-
-                reordered.append(next_scene)
-                remaining.remove(next_scene)
-
-            selected_scenes = reordered
-
-        # Filter out blurry scenes using sharpness threshold
-        import cv2
-
-        def get_scene_sharpness(scene) -> float:
-            """Calculate sharpness of scene midpoint frame using Laplacian variance."""
-            try:
-                cap = cv2.VideoCapture(str(scene.source_file))
-                fps = cap.get(cv2.CAP_PROP_FPS) or 30
-                mid_frame = int(scene.midpoint * fps)
-                cap.set(cv2.CAP_PROP_POS_FRAMES, mid_frame)
-                ret, frame = cap.read()
-                cap.release()
-                if ret and frame is not None:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-                    return float(laplacian.var())
-            except Exception:
-                pass
-            return 0.0
-
-        # Calculate sharpness for all scenes and store for duration adjustment
-        scene_sharpness_map = {id(scene): get_scene_sharpness(scene) for scene in selected_scenes}
-
-        # Adjust clip durations based on scene characteristics AND sharpness
-        # Dynamic max duration based on target: longer reels allow longer clips
-        MIN_CLIP_DURATION = 2.0
-        MAX_CLIP_DURATION = 4.0 if duration <= 15 else (5.0 if duration <= 30 else 6.0)
-        SHARP_THRESHOLD = 100  # Above this = sharp (full duration)
-        SOFT_THRESHOLD = 30    # Below this = very blurry (minimum duration)
-
-        adjusted_durations = []
-        for i, (scene, dur) in enumerate(zip(selected_scenes, clip_durations)):
-            adjusted_dur = dur
-            sharpness = scene_sharpness_map.get(id(scene), 100)
-
-            # Sharpness-based duration scaling
-            if sharpness < SOFT_THRESHOLD:
-                # Very blurry - use minimum duration
-                adjusted_dur = MIN_CLIP_DURATION
-            elif sharpness < SHARP_THRESHOLD:
-                # Soft but acceptable - reduce duration proportionally
-                # Scale from min (at 30 sharpness) to full dur (at 100 sharpness)
-                scale = (sharpness - SOFT_THRESHOLD) / (SHARP_THRESHOLD - SOFT_THRESHOLD)
-                adjusted_dur = MIN_CLIP_DURATION + (dur - MIN_CLIP_DURATION) * scale
-
-            if isinstance(scene, EnhancedSceneInfo):
-                # MAXIMUM/HIGH hook tier scenes with good sharpness: ensure minimum showcase time
-                if scene.hook_tier in (HookPotential.MAXIMUM, HookPotential.HIGH) and sharpness >= SOFT_THRESHOLD:
-                    adjusted_dur = max(adjusted_dur, 3.0)  # At least 3 seconds for best shots
-
-                # LOW/POOR hook tier: cap duration to keep pacing tight (but scale with reel length)
-                elif scene.hook_tier in (HookPotential.LOW, HookPotential.POOR):
-                    max_weak = 2.0 if duration <= 15 else 3.0  # Allow longer weak clips in longer reels
-                    adjusted_dur = min(adjusted_dur, max_weak)
-
-                # Static scenes: cap duration to avoid boring segments (but scale with reel length)
-                if scene.motion_type == MotionType.STATIC:
-                    max_static = 2.5 if duration <= 15 else 3.5  # Allow longer static clips in longer reels
-                    adjusted_dur = min(adjusted_dur, max_static)
-
-            # Enforce global duration limits
-            adjusted_dur = max(MIN_CLIP_DURATION, min(MAX_CLIP_DURATION, adjusted_dur))
-
-            adjusted_durations.append(adjusted_dur)
-
-        clip_durations = adjusted_durations
-
-        # Calculate actual duration
         actual_duration = sum(clip_durations)
-
-        # If we're significantly short of target, scale up all clips proportionally
-        if actual_duration < duration * 0.85:  # More than 15% short
-            scale_factor = min(duration / actual_duration, 1.5)  # Cap at 1.5x scaling
-            clip_durations = [min(d * scale_factor, MAX_CLIP_DURATION) for d in clip_durations]
-            new_duration = sum(clip_durations)
-            console.print(f"[cyan]Duration adjustment:[/cyan] Scaled clips by {scale_factor:.2f}x ({actual_duration:.0f}s → {new_duration:.0f}s)")
-            actual_duration = new_duration
+        if auto_scale:
+            console.print(f"[cyan]Duration adjustment:[/cyan] Scaled clips by {auto_scale:.2f}x → {actual_duration:.0f}s")
 
         # Preview mode - show plan and exit
         if preview:
             _show_preview(selected_scenes, clip_durations, config, beat_info)
             return
 
-        # Step 4: Generate dynamic transitions
+        # Step 4: Generate transitions
+        # Map CLI transition choice to TransitionType
         import random
+        transition_map = {
+            "cut": TransitionType.CUT,
+            "crossfade": TransitionType.CROSSFADE,
+            "fade_black": TransitionType.FADE_BLACK,
+            "zoom_in": TransitionType.ZOOM_IN,
+        }
+        user_transition = transition_map.get(transition, TransitionType.CROSSFADE)
+
         if beat_info and cut_points:
             energy_levels = [
                 beat_sync.get_energy_at_time(beat_info, cp.time)
@@ -725,29 +666,28 @@ def create(
                 len(selected_scenes),
                 style="cinematic",  # Use cinematic style for drone footage
             )
+            # Override with user's choice if they explicitly set --transition to something other than default
+            if transition != "crossfade":
+                transitions = [user_transition] * len(selected_scenes)
         else:
-            # Generate varied dynamic transitions even without music
-            dynamic_transitions = [
-                TransitionType.CROSSFADE,
-                TransitionType.ZOOM_IN,
-                TransitionType.ZOOM_OUT,
-                TransitionType.FADE_BLACK,
-            ]
-            transitions = []
-            for i in range(len(selected_scenes)):
-                # Alternate between transition types for variety
-                if i == 0:
-                    transitions.append(TransitionType.FADE_BLACK)  # Start with fade in
-                elif i == len(selected_scenes) - 1:
-                    transitions.append(TransitionType.FADE_BLACK)  # End with fade out
-                else:
-                    # Mix of crossfades and zooms
-                    transitions.append(random.choice([
-                        TransitionType.CROSSFADE,
-                        TransitionType.CROSSFADE,
-                        TransitionType.ZOOM_IN,
-                        TransitionType.ZOOM_OUT,
-                    ]))
+            if transition != "crossfade":
+                # User explicitly chose a transition type - use it consistently
+                transitions = [user_transition] * len(selected_scenes)
+            else:
+                # Generate varied dynamic transitions without music
+                transitions = []
+                for i in range(len(selected_scenes)):
+                    if i == 0:
+                        transitions.append(TransitionType.FADE_BLACK)  # Start with fade in
+                    elif i == len(selected_scenes) - 1:
+                        transitions.append(TransitionType.FADE_BLACK)  # End with fade out
+                    else:
+                        transitions.append(random.choice([
+                            TransitionType.CROSSFADE,
+                            TransitionType.CROSSFADE,
+                            TransitionType.ZOOM_IN,
+                            TransitionType.ZOOM_OUT,
+                        ]))
 
         # Step 5: Create clip segments with motion-matched transitions
         processor_kwargs = {
@@ -764,6 +704,13 @@ def create(
                 console.print("[cyan]Stabilization:[/cyan] Full mode - stabilizing ALL clips")
             else:
                 console.print(f"[cyan]Stabilization:[/cyan] Adaptive mode (stable threshold: {stable_threshold:.0f})")
+
+        # Display Ken Burns settings
+        if kb_settings:
+            kb_info = f"zoom={kb_settings['zoom_end']:.2f}x, pan=({kb_settings['pan_x']:.2f}, {kb_settings['pan_y']:.2f})"
+            console.print(f"[cyan]Ken Burns:[/cyan] {ken_burns_style} ({kb_info})")
+        else:
+            console.print("[cyan]Ken Burns:[/cyan] off (using CENTER mode for panoramas)")
 
         if preset:
             processor_kwargs["output_fps"] = preset.fps
@@ -786,84 +733,22 @@ def create(
 
         # Create intelligent per-clip reframers based on scene content
         clip_reframers = []
-        clip_reframe_modes = []  # Track which mode each clip uses for stabilization decisions
+        clip_reframe_modes = []
         if not no_reframe:
-            from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
-            import random
-
-            for i, scene in enumerate(selected_scenes):
-                # Get scene characteristics
-                motion_type = MotionType.STATIC
-                subject_score = 0.0
-
-                if isinstance(scene, EnhancedSceneInfo):
-                    motion_type = scene.motion_type
-                    subject_score = scene.subject_score
-
-                # Decision logic:
-                # 1. High subject score (>= 40) with movement -> gentle subject tracking
-                # 2. Landscape/panorama (low subject score) -> stable center or subtle Ken Burns
-                # 3. Camera already moving -> stable center crop
-
-                has_active_subject = subject_score >= 40
-                camera_moving = motion_type in (
-                    MotionType.PAN_LEFT, MotionType.PAN_RIGHT,
-                    MotionType.TILT_UP, MotionType.TILT_DOWN,
-                    MotionType.ORBIT_CW, MotionType.ORBIT_CCW,
-                    MotionType.FLYOVER, MotionType.REVEAL, MotionType.FPV
+            kb_cfg = None
+            if kb_settings:
+                kb_cfg = KenBurnsConfig(
+                    zoom_end=kb_settings["zoom_end"],
+                    pan_x=kb_settings["pan_x"],
+                    pan_y=kb_settings["pan_y"],
                 )
-
-                # Get clip duration to scale movement speed
-                clip_duration = clip_durations[i] if i < len(clip_durations) else 3.0
-
-                # Scale factor: longer clips can have more movement
-                # Base is 3 seconds, so a 2-sec clip gets 0.67x, a 4-sec clip gets 1.33x
-                duration_scale = min(clip_duration / 3.0, 1.5)  # Cap at 1.5x
-
-                if has_active_subject and not camera_moving:
-                    # Scene has subjects - ultra-smooth, barely perceptible tracking
-                    # Scale smoothness inversely with duration (shorter = smoother)
-                    smoothness = 0.003 * duration_scale  # Even slower base
-
-                    settings = ReframeSettings(
-                        target_ratio=AspectRatio.VERTICAL_9_16,
-                        mode=ReframeMode.SMART,
-                        output_width=output_w,
-                        tracking_smoothness=smoothness,  # Ultra-slow, scales with duration
-                        saliency_cache_frames=240,  # Update very rarely (every 8 sec at 30fps)
-                        smooth_tracking=True,
-                        adaptive_smoothing=False,
-                        focal_clamp_x=(0.4, 0.6),  # Very tight bounds - barely moves from center
-                        focal_clamp_y=(0.4, 0.6),  # Minimal vertical movement
-                    )
-                    clip_reframe_modes.append("SMART")
-                elif camera_moving:
-                    # Camera already moving - stable center crop, no additional movement
-                    settings = ReframeSettings(
-                        target_ratio=AspectRatio.VERTICAL_9_16,
-                        mode=ReframeMode.CENTER,
-                        output_width=output_w,
-                    )
-                    clip_reframe_modes.append("CENTER")
-                else:
-                    # Landscape panorama - very subtle Ken Burns scaled by duration
-                    # Shorter clips get less pan to avoid looking rushed
-                    base_pan = 0.008 * duration_scale  # Reduced base pan
-                    pan_x = random.uniform(-base_pan, base_pan)
-                    pan_y = random.uniform(-base_pan * 0.5, base_pan * 0.5)
-
-                    settings = ReframeSettings(
-                        target_ratio=AspectRatio.VERTICAL_9_16,
-                        mode=ReframeMode.KEN_BURNS,
-                        output_width=output_w,
-                        ken_burns_zoom_start=1.0,
-                        ken_burns_zoom_end=1.01,  # Even more minimal zoom (1%)
-                        ken_burns_pan_direction=(pan_x, pan_y),
-                        ken_burns_ease_curve="ease_in_out",
-                    )
-                    clip_reframe_modes.append("KEN_BURNS")
-
-                clip_reframers.append(Reframer(settings))
+            reframe_selector = ReframeSelector(
+                output_width=output_w,
+                kb_config=kb_cfg,
+            )
+            clip_reframers, clip_reframe_modes = reframe_selector.select_reframers(
+                selected_scenes, clip_durations,
+            )
 
         # Step 7: Stitch video
         task = progress.add_task("[cyan]Stitching video...", total=100)
@@ -954,38 +839,177 @@ def create(
                     adjusted_shake_scores.append(score)
             selected_shake_scores = adjusted_shake_scores
 
-        video_processor.stitch_clips(
-            segments,
-            output_path,
-            audio_path=music_path,
-            target_size=None,  # Let reframers handle sizing
-            progress_callback=update_progress,
-            reframers=clip_reframers if clip_reframers else None,
-            shake_scores=selected_shake_scores if stabilize else None,
-        )
+        # Step 7b: Generate speed ramps if enabled
+        clip_speed_ramps = None
+        if speed_ramp:
+            from drone_reel.core.speed_ramper import SpeedRamper
+            speed_ramper = SpeedRamper()
+            clip_speed_ramps = []
+            ramped_count = 0
+            for scene in selected_scenes:
+                ramps = speed_ramper.auto_detect_ramp_points(
+                    scene, beat_info=beat_info
+                )
+                clip_speed_ramps.append(ramps)
+                if ramps:
+                    ramped_count += 1
+            # Hook enhancement: add slow-mo opener to first clip for dramatic hook
+            if clip_speed_ramps and selected_scenes:
+                from drone_reel.core.speed_ramper import SpeedRamp
+                first_scene = selected_scenes[0]
+                opener_duration = min(1.0, first_scene.duration * 0.3)
+                if opener_duration > 0.2:
+                    opener_ramp = SpeedRamp(
+                        start_time=0.0,
+                        end_time=opener_duration,
+                        start_speed=0.7,
+                        end_speed=1.0,
+                        easing="ease_out",
+                    )
+                    # Prepend to first clip's ramps (avoid overlap with auto-detected)
+                    existing = clip_speed_ramps[0]
+                    if not existing or existing[0].start_time >= opener_duration:
+                        clip_speed_ramps[0] = [opener_ramp] + existing
+                        if not existing:
+                            ramped_count += 1
+            console.print(f"[cyan]Speed ramping:[/cyan] {ramped_count} of {len(selected_scenes)} clips ramped")
 
-        # Step 8: Apply color grading (if enabled)
-        if not no_color and color != "none":
-            task = progress.add_task("[cyan]Applying color grade...", total=100)
+        # Determine if post-processing is needed (caption, color grading, or silent audio injection)
+        # Also force return_clip path when no music so we can inject a silent audio stream
+        # (platforms require an audio track for compatibility)
+        needs_post_processing = caption or (not no_color and color != "none") or not music_path
 
-            color_grader = ColorGrader(preset=ColorPreset(color))
-
-            graded_path = output_path.with_stem(output_path.stem + "_graded")
-
-            def update_color_progress(p):
-                progress.update(task, completed=int(p * 100))
-
-            color_grader.grade_video(
+        if needs_post_processing:
+            # Single-pipeline mode: get clip object, apply transforms, write once
+            final_clip = video_processor.stitch_clips(
+                segments,
                 output_path,
-                graded_path,
-                progress_callback=update_color_progress,
-                video_bitrate=video_bitrate,
-                audio_bitrate=audio_bitrate,
+                audio_path=music_path,
+                target_size=None,  # Let reframers handle sizing
+                progress_callback=update_progress,
+                reframers=clip_reframers if clip_reframers else None,
+                shake_scores=selected_shake_scores if stabilize else None,
+                speed_ramps=clip_speed_ramps,
+                return_clip=True,
             )
 
-            # Replace original with graded
-            output_path.unlink()
-            graded_path.rename(output_path)
+            try:
+                # CF-1: Inject near-silent stereo audio when no music provided for platform compatibility
+                # The make_frame must handle vectorized t (numpy array of time points).
+                # Uses inaudible low-amplitude signal so AAC doesn't optimize to zero length.
+                if not music_path:
+                    import numpy as np
+                    from moviepy.audio.AudioClip import AudioClip
+
+                    def _silent_frame(t):
+                        if isinstance(t, np.ndarray):
+                            return np.full((len(t), 2), 1e-6)
+                        return np.array([1e-6, 1e-6])
+
+                    silent = AudioClip(
+                        _silent_frame,
+                        duration=final_clip.duration,
+                        fps=44100,
+                    )
+                    final_clip = final_clip.with_audio(silent)
+
+                # Apply text caption overlay as in-memory transform
+                if caption:
+                    from drone_reel.core.text_overlay import TextOverlay as TextOverlayConfig, TextRenderer, TextAnimation
+                    console.print(f"[cyan]Caption:[/cyan] \"{caption}\"")
+
+                    renderer = TextRenderer()
+                    overlay_config = TextOverlayConfig(
+                        text=caption,
+                        position=(0.5, 0.88),
+                        font_size=42,
+                        duration=3.0,
+                        animation_in=TextAnimation.FADE_IN,
+                        animation_out=TextAnimation.FADE_OUT,
+                    )
+                    final_clip = renderer.apply_overlay_to_clip(final_clip, overlay_config)
+
+                # Apply color grading as in-memory transform
+                if not no_color and color != "none":
+                    import cv2
+                    console.print(f"[cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity")
+                    color_grader = ColorGrader(preset=ColorPreset(color), intensity=color_intensity)
+
+                    def grade_transform(get_frame, t):
+                        frame = get_frame(t)
+                        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                        graded_bgr = color_grader.grade_frame(frame_bgr)
+                        return cv2.cvtColor(graded_bgr, cv2.COLOR_BGR2RGB)
+
+                    final_clip = final_clip.transform(grade_transform)
+
+                # Write once to disk with identical encoding params to video_processor path
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+
+                # Build ffmpeg_params matching video_processor.py: BT.709 + faststart + VBV caps
+                manual_ffmpeg_params = [
+                    "-pix_fmt", "yuv420p",
+                    "-colorspace", "bt709",
+                    "-color_primaries", "bt709",
+                    "-color_trc", "bt709",
+                    "-movflags", "+faststart",
+                ]
+                _bitrate_for_caps = video_bitrate or video_processor.video_bitrate
+                if _bitrate_for_caps:
+                    _numeric_str = _bitrate_for_caps.rstrip("MmKk")
+                    try:
+                        _numeric_val = float(_numeric_str)
+                        _unit = _bitrate_for_caps[len(_numeric_str):].upper()
+                        manual_ffmpeg_params += [
+                            "-maxrate", f"{_numeric_val * 1.5:.0f}{_unit}",
+                            "-bufsize", f"{_numeric_val * 2:.0f}{_unit}",
+                        ]
+                    except (ValueError, IndexError):
+                        pass
+
+                final_clip.write_videofile(
+                    str(output_path),
+                    fps=video_processor.output_fps,
+                    codec=video_processor.output_codec,
+                    audio_codec="aac",
+                    preset=video_processor.preset,
+                    threads=video_processor.threads,
+                    bitrate=video_bitrate or video_processor.video_bitrate,
+                    audio_bitrate=audio_bitrate or video_processor.audio_bitrate,
+                    ffmpeg_params=manual_ffmpeg_params,
+                    logger=None,
+                )
+            finally:
+                # Clean up all clip resources
+                if hasattr(final_clip, '_stitch_source_clips'):
+                    for clip in final_clip._stitch_source_clips:
+                        try:
+                            if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                                clip._source_clip_ref.close()
+                            clip.close()
+                        except Exception:
+                            pass
+                if hasattr(final_clip, '_stitch_audio') and final_clip._stitch_audio:
+                    try:
+                        final_clip._stitch_audio.close()
+                    except Exception:
+                        pass
+                try:
+                    final_clip.close()
+                except Exception:
+                    pass
+        else:
+            # No post-processing: write directly to disk (original path)
+            video_processor.stitch_clips(
+                segments,
+                output_path,
+                audio_path=music_path,
+                target_size=None,  # Let reframers handle sizing
+                progress_callback=update_progress,
+                reframers=clip_reframers if clip_reframers else None,
+                shake_scores=selected_shake_scores if stabilize else None,
+                speed_ramps=clip_speed_ramps,
+            )
 
     # Done!
     duration_info = format_duration(actual_duration)
