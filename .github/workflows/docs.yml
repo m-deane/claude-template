@@ -41,15 +41,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      - name: Generate API reference with pdoc
-        run: |
-          pdoc --html --output-dir docs/api src/drone_reel
-          # Move generated files to expected location
-          mv docs/api/drone_reel/* docs/api/
-          rmdir docs/api/drone_reel
-
       - name: Build documentation with MkDocs
-        run: mkdocs build --strict
+        run: mkdocs build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

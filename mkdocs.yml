@@ -1,9 +1,9 @@
 site_name: drone-reel Documentation
 site_description: AI-powered CLI tool to create Instagram-style reels from drone footage
-site_url: https://github.com/your-username/drone-reel
+site_url: https://m-deane.github.io/claude-template
 
 repo_name: drone-reel
-repo_url: https://github.com/your-username/drone-reel
+repo_url: https://github.com/m-deane/claude-template
 
 theme:
   name: material
@@ -31,6 +31,17 @@ theme:
 
 plugins:
   - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_root_heading: true
+            show_source: false
+            members_order: source
+            docstring_style: google
+            merge_init_into_class: true
+            show_if_no_docstring: false
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -46,19 +57,40 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Installation: index.md
-    - Quick Start: index.md
   - CLI Reference: cli-reference.md
   - Python API: api-reference.md
+  - Generated API Reference:
+    - Overview: api/index.md
+    - Core Pipeline:
+      - SceneDetector: api/scene_detector.md
+      - SceneFilter: api/scene_filter.md
+      - SceneSequencer: api/scene_sequencer.md
+      - DiversitySelector: api/sequence_optimizer.md
+      - DurationAdjuster: api/duration_adjuster.md
+      - BeatSync: api/beat_sync.md
+      - VideoProcessor: api/video_processor.md
+      - Stabilizer: api/stabilizer.md
+      - Reframer: api/reframer.md
+      - ColorGrader: api/color_grader.md
+    - Enhancements:
+      - SpeedRamper: api/speed_ramper.md
+      - TextOverlay: api/text_overlay.md
+      - Narrative: api/narrative.md
+      - Preview: api/preview.md
+      - ExportPresets: api/export_presets.md
+    - Analysis:
+      - SceneAnalyzer: api/scene_analyzer.md
+      - ReframeSelector: api/reframe_selector.md
+    - Utilities:
+      - File Utils: api/file_utils.md
+      - Config: api/config.md
+      - Resource Guard: api/resource_guard.md
   - Presets:
     - Color Presets: presets/color-presets.md
     - Transitions: presets/transitions.md
-  - Examples:
-    - Overview: examples/README.md
-  - API Reference (Generated): api/index.html
+  - Examples: examples/README.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/drone-reel
+      link: https://github.com/m-deane/claude-template
