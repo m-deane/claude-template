@@ -111,7 +111,12 @@ def main(ctx, version):
 )
 @click.option(
     "--transition",
-    type=click.Choice(["cut", "crossfade", "fade_black", "zoom_in"]),
+    type=click.Choice([
+        "cut", "crossfade", "fade_black", "zoom_in", "whip_pan", "glitch_rgb",
+        "iris_in", "iris_out", "flash_white", "light_leak", "hyperlapse_zoom",
+        "parallax_left", "parallax_right", "wipe_diagonal", "wipe_diamond",
+        "fog_pass", "vortex_zoom",
+    ]),
     default="crossfade",
     help="Default transition type",
 )
@@ -225,6 +230,84 @@ def main(ctx, version):
     default=None,
     help="Ken Burns vertical pan (0.0-0.2, where 0.05=5%% of height). Overrides --ken-burns preset.",
 )
+@click.option(
+    "--vignette",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Vignette edge darkening intensity (0.0=off, 0.3=subtle, 0.6=cinematic, 1.0=heavy)",
+)
+@click.option(
+    "--halation",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Halation bloom: warm glow around highlights (0.0=off, 0.3=subtle, 0.7=cinematic)",
+)
+@click.option(
+    "--chromatic-aberration",
+    "chromatic_aberration",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Chromatic aberration: RGB edge fringing (0.0=off, 0.3=subtle, 0.7=strong)",
+)
+@click.option(
+    "--lut",
+    "lut_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to .cube 3D LUT file for professional color grading",
+)
+@click.option(
+    "--letterbox",
+    type=click.Choice(["off", "2.35", "1.85", "2.39"]),
+    default="off",
+    help="Cinematic letterbox bars (2.35:1 anamorphic, 1.85:1 flat, 2.39:1 scope)",
+)
+@click.option(
+    "--duck-outro",
+    "duck_outro",
+    is_flag=True,
+    help="Smooth audio fade-out over final 2 seconds",
+)
+@click.option(
+    "--input-colorspace",
+    "input_colorspace",
+    type=click.Choice(["rec709", "dlog", "dlog_m", "slog3", "auto"]),
+    default="rec709",
+    help="Input footage colorspace (auto-detect or specify DJI D-Log, Sony S-Log3)",
+)
+@click.option(
+    "--auto-wb",
+    "auto_wb",
+    is_flag=True,
+    help="Auto white balance using gray world algorithm",
+)
+@click.option(
+    "--denoise",
+    "denoise",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Noise reduction strength (0.0=off, 0.3=subtle, 0.8=strong)",
+)
+@click.option(
+    "--haze",
+    "haze",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Atmospheric haze / depth fog (0.0=off, 0.3=subtle, 0.7=heavy)",
+)
+@click.option(
+    "--gnd-sky",
+    "gnd_sky",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Graduated ND sky darkening (0.0=off, 0.5=moderate, 1.0=strong)",
+)
+@click.option(
+    "--auto-color-match",
+    "auto_color_match",
+    is_flag=True,
+    help="Normalize color across clips using histogram matching",
+)
 def create(
     input_path: Path,
     music_path: Optional[Path],
@@ -253,6 +336,18 @@ def create(
     kb_zoom_end: Optional[float],
     kb_pan_x: Optional[float],
     kb_pan_y: Optional[float],
+    vignette: float,
+    halation: float,
+    chromatic_aberration: float,
+    lut_path: Optional[str],
+    letterbox: str,
+    duck_outro: bool,
+    input_colorspace: str,
+    auto_wb: bool,
+    denoise: float,
+    haze: float,
+    gnd_sky: float,
+    auto_color_match: bool,
 ):
     """Create a reel from drone footage."""
     # Validate conflicting options
@@ -874,10 +969,26 @@ def create(
                             ramped_count += 1
             console.print(f"[cyan]Speed ramping:[/cyan] {ramped_count} of {len(selected_scenes)} clips ramped")
 
-        # Determine if post-processing is needed (caption, color grading, or silent audio injection)
+        # Determine if post-processing is needed (caption, color grading, effects, or silent audio)
         # Also force return_clip path when no music so we can inject a silent audio stream
         # (platforms require an audio track for compatibility)
-        needs_post_processing = caption or (not no_color and color != "none") or not music_path
+        needs_post_processing = (
+            caption
+            or (not no_color and color != "none")
+            or not music_path
+            or vignette > 0
+            or halation > 0
+            or chromatic_aberration > 0
+            or lut_path
+            or letterbox != "off"
+            or duck_outro
+            or input_colorspace != "rec709"
+            or auto_wb
+            or denoise > 0
+            or haze > 0
+            or gnd_sky > 0
+            or auto_color_match
+        )
 
         if needs_post_processing:
             # Single-pipeline mode: get clip object, apply transforms, write once
@@ -929,11 +1040,78 @@ def create(
                     )
                     final_clip = renderer.apply_overlay_to_clip(final_clip, overlay_config)
 
-                # Apply color grading as in-memory transform
-                if not no_color and color != "none":
+                # Apply color grading as in-memory transform (with optional effects)
+                has_color = not no_color and color != "none"
+                has_effects = (
+                    vignette > 0 or halation > 0 or chromatic_aberration > 0
+                    or lut_path or input_colorspace != "rec709" or auto_wb
+                    or denoise > 0 or haze > 0 or gnd_sky > 0 or auto_color_match
+                )
+                if has_color or has_effects:
                     import cv2
-                    console.print(f"[cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity")
-                    color_grader = ColorGrader(preset=ColorPreset(color), intensity=color_intensity)
+                    from pathlib import Path as _Path
+                    if has_color:
+                        console.print(f"[cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity")
+                    effects_desc = []
+                    if input_colorspace != "rec709":
+                        effects_desc.append(f"colorspace: {input_colorspace}")
+                    if auto_wb:
+                        effects_desc.append("auto-WB")
+                    if denoise > 0:
+                        effects_desc.append(f"denoise {denoise:.0%}")
+                    if vignette > 0:
+                        effects_desc.append(f"vignette {vignette:.0%}")
+                    if halation > 0:
+                        effects_desc.append(f"halation {halation:.0%}")
+                    if chromatic_aberration > 0:
+                        effects_desc.append(f"CA {chromatic_aberration:.0%}")
+                    if haze > 0:
+                        effects_desc.append(f"haze {haze:.0%}")
+                    if gnd_sky > 0:
+                        effects_desc.append(f"GND sky {gnd_sky:.0%}")
+                    if lut_path:
+                        effects_desc.append(f"LUT {_Path(lut_path).name}")
+                    if auto_color_match:
+                        effects_desc.append("color match")
+                    if effects_desc:
+                        console.print(f"[cyan]Effects:[/cyan] {', '.join(effects_desc)}")
+
+                    # Auto-detect D-Log if requested
+                    _colorspace = input_colorspace
+                    if _colorspace == "auto":
+                        # Sample first frame to detect log footage
+                        try:
+                            sample_frame = final_clip.get_frame(0)
+                            sample_bgr = cv2.cvtColor(sample_frame, cv2.COLOR_RGB2BGR)
+                            _colorspace = ColorGrader.detect_log_footage(sample_bgr)
+                            if _colorspace != "rec709":
+                                console.print(f"[yellow]Detected log footage:[/yellow] {_colorspace}")
+                        except Exception:
+                            _colorspace = "rec709"
+
+                    color_grader = ColorGrader(
+                        preset=ColorPreset(color) if has_color else ColorPreset.NONE,
+                        intensity=color_intensity if has_color else 1.0,
+                        vignette_strength=vignette,
+                        halation_strength=halation,
+                        chromatic_aberration_strength=chromatic_aberration,
+                        lut_path=_Path(lut_path) if lut_path else None,
+                        input_colorspace=_colorspace,
+                        auto_wb=auto_wb,
+                        denoise_strength=denoise,
+                        haze_strength=haze,
+                        gnd_sky_strength=gnd_sky,
+                    )
+
+                    # Set up auto color match if requested
+                    if auto_color_match:
+                        try:
+                            ref_frame = final_clip.get_frame(0)
+                            ref_bgr = cv2.cvtColor(ref_frame, cv2.COLOR_RGB2BGR)
+                            color_grader.set_reference_frame(ref_bgr)
+                            console.print("[cyan]Auto color match:[/cyan] reference frame captured")
+                        except Exception:
+                            console.print("[yellow]Warning:[/yellow] Could not capture reference frame for color matching")
 
                     def grade_transform(get_frame, t):
                         frame = get_frame(t)
@@ -942,6 +1120,36 @@ def create(
                         return cv2.cvtColor(graded_bgr, cv2.COLOR_BGR2RGB)
 
                     final_clip = final_clip.transform(grade_transform)
+
+                # Apply cinematic letterbox bars
+                if letterbox != "off":
+                    from moviepy import CompositeVideoClip, ColorClip
+                    ratio = float(letterbox)  # 2.35, 1.85, or 2.39
+                    clip_w, clip_h = final_clip.w, final_clip.h
+                    # Calculate bar height for the target aspect ratio
+                    target_h = int(clip_w / ratio)
+                    if target_h < clip_h:
+                        bar_h = (clip_h - target_h) // 2
+                        console.print(f"[cyan]Letterbox:[/cyan] {letterbox}:1 ({bar_h}px bars)")
+                        top_bar = ColorClip(
+                            size=(clip_w, bar_h), color=(0, 0, 0)
+                        ).with_duration(final_clip.duration).with_position(("center", "top"))
+                        bottom_bar = ColorClip(
+                            size=(clip_w, bar_h), color=(0, 0, 0)
+                        ).with_duration(final_clip.duration).with_position(("center", "bottom"))
+                        final_clip = CompositeVideoClip(
+                            [final_clip, top_bar, bottom_bar],
+                            size=(clip_w, clip_h),
+                        )
+
+                # Apply audio ducking (outro fade)
+                if duck_outro and final_clip.audio is not None:
+                    from moviepy import afx
+                    fade_dur = min(2.0, final_clip.duration * 0.15)
+                    console.print(f"[cyan]Audio duck:[/cyan] {fade_dur:.1f}s outro fade")
+                    final_clip = final_clip.with_audio(
+                        final_clip.audio.with_effects([afx.AudioFadeOut(fade_dur)])
+                    )
 
                 # Write once to disk with identical encoding params to video_processor path
                 output_path.parent.mkdir(parents=True, exist_ok=True)

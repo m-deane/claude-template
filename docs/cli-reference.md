@@ -32,21 +32,81 @@ drone-reel create [OPTIONS]
 | `--output PATH` | `-o` | `./output/reel.mp4` | Output video file path |
 | `--duration FLOAT` | `-d` | `45.0` | Target duration in seconds |
 | `--aspect CHOICE` | | `9:16` | Output aspect ratio: `9:16`, `1:1`, `4:5`, `16:9` |
+| `--resolution CHOICE` | | `1080p` | Output resolution: `720p`, `1080p`, `1440p`, `4k` |
+| `--quality CHOICE` | | `medium` | Encoding quality: `draft`, `medium`, `high`, `ultra` |
+| `--platform CHOICE` | | | Platform preset: `instagram_reels`, `tiktok`, `youtube_shorts`, `youtube` |
 
 ### Audio Options
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--music PATH` | `-m` | Music track for beat synchronization |
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--music PATH` | `-m` | | Music track for beat synchronization |
+| `--beat-mode CHOICE` | | `all` | Beat sync mode: `all` (every beat), `downbeat` (strong beats only) |
+| `--duck-outro FLOAT` | | `0.0` | Fade music volume at end (seconds, 0 = off) |
 
-### Visual Options
+### Color Grading Options
+
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--color PRESET` | `-c` | `drone_aerial` | Color grading preset (see [Color Presets](presets/color-presets.md)) |
+| `--color-intensity FLOAT` | | `1.0` | Scale color adjustments (0.0-1.0) |
+| `--lut PATH` | | | Path to .cube LUT file for custom color grading |
+
+### Visual Effects Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--color PRESET` | `drone_aerial` | Color grading preset (see [Color Presets](presets/color-presets.md)) |
+| `--vignette FLOAT` | `0.0` | Edge darkening strength (0.0-1.0) |
+| `--halation FLOAT` | `0.0` | Warm highlight bloom strength (0.0-1.0) |
+| `--chromatic-aberration FLOAT` | `0.0` | RGB edge fringing strength (0.0-1.0) |
+| `--haze FLOAT` | `0.0` | Atmospheric haze overlay (0.0-1.0) |
+| `--gnd-sky FLOAT` | `0.0` | Graduated ND sky darkening (0.0-1.0) |
+| `--letterbox FLOAT` | `0.0` | Cinematic letterbox bars (0.0-1.0, fraction of frame height) |
+
+### Color Science Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--input-colorspace CHOICE` | `rec709` | Input footage colorspace: `rec709`, `dlog`, `dlog_m`, `slog3`, `auto` |
+| `--auto-wb` | off | Enable gray world auto white balance |
+| `--auto-color-match` | off | Normalize clip colors to first clip's histogram |
+| `--denoise FLOAT` | `0.0` | Spatial noise reduction strength (0.0-1.0) |
+
+### Transition Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--transition TYPE` | `crossfade` | Default transition type (see [Transitions](presets/transitions.md)) |
+
+Available types: `cut`, `crossfade`, `fade_black`, `fade_white`, `zoom_in`, `zoom_out`, `slide_left`, `slide_right`, `wipe_left`, `wipe_right`, `whip_pan`, `glitch_rgb`, `iris_in`, `iris_out`, `flash_white`, `light_leak`, `hyperlapse_zoom`, `parallax_left`, `parallax_right`, `wipe_diagonal`, `wipe_diamond`, `fog_pass`, `vortex_zoom`
+
+### Reframing Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
 | `--reframe MODE` | `smart` | Reframing mode: `smart`, `center`, `pan`, `thirds` |
-| `--transition TYPE` | `crossfade` | Default transition: `cut`, `crossfade`, `fade_black`, `zoom_in` |
 | `--clips INT` | auto | Number of clips to include (auto-calculated if not specified) |
+
+### Stabilization Options
+
+| Option | Description |
+|--------|-------------|
+| `--stabilize` | Enable stabilization for shaky clips |
+| `--stabilize-all` | Force stabilization on all clips |
+| `--stable-threshold FLOAT` | Shake score threshold for auto-stabilization (0-100) |
+
+### Speed & Text Options
+
+| Option | Description |
+|--------|-------------|
+| `--speed-ramp` | Enable automatic speed ramping (slow-mo on hooks) |
+| `--caption TEXT` | Add animated lower-third text overlay |
+
+### Preset Options
+
+| Option | Description |
+|--------|-------------|
+| `--viral` | Viral preset: 15s, Instagram Reels, 60% color, speed ramp |
 
 ### Skip Options
 
@@ -65,6 +125,18 @@ drone-reel create -i ./clips/ -o reel.mp4
 # 60-second reel with music and cinematic color grade
 drone-reel create -i ./clips/ -m ./track.mp3 -d 60 --color cinematic
 
+# D-Log footage with auto white balance and film look
+drone-reel create -i ./clips/ --input-colorspace dlog_m --auto-wb --color kodak_2383
+
+# Cinematic with vignette, halation, and letterbox
+drone-reel create -i ./clips/ --color cinematic --vignette 0.4 --halation 0.3 --letterbox 0.1
+
+# 4K with stabilization and atmospheric effects
+drone-reel create -i ./clips/ --resolution 4k --quality ultra --stabilize-all --haze 0.2 --gnd-sky 0.4
+
+# Consistent color across clips with denoising
+drone-reel create -i ./clips/ --auto-color-match --denoise 0.5
+
 # Square format for Instagram feed
 drone-reel create -i ./clips/ --aspect 1:1 --reframe center
 
@@ -73,6 +145,9 @@ drone-reel create -i ./clips/ -d 30 --preview
 
 # Keep original landscape format with color grading only
 drone-reel create -i ./clips/ --no-reframe --color warm_sunset
+
+# Custom LUT with chromatic aberration
+drone-reel create -i ./clips/ --lut my_grade.cube --chromatic-aberration 0.3
 ```
 
 ---
@@ -177,20 +252,16 @@ drone-reel presets
 
 ### Output
 
-Displays a table of all available color presets with descriptions.
+Displays a table of all 30 available color presets with descriptions.
 
-```
-          Available Color Presets
-┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Preset         ┃ Description                         ┃
-┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ none           │ No color grading                    │
-│ cinematic      │ Film-like with lifted blacks        │
-│ warm_sunset    │ Warm golden tones                   │
-│ cool_blue      │ Cool blue tones                     │
-│ drone_aerial   │ Optimized for aerial drone footage  │
-│ ...            │ ...                                 │
-└────────────────┴─────────────────────────────────────┘
+---
+
+## platforms
+
+List available platform export presets.
+
+```bash
+drone-reel platforms
 ```
 
 ---

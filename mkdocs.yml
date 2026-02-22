@@ -88,6 +88,7 @@ nav:
   - Presets:
     - Color Presets: presets/color-presets.md
     - Transitions: presets/transitions.md
+  - Advanced Color Grader: color_grader_advanced_features.md
   - Examples: examples/README.md
 
 extra:

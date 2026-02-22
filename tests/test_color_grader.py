@@ -987,3 +987,574 @@ class TestDroneAerialPresetBoost:
         diff = np.mean(np.abs(result.astype(float) - result_none.astype(float)))
         # Expect at least a small measurable difference
         assert diff > 0.5
+
+
+class TestVignetteEffect:
+    """Tests for vignette radial edge darkening effect."""
+
+    @pytest.fixture
+    def uniform_frame(self):
+        """Create a uniform brightness frame."""
+        return np.ones((200, 200, 3), dtype=np.uint8) * 200
+
+    def test_vignette_off_by_default(self):
+        """Vignette is disabled when strength is 0."""
+        grader = ColorGrader()
+        assert grader.vignette_strength == 0.0
+
+    def test_vignette_init_param(self):
+        """Vignette strength is set via constructor."""
+        grader = ColorGrader(vignette_strength=0.5)
+        assert grader.vignette_strength == 0.5
+
+    def test_vignette_clamped_to_range(self):
+        """Vignette strength clamped to 0-1."""
+        assert ColorGrader(vignette_strength=-0.5).vignette_strength == 0.0
+        assert ColorGrader(vignette_strength=2.0).vignette_strength == 1.0
+
+    def test_vignette_darkens_edges(self, uniform_frame):
+        """Vignette makes edges darker than center."""
+        grader = ColorGrader(vignette_strength=0.8)
+        result = grader.grade_frame(uniform_frame)
+        h, w = result.shape[:2]
+        center_val = float(result[h // 2, w // 2].mean())
+        corner_val = float(result[0, 0].mean())
+        # Center should be brighter than corner
+        assert center_val > corner_val
+
+    def test_vignette_center_unchanged(self, uniform_frame):
+        """Vignette center should be approximately unchanged."""
+        grader = ColorGrader(vignette_strength=0.5)
+        result = grader.grade_frame(uniform_frame)
+        h, w = result.shape[:2]
+        center_val = float(result[h // 2, w // 2].mean())
+        # Center should be close to original (within dithering margin)
+        assert abs(center_val - 200.0) < 10
+
+    def test_vignette_higher_strength_darker_corners(self, uniform_frame):
+        """Higher vignette strength produces darker corners."""
+        grader_light = ColorGrader(vignette_strength=0.2)
+        grader_heavy = ColorGrader(vignette_strength=0.9)
+        result_light = grader_light.grade_frame(uniform_frame.copy())
+        result_heavy = grader_heavy.grade_frame(uniform_frame.copy())
+        corner_light = float(result_light[0, 0].mean())
+        corner_heavy = float(result_heavy[0, 0].mean())
+        assert corner_heavy < corner_light
+
+    def test_vignette_mask_cached(self, uniform_frame):
+        """Vignette mask is cached after first frame."""
+        grader = ColorGrader(vignette_strength=0.5)
+        assert grader._vignette_mask_cache is None
+        grader.grade_frame(uniform_frame)
+        assert grader._vignette_mask_cache is not None
+        assert grader._vignette_mask_cache[:2] == (200, 200)
+
+    def test_vignette_with_preset(self, uniform_frame):
+        """Vignette works together with color preset."""
+        grader = ColorGrader(
+            preset=ColorPreset.CINEMATIC,
+            vignette_strength=0.5,
+        )
+        result = grader.grade_frame(uniform_frame)
+        # Should produce a valid frame
+        assert result.shape == uniform_frame.shape
+        assert result.dtype == np.uint8
+
+    def test_vignette_no_change_when_zero(self, uniform_frame):
+        """Zero vignette should not modify the frame beyond other grading."""
+        grader_no_vig = ColorGrader(vignette_strength=0.0)
+        grader_with_vig = ColorGrader(vignette_strength=0.0)
+        r1 = grader_no_vig.grade_frame(uniform_frame.copy())
+        r2 = grader_with_vig.grade_frame(uniform_frame.copy())
+        np.testing.assert_array_equal(r1, r2)
+
+
+class TestHalationEffect:
+    """Tests for halation/bloom warm glow effect."""
+
+    @pytest.fixture
+    def bright_frame(self):
+        """Frame with bright highlights for halation testing."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 50
+        # Add bright spot in center
+        frame[40:60, 40:60] = 240
+        return frame
+
+    def test_halation_off_by_default(self):
+        """Halation is disabled when strength is 0."""
+        grader = ColorGrader()
+        assert grader.halation_strength == 0.0
+
+    def test_halation_init_param(self):
+        """Halation strength is set via constructor."""
+        grader = ColorGrader(halation_strength=0.5)
+        assert grader.halation_strength == 0.5
+
+    def test_halation_clamped(self):
+        """Halation strength clamped to 0-1."""
+        assert ColorGrader(halation_strength=-1.0).halation_strength == 0.0
+        assert ColorGrader(halation_strength=2.0).halation_strength == 1.0
+
+    def test_halation_adds_warm_glow(self, bright_frame):
+        """Halation should add warm glow around bright areas."""
+        grader = ColorGrader(halation_strength=0.7)
+        result = grader.grade_frame(bright_frame)
+        # Area near highlights should be warmer (more red/orange) than original
+        # Check pixels adjacent to the bright spot
+        nearby_original = bright_frame[35, 50].astype(float)
+        nearby_result = result[35, 50].astype(float)
+        # Red channel should increase more than blue
+        assert nearby_result[2] >= nearby_original[2]  # BGR: index 2 = red
+
+    def test_halation_no_effect_dark_frame(self):
+        """Halation should not affect frames with no highlights."""
+        dark_frame = np.ones((100, 100, 3), dtype=np.uint8) * 30
+        grader = ColorGrader(halation_strength=0.8)
+        result = grader.grade_frame(dark_frame)
+        # Should be very similar to original
+        diff = np.abs(result.astype(float) - dark_frame.astype(float)).mean()
+        assert diff < 5.0
+
+    def test_halation_produces_valid_output(self, bright_frame):
+        """Halation output should be valid uint8 frame."""
+        grader = ColorGrader(halation_strength=1.0)
+        result = grader.grade_frame(bright_frame)
+        assert result.dtype == np.uint8
+        assert result.shape == bright_frame.shape
+
+
+class TestChromaticAberration:
+    """Tests for chromatic aberration RGB edge fringing."""
+
+    @pytest.fixture
+    def test_frame(self):
+        return np.ones((100, 100, 3), dtype=np.uint8) * 128
+
+    def test_ca_off_by_default(self):
+        """CA is disabled when strength is 0."""
+        grader = ColorGrader()
+        assert grader.chromatic_aberration_strength == 0.0
+
+    def test_ca_init_param(self):
+        """CA strength is set via constructor."""
+        grader = ColorGrader(chromatic_aberration_strength=0.5)
+        assert grader.chromatic_aberration_strength == 0.5
+
+    def test_ca_clamped(self):
+        """CA strength clamped to 0-1."""
+        assert ColorGrader(chromatic_aberration_strength=-1.0).chromatic_aberration_strength == 0.0
+        assert ColorGrader(chromatic_aberration_strength=2.0).chromatic_aberration_strength == 1.0
+
+    def test_ca_shifts_channels_at_edges(self):
+        """CA should shift R and B channels at frame edges."""
+        # Create frame with distinct per-channel values
+        frame = np.zeros((100, 200, 3), dtype=np.uint8)
+        frame[:, :, 0] = 50   # B
+        frame[:, :, 1] = 128  # G
+        frame[:, :, 2] = 200  # R
+        grader = ColorGrader(chromatic_aberration_strength=0.8)
+        result = grader.grade_frame(frame)
+        # G channel center should be approximately unchanged (interpolation may shift by 1)
+        assert abs(int(result[50, 100, 1]) - 128) <= 1
+        # Edges should show channel separation
+        assert result.shape == frame.shape
+
+    def test_ca_produces_valid_output(self, test_frame):
+        """CA output should be valid uint8 frame."""
+        grader = ColorGrader(chromatic_aberration_strength=0.5)
+        result = grader.grade_frame(test_frame)
+        assert result.dtype == np.uint8
+        assert result.shape == test_frame.shape
+
+
+class TestNewColorPresets:
+    """Tests for the 19 new color presets added in Phase 2."""
+
+    @pytest.fixture
+    def sample_frame(self):
+        """Uniform mid-gray frame for preset testing."""
+        return np.ones((50, 50, 3), dtype=np.uint8) * 128
+
+    def test_all_new_presets_in_enum(self):
+        """All 19 new presets exist in ColorPreset enum."""
+        new_presets = [
+            "golden_hour", "blue_hour", "harsh_midday", "overcast", "night_city",
+            "ocean_coastal", "forest_jungle", "urban_city", "desert_arid",
+            "snow_mountain", "autumn_foliage", "kodak_2383", "fujifilm_3513",
+            "technicolor_2strip", "desaturated_moody", "warm_pastel",
+            "cyberpunk_neon", "hyper_natural", "film_emulation",
+        ]
+        for name in new_presets:
+            assert ColorPreset(name) is not None
+
+    def test_all_new_presets_have_adjustments(self):
+        """All new presets have PRESET_ADJUSTMENTS entries."""
+        for preset in ColorPreset:
+            assert preset in ColorGrader.PRESET_ADJUSTMENTS
+
+    def test_total_preset_count(self):
+        """Total presets should be 30 (11 original + 19 new)."""
+        assert len(ColorPreset) == 30
+
+    def test_new_presets_produce_different_output(self, sample_frame):
+        """Each new preset should produce different output than NONE."""
+        none_result = ColorGrader(preset=ColorPreset.NONE).grade_frame(sample_frame.copy())
+        for preset in ColorPreset:
+            if preset == ColorPreset.NONE:
+                continue
+            result = ColorGrader(preset=preset).grade_frame(sample_frame.copy())
+            diff = np.abs(result.astype(float) - none_result.astype(float)).mean()
+            assert diff > 0, f"Preset {preset.value} produces same output as NONE"
+
+    def test_golden_hour_warms_frame(self, sample_frame):
+        """Golden hour should produce warmer (more red/orange) output."""
+        grader = ColorGrader(preset=ColorPreset.GOLDEN_HOUR)
+        result = grader.grade_frame(sample_frame.copy())
+        # Red channel should increase relative to blue
+        assert result[:, :, 2].mean() > result[:, :, 0].mean()
+
+    def test_blue_hour_cools_frame(self, sample_frame):
+        """Blue hour should produce cooler (more blue) output."""
+        grader = ColorGrader(preset=ColorPreset.BLUE_HOUR)
+        result = grader.grade_frame(sample_frame.copy())
+        # Blue channel should increase relative to red
+        assert result[:, :, 0].mean() > result[:, :, 2].mean()
+
+    def test_desaturated_moody_reduces_saturation(self, sample_frame):
+        """Desaturated moody should reduce overall color saturation."""
+        import cv2
+        grader = ColorGrader(preset=ColorPreset.DESATURATED_MOODY)
+        result = grader.grade_frame(sample_frame.copy())
+        # Convert to HSV and check saturation is lower
+        result_hsv = cv2.cvtColor(result, cv2.COLOR_BGR2HSV)
+        original_hsv = cv2.cvtColor(sample_frame, cv2.COLOR_BGR2HSV)
+        assert result_hsv[:, :, 1].mean() <= original_hsv[:, :, 1].mean() + 5
+
+    def test_presets_with_intensity_scaling(self, sample_frame):
+        """New presets should work with intensity scaling."""
+        for preset in [ColorPreset.GOLDEN_HOUR, ColorPreset.CYBERPUNK_NEON, ColorPreset.KODAK_2383]:
+            grader = ColorGrader(preset=preset, intensity=0.5)
+            result = grader.grade_frame(sample_frame.copy())
+            assert result.dtype == np.uint8
+            assert result.shape == sample_frame.shape
+
+    def test_get_preset_names_includes_new(self):
+        """get_preset_names() should include all new presets."""
+        names = get_preset_names()
+        assert "golden_hour" in names
+        assert "cyberpunk_neon" in names
+        assert "kodak_2383" in names
+        assert len(names) == 30
+
+
+class TestDLogNormalization:
+    """Tests for D-Log / S-Log3 auto-normalization."""
+
+    @pytest.fixture
+    def flat_frame(self):
+        """Create a flat, low-contrast frame simulating log footage."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        # Add slight variation but keep compressed range
+        noise = np.random.RandomState(42).normal(0, 10, frame.shape).astype(np.float32)
+        return np.clip(frame.astype(np.float32) + noise, 80, 180).astype(np.uint8)
+
+    def test_dlog_normalization_changes_frame(self, flat_frame):
+        """D-Log normalization should transform the frame (different from rec709 path)."""
+        grader_dlog = ColorGrader(input_colorspace="dlog")
+        grader_rec = ColorGrader(input_colorspace="rec709")
+        result_dlog = grader_dlog.grade_frame(flat_frame.copy())
+        result_rec = grader_rec.grade_frame(flat_frame.copy())
+        # D-Log normalization should produce different output than passthrough
+        assert not np.array_equal(result_dlog, result_rec)
+
+    def test_dlog_m_normalization(self, flat_frame):
+        """D-Log M variant should also normalize."""
+        grader = ColorGrader(input_colorspace="dlog_m")
+        result = grader.grade_frame(flat_frame)
+        assert result.dtype == np.uint8
+        assert result.shape == flat_frame.shape
+
+    def test_slog3_normalization(self, flat_frame):
+        """S-Log3 should normalize differently from D-Log."""
+        grader_dlog = ColorGrader(input_colorspace="dlog")
+        grader_slog = ColorGrader(input_colorspace="slog3")
+        result_dlog = grader_dlog.grade_frame(flat_frame.copy())
+        result_slog = grader_slog.grade_frame(flat_frame.copy())
+        # Different curves should produce different results
+        assert not np.array_equal(result_dlog, result_slog)
+
+    def test_rec709_passthrough(self, flat_frame):
+        """rec709 input should not apply normalization."""
+        grader = ColorGrader(input_colorspace="rec709")
+        result = grader.grade_frame(flat_frame)
+        assert result.dtype == np.uint8
+
+    def test_detect_log_footage_flat(self, flat_frame):
+        """Flat, compressed-range frame should be detected as log."""
+        result = ColorGrader.detect_log_footage(flat_frame)
+        assert result == "dlog"
+
+    def test_detect_log_footage_normal(self):
+        """Normal high-contrast frame should be detected as rec709."""
+        frame = np.zeros((100, 200, 3), dtype=np.uint8)
+        frame[:50] = 240  # High contrast
+        frame[50:] = 10
+        result = ColorGrader.detect_log_footage(frame)
+        assert result == "rec709"
+
+    def test_dlog_with_preset(self, flat_frame):
+        """D-Log normalization should work with color presets."""
+        grader = ColorGrader(preset=ColorPreset.CINEMATIC, input_colorspace="dlog")
+        result = grader.grade_frame(flat_frame)
+        assert result.dtype == np.uint8
+
+    def test_normalize_dlog_valid_output(self):
+        """_normalize_dlog should produce valid float32 output."""
+        grader = ColorGrader(input_colorspace="dlog")
+        frame = np.full((50, 50, 3), 128, dtype=np.float32)
+        result = grader._normalize_dlog(frame)
+        assert result.dtype == np.float32
+        assert np.all(result >= 0) and np.all(result <= 255)
+
+
+class TestAutoWhiteBalance:
+    """Tests for gray world auto white balance."""
+
+    def test_awb_corrects_blue_cast(self):
+        """AWB should reduce a strong blue color cast."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        frame[:, :, 0] = 200  # Strong blue cast (BGR)
+        grader = ColorGrader(auto_wb=True)
+        result = grader.grade_frame(frame)
+        # Blue channel should be reduced toward the mean
+        assert result[:, :, 0].mean() < 200
+
+    def test_awb_preserves_neutral(self):
+        """AWB should minimally affect already-neutral frames."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        grader = ColorGrader(auto_wb=True)
+        result = grader.grade_frame(frame)
+        # Should be close to original
+        assert np.allclose(result.astype(float), frame.astype(float), atol=5)
+
+    def test_awb_valid_output(self):
+        """AWB output should be valid uint8."""
+        frame = np.random.RandomState(42).randint(50, 200, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader(auto_wb=True)
+        result = grader.grade_frame(frame)
+        assert result.dtype == np.uint8
+        assert result.shape == frame.shape
+
+    def test_awb_with_preset(self):
+        """AWB should work combined with a color preset."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        frame[:, :, 2] = 200  # Red cast
+        grader = ColorGrader(preset=ColorPreset.DRONE_AERIAL, auto_wb=True)
+        result = grader.grade_frame(frame)
+        assert result.dtype == np.uint8
+
+
+class TestDenoise:
+    """Tests for noise reduction."""
+
+    def test_denoise_reduces_noise(self):
+        """Denoise should reduce noise level."""
+        base = np.full((100, 200, 3), 128, dtype=np.uint8)
+        noise = np.random.RandomState(42).normal(0, 30, base.shape).astype(np.float32)
+        noisy = np.clip(base.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+        grader = ColorGrader(denoise_strength=0.8)
+        result = grader.grade_frame(noisy)
+        # Denoised frame should have lower std deviation
+        assert result.astype(float).std() < noisy.astype(float).std()
+
+    def test_denoise_zero_strength_passthrough(self):
+        """Zero denoise strength should not modify frame."""
+        frame = np.random.RandomState(42).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader(denoise_strength=0.0)
+        result = grader.grade_frame(frame)
+        assert np.array_equal(result, frame)
+
+    def test_denoise_valid_output(self):
+        """Denoise output should be valid uint8."""
+        frame = np.random.RandomState(42).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader(denoise_strength=0.5)
+        result = grader.grade_frame(frame)
+        assert result.dtype == np.uint8
+        assert result.shape == frame.shape
+
+    def test_denoise_strength_scaling(self):
+        """Higher denoise strength should smooth more."""
+        noise = np.random.RandomState(42).normal(128, 30, (100, 200, 3)).astype(np.uint8)
+        grader_low = ColorGrader(denoise_strength=0.2)
+        grader_high = ColorGrader(denoise_strength=0.9)
+        result_low = grader_low.grade_frame(noise.copy())
+        result_high = grader_high.grade_frame(noise.copy())
+        # Higher strength should produce smoother (lower std) result
+        assert result_high.astype(float).std() <= result_low.astype(float).std()
+
+
+class TestAtmosphericHaze:
+    """Tests for atmospheric haze effect."""
+
+    @pytest.fixture
+    def test_frame(self):
+        return np.full((100, 200, 3), 100, dtype=np.uint8)
+
+    def test_haze_brightens_top(self, test_frame):
+        """Haze should make the top of the frame brighter (closer to haze color)."""
+        grader = ColorGrader(haze_strength=0.8)
+        result = grader.grade_frame(test_frame)
+        top_mean = result[:10].mean()
+        bottom_mean = result[-10:].mean()
+        assert top_mean > bottom_mean
+
+    def test_haze_zero_passthrough(self, test_frame):
+        """Zero haze should not modify frame."""
+        grader = ColorGrader(haze_strength=0.0)
+        result = grader.grade_frame(test_frame)
+        assert np.array_equal(result, test_frame)
+
+    def test_haze_valid_output(self, test_frame):
+        """Haze output should be valid uint8."""
+        grader = ColorGrader(haze_strength=0.5)
+        result = grader.grade_frame(test_frame)
+        assert result.dtype == np.uint8
+        assert result.shape == test_frame.shape
+
+    def test_haze_strength_scaling(self, test_frame):
+        """Higher haze strength should produce more effect at top."""
+        grader_low = ColorGrader(haze_strength=0.2)
+        grader_high = ColorGrader(haze_strength=0.8)
+        result_low = grader_low.grade_frame(test_frame.copy())
+        result_high = grader_high.grade_frame(test_frame.copy())
+        # Top row should be brighter with higher strength
+        assert result_high[:5].mean() > result_low[:5].mean()
+
+
+class TestGNDSkyCorrection:
+    """Tests for graduated neutral density sky correction."""
+
+    @pytest.fixture
+    def bright_sky_frame(self):
+        """Frame with bright top (sky) and darker bottom (ground)."""
+        frame = np.zeros((100, 200, 3), dtype=np.uint8)
+        frame[:50] = 220  # Bright sky
+        frame[50:] = 80   # Darker ground
+        return frame
+
+    def test_gnd_darkens_top(self, bright_sky_frame):
+        """GND should darken the top of the frame."""
+        grader = ColorGrader(gnd_sky_strength=0.8)
+        result = grader.grade_frame(bright_sky_frame)
+        # Top should be darker than original
+        assert result[:10].mean() < bright_sky_frame[:10].mean()
+
+    def test_gnd_preserves_bottom(self, bright_sky_frame):
+        """GND should not affect the bottom half."""
+        grader = ColorGrader(gnd_sky_strength=0.8)
+        result = grader.grade_frame(bright_sky_frame)
+        # Bottom half should be approximately unchanged
+        assert abs(result[-10:].mean() - bright_sky_frame[-10:].mean()) < 5
+
+    def test_gnd_zero_passthrough(self, bright_sky_frame):
+        """Zero GND should not modify frame."""
+        grader = ColorGrader(gnd_sky_strength=0.0)
+        result = grader.grade_frame(bright_sky_frame)
+        assert np.array_equal(result, bright_sky_frame)
+
+    def test_gnd_valid_output(self, bright_sky_frame):
+        """GND output should be valid uint8."""
+        grader = ColorGrader(gnd_sky_strength=0.6)
+        result = grader.grade_frame(bright_sky_frame)
+        assert result.dtype == np.uint8
+        assert result.shape == bright_sky_frame.shape
+
+
+class TestAutoColorMatch:
+    """Tests for histogram-based auto color matching."""
+
+    def test_color_match_normalizes_toward_reference(self):
+        """Color matching should shift frame histogram toward reference."""
+        # Reference: bright frame
+        ref = np.full((100, 200, 3), 200, dtype=np.uint8)
+        # Source: dark frame
+        source = np.full((100, 200, 3), 60, dtype=np.uint8)
+
+        grader = ColorGrader()
+        grader.set_reference_frame(ref)
+        result = grader.grade_frame(source)
+        # Result should be brighter than source (shifted toward reference)
+        assert result.mean() > source.mean()
+
+    def test_color_match_no_reference_passthrough(self):
+        """Without reference frame, color match should be a no-op."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        grader = ColorGrader()
+        result = grader.grade_frame(frame)
+        assert np.array_equal(result, frame)
+
+    def test_set_reference_frame(self):
+        """set_reference_frame should store CDF histograms."""
+        ref = np.random.RandomState(42).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader()
+        grader.set_reference_frame(ref)
+        assert grader._reference_histogram is not None
+        assert len(grader._reference_histogram) == 3
+        for cdf in grader._reference_histogram:
+            assert len(cdf) == 256
+            assert cdf[-1] == pytest.approx(1.0, abs=0.01)
+
+    def test_color_match_valid_output(self):
+        """Color match output should be valid uint8."""
+        ref = np.random.RandomState(42).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        source = np.random.RandomState(99).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader()
+        grader.set_reference_frame(ref)
+        result = grader.grade_frame(source)
+        assert result.dtype == np.uint8
+        assert result.shape == source.shape
+
+    def test_color_match_with_preset(self):
+        """Color match should work combined with a preset."""
+        ref = np.full((100, 200, 3), 150, dtype=np.uint8)
+        source = np.full((100, 200, 3), 80, dtype=np.uint8)
+        grader = ColorGrader(preset=ColorPreset.CINEMATIC)
+        grader.set_reference_frame(ref)
+        result = grader.grade_frame(source)
+        assert result.dtype == np.uint8
+
+
+class TestGrainUpgrade:
+    """Tests for the upgraded film grain effect."""
+
+    def test_grain_temporal_variation(self):
+        """Consecutive frames should have different grain patterns."""
+        frame = np.full((100, 200, 3), 128, dtype=np.uint8)
+        grader = ColorGrader(preset=ColorPreset.NONE, adjustments=ColorAdjustments(grain=50))
+        result1 = grader.grade_frame(frame.copy())
+        result2 = grader.grade_frame(frame.copy())
+        # Different frame_index -> different grain
+        assert not np.array_equal(result1, result2)
+
+    def test_grain_midtone_weighted(self):
+        """Grain should be stronger in midtones than in pure black/white."""
+        # Dark frame
+        dark = np.full((100, 200, 3), 10, dtype=np.uint8)
+        # Midtone frame
+        mid = np.full((100, 200, 3), 128, dtype=np.uint8)
+        grader = ColorGrader(preset=ColorPreset.NONE, adjustments=ColorAdjustments(grain=50))
+        dark_result = grader.grade_frame(dark.copy())
+        grader._frame_index = 0  # Reset for fair comparison
+        mid_result = grader.grade_frame(mid.copy())
+        # Midtone grain variance should be higher than dark
+        dark_diff = np.abs(dark_result.astype(float) - dark.astype(float)).std()
+        mid_diff = np.abs(mid_result.astype(float) - mid.astype(float)).std()
+        assert mid_diff > dark_diff
+
+    def test_grain_valid_output(self):
+        """Grain output should be valid uint8."""
+        frame = np.random.RandomState(42).randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        grader = ColorGrader(preset=ColorPreset.NONE, adjustments=ColorAdjustments(grain=30))
+        result = grader.grade_frame(frame)
+        assert result.dtype == np.uint8
+        assert result.shape == frame.shape

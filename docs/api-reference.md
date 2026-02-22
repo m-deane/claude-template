@@ -230,16 +230,34 @@ Get information about a video file (duration, fps, size).
 
 ```python
 class TransitionType(Enum):
-    CUT = "cut"              # Hard cut (no effect)
-    CROSSFADE = "crossfade"  # Dissolve between clips
+    # Basic
+    CUT = "cut"
+    CROSSFADE = "crossfade"
     FADE_BLACK = "fade_black"
     FADE_WHITE = "fade_white"
+    # Zoom
     ZOOM_IN = "zoom_in"
     ZOOM_OUT = "zoom_out"
+    # Slide & Wipe
     SLIDE_LEFT = "slide_left"
     SLIDE_RIGHT = "slide_right"
     WIPE_LEFT = "wipe_left"
     WIPE_RIGHT = "wipe_right"
+    WIPE_DIAGONAL = "wipe_diagonal"
+    WIPE_DIAMOND = "wipe_diamond"
+    # Cinematic
+    WHIP_PAN = "whip_pan"
+    GLITCH_RGB = "glitch_rgb"
+    IRIS_IN = "iris_in"
+    IRIS_OUT = "iris_out"
+    FLASH_WHITE = "flash_white"
+    LIGHT_LEAK = "light_leak"
+    HYPERLAPSE_ZOOM = "hyperlapse_zoom"
+    # Depth & Motion
+    PARALLAX_LEFT = "parallax_left"
+    PARALLAX_RIGHT = "parallax_right"
+    FOG_PASS = "fog_pass"
+    VORTEX_ZOOM = "vortex_zoom"
 ```
 
 #### ClipSegment Data Class
@@ -265,7 +283,7 @@ class ClipSegment:
 
 ### ColorGrader
 
-Applies color grading to video frames and clips.
+Applies color grading, visual effects, and color science corrections to video frames and clips.
 
 ```python
 from drone_reel import ColorGrader
@@ -281,18 +299,51 @@ grader = ColorGrader(adjustments=ColorAdjustments(
     saturation=-5,
     temperature=20
 ))
+
+# Full-featured setup
+grader = ColorGrader(
+    preset=ColorPreset.KODAK_2383,
+    intensity=0.7,
+    vignette_strength=0.4,
+    halation_strength=0.3,
+    chromatic_aberration_strength=0.2,
+    input_colorspace="dlog_m",
+    auto_wb=True,
+    denoise_strength=0.3,
+    haze_strength=0.15,
+    gnd_sky_strength=0.4,
+)
 ```
+
+#### Constructor Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `preset` | `ColorPreset` | `NONE` | Color grading preset |
+| `adjustments` | `ColorAdjustments` | `None` | Manual color adjustments (overrides preset) |
+| `lut_path` | `Path` | `None` | Path to .cube LUT file |
+| `tone_curve` | `ToneCurve` | `None` | Tone curve RGB adjustments |
+| `use_gpu` | `bool` | `False` | Enable GPU acceleration |
+| `intensity` | `float` | `1.0` | Scale all color adjustments (0.0-1.0) |
+| `vignette_strength` | `float` | `0.0` | Radial edge darkening (0.0-1.0) |
+| `halation_strength` | `float` | `0.0` | Warm highlight bloom (0.0-1.0) |
+| `chromatic_aberration_strength` | `float` | `0.0` | RGB edge fringing (0.0-1.0) |
+| `input_colorspace` | `str` | `"rec709"` | Input colorspace: `rec709`, `dlog`, `dlog_m`, `slog3` |
+| `auto_wb` | `bool` | `False` | Gray world auto white balance |
+| `denoise_strength` | `float` | `0.0` | Spatial denoising (0.0-1.0) |
+| `haze_strength` | `float` | `0.0` | Atmospheric haze overlay (0.0-1.0) |
+| `gnd_sky_strength` | `float` | `0.0` | Graduated ND sky darkening (0.0-1.0) |
 
 #### Methods
 
-**`grade_frame(frame: np.ndarray) -> np.ndarray`**
+**`grade_frame(frame: np.ndarray, frame_index: int = None) -> np.ndarray`**
 
 Apply color grading to a single frame (BGR numpy array).
 
 ```python
 import cv2
 frame = cv2.imread("frame.jpg")
-graded = grader.grade_frame(frame)
+graded = grader.grade_frame(frame, frame_index=0)
 cv2.imwrite("graded.jpg", graded)
 ```
 
@@ -308,21 +359,57 @@ grader.grade_video(
 )
 ```
 
+**`grade_frame_preview(frame: np.ndarray, scale: float = 0.25) -> np.ndarray`**
+
+Apply color grading at reduced resolution for fast iteration.
+
+**`set_reference_frame(frame: np.ndarray)`**
+
+Set a reference frame for auto color matching. Call before grading clips that should match this reference.
+
+**`detect_log_footage(video_path: Path) -> str`** *(static)*
+
+Detect if footage is log-encoded by analyzing frame histogram. Returns `"dlog"` or `"rec709"`.
+
 #### ColorPreset Enum
 
 ```python
 class ColorPreset(Enum):
+    # Classic
     NONE = "none"
-    CINEMATIC = "cinematic"        # Film-like, lifted blacks
-    WARM_SUNSET = "warm_sunset"    # Golden warm tones
-    COOL_BLUE = "cool_blue"        # Cool blue tones
-    VINTAGE = "vintage"            # Faded retro look
+    CINEMATIC = "cinematic"
+    WARM_SUNSET = "warm_sunset"
+    COOL_BLUE = "cool_blue"
+    VINTAGE = "vintage"
     HIGH_CONTRAST = "high_contrast"
-    MUTED = "muted"                # Desaturated, understated
-    VIBRANT = "vibrant"            # Enhanced colors
-    TEAL_ORANGE = "teal_orange"    # Popular cinematic grade
+    MUTED = "muted"
+    VIBRANT = "vibrant"
+    TEAL_ORANGE = "teal_orange"
     BLACK_WHITE = "black_white"
-    DRONE_AERIAL = "drone_aerial"  # Optimized for aerial footage
+    DRONE_AERIAL = "drone_aerial"
+    # Time-of-day
+    GOLDEN_HOUR = "golden_hour"
+    BLUE_HOUR = "blue_hour"
+    HARSH_MIDDAY = "harsh_midday"
+    OVERCAST = "overcast"
+    NIGHT_CITY = "night_city"
+    # Terrain-aware
+    OCEAN_COASTAL = "ocean_coastal"
+    FOREST_JUNGLE = "forest_jungle"
+    URBAN_CITY = "urban_city"
+    DESERT_ARID = "desert_arid"
+    SNOW_MOUNTAIN = "snow_mountain"
+    AUTUMN_FOLIAGE = "autumn_foliage"
+    # Cinematic film emulation
+    KODAK_2383 = "kodak_2383"
+    FUJIFILM_3513 = "fujifilm_3513"
+    TECHNICOLOR_2STRIP = "technicolor_2strip"
+    # Social media trends
+    DESATURATED_MOODY = "desaturated_moody"
+    WARM_PASTEL = "warm_pastel"
+    CYBERPUNK_NEON = "cyberpunk_neon"
+    HYPER_NATURAL = "hyper_natural"
+    FILM_EMULATION = "film_emulation"
 ```
 
 #### ColorAdjustments Data Class
@@ -340,6 +427,7 @@ class ColorAdjustments:
     vibrance: float = 0.0      # -100 to 100
     fade: float = 0.0          # 0 to 100 (lifts blacks)
     grain: float = 0.0         # 0 to 100
+    selective_color: SelectiveColorAdjustments  # Per-color adjustments
 ```
 
 ---
@@ -524,8 +612,15 @@ processor.stitch_clips(
     target_size=(1080, 1920)  # 9:16 vertical
 )
 
-# 6. Apply color grading
-grader = ColorGrader(preset=ColorPreset.DRONE_AERIAL)
+# 6. Apply color grading with visual effects
+grader = ColorGrader(
+    preset=ColorPreset.DRONE_AERIAL,
+    intensity=0.7,
+    vignette_strength=0.3,
+    halation_strength=0.2,
+    input_colorspace="dlog_m",
+    auto_wb=True,
+)
 final_output = Path("./output/final_reel.mp4")
 grader.grade_video(temp_output, final_output)
 

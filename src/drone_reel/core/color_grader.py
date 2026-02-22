@@ -31,6 +31,29 @@ class ColorPreset(Enum):
     TEAL_ORANGE = "teal_orange"
     BLACK_WHITE = "black_white"
     DRONE_AERIAL = "drone_aerial"
+    # Time-of-day presets
+    GOLDEN_HOUR = "golden_hour"
+    BLUE_HOUR = "blue_hour"
+    HARSH_MIDDAY = "harsh_midday"
+    OVERCAST = "overcast"
+    NIGHT_CITY = "night_city"
+    # Terrain-aware presets
+    OCEAN_COASTAL = "ocean_coastal"
+    FOREST_JUNGLE = "forest_jungle"
+    URBAN_CITY = "urban_city"
+    DESERT_ARID = "desert_arid"
+    SNOW_MOUNTAIN = "snow_mountain"
+    AUTUMN_FOLIAGE = "autumn_foliage"
+    # Cinematic film emulation
+    KODAK_2383 = "kodak_2383"
+    FUJIFILM_3513 = "fujifilm_3513"
+    TECHNICOLOR_2STRIP = "technicolor_2strip"
+    # Social media trend presets
+    DESATURATED_MOODY = "desaturated_moody"
+    WARM_PASTEL = "warm_pastel"
+    CYBERPUNK_NEON = "cyberpunk_neon"
+    HYPER_NATURAL = "hyper_natural"
+    FILM_EMULATION = "film_emulation"
 
 
 @dataclass
@@ -172,6 +195,162 @@ class ColorGrader:
             shadows=10,
             highlights=-8,
         ),
+        # --- Time-of-day presets ---
+        ColorPreset.GOLDEN_HOUR: ColorAdjustments(
+            temperature=30,
+            highlights=-50,
+            vibrance=30,
+            saturation=8,
+            contrast=8,
+            selective_color=SelectiveColorAdjustments(
+                orange_sat=25, yellow_sat=20,
+            ),
+        ),
+        ColorPreset.BLUE_HOUR: ColorAdjustments(
+            temperature=-40,
+            saturation=10,
+            contrast=12,
+            shadows=-15,
+            highlights=-20,
+            selective_color=SelectiveColorAdjustments(
+                blue_sat=30, cyan_sat=15,
+            ),
+        ),
+        ColorPreset.HARSH_MIDDAY: ColorAdjustments(
+            highlights=-90,
+            shadows=70,
+            vibrance=50,
+            contrast=5,
+            selective_color=SelectiveColorAdjustments(
+                blue_sat=30, green_sat=-15,
+            ),
+        ),
+        ColorPreset.OVERCAST: ColorAdjustments(
+            temperature=-8,
+            contrast=8,
+            saturation=-8,
+            vibrance=10,
+            selective_color=SelectiveColorAdjustments(
+                green_sat=10,
+            ),
+        ),
+        ColorPreset.NIGHT_CITY: ColorAdjustments(
+            brightness=-7,
+            contrast=40,
+            saturation=5,
+            selective_color=SelectiveColorAdjustments(
+                orange_sat=30, blue_sat=25,
+            ),
+        ),
+        # --- Terrain-aware presets ---
+        ColorPreset.OCEAN_COASTAL: ColorAdjustments(
+            contrast=10,
+            vibrance=15,
+            selective_color=SelectiveColorAdjustments(
+                cyan_hue=-5, cyan_sat=20,
+                orange_sat=25, yellow_sat=25,
+            ),
+        ),
+        ColorPreset.FOREST_JUNGLE: ColorAdjustments(
+            shadows=40,
+            contrast=8,
+            selective_color=SelectiveColorAdjustments(
+                green_hue=-5, green_sat=-12,
+            ),
+        ),
+        ColorPreset.URBAN_CITY: ColorAdjustments(
+            contrast=30,
+            temperature=-5,
+            shadows=-10,
+            selective_color=SelectiveColorAdjustments(
+                orange_sat=20, red_sat=15,
+            ),
+        ),
+        ColorPreset.DESERT_ARID: ColorAdjustments(
+            temperature=20,
+            highlights=-60,
+            selective_color=SelectiveColorAdjustments(
+                orange_sat=-12, blue_sat=20,
+            ),
+        ),
+        ColorPreset.SNOW_MOUNTAIN: ColorAdjustments(
+            temperature=8,
+            highlights=-70,
+            vibrance=20,
+            selective_color=SelectiveColorAdjustments(
+                blue_sat=-25, cyan_sat=-15,
+            ),
+        ),
+        ColorPreset.AUTUMN_FOLIAGE: ColorAdjustments(
+            temperature=15,
+            vibrance=10,
+            selective_color=SelectiveColorAdjustments(
+                orange_sat=30, orange_hue=-5,
+                red_sat=20, green_sat=-20,
+                blue_sat=20,
+            ),
+        ),
+        # --- Cinematic film emulation ---
+        ColorPreset.KODAK_2383: ColorAdjustments(
+            contrast=12,
+            temperature=8,
+            shadows=-8,
+            highlights=-15,
+            fade=8,
+        ),
+        ColorPreset.FUJIFILM_3513: ColorAdjustments(
+            contrast=10,
+            temperature=-10,
+            tint=5,
+            shadows=-5,
+            highlights=-10,
+        ),
+        ColorPreset.TECHNICOLOR_2STRIP: ColorAdjustments(
+            contrast=15,
+            temperature=15,
+            saturation=-15,
+            selective_color=SelectiveColorAdjustments(
+                red_sat=20, orange_sat=15,
+                blue_sat=-30,
+            ),
+        ),
+        # --- Social media trend presets ---
+        ColorPreset.DESATURATED_MOODY: ColorAdjustments(
+            saturation=-35,
+            contrast=35,
+            shadows=-20,
+            selective_color=SelectiveColorAdjustments(
+                blue_sat=15, cyan_sat=10,
+            ),
+        ),
+        ColorPreset.WARM_PASTEL: ColorAdjustments(
+            contrast=-25,
+            saturation=-20,
+            temperature=15,
+            tint=5,
+            fade=40,
+        ),
+        ColorPreset.CYBERPUNK_NEON: ColorAdjustments(
+            brightness=-10,
+            contrast=30,
+            shadows=-25,
+            selective_color=SelectiveColorAdjustments(
+                cyan_sat=50, magenta_sat=40, orange_sat=25,
+            ),
+        ),
+        ColorPreset.HYPER_NATURAL: ColorAdjustments(
+            brightness=1,
+            contrast=7,
+            saturation=3,
+            vibrance=8,
+        ),
+        ColorPreset.FILM_EMULATION: ColorAdjustments(
+            contrast=5,
+            temperature=8,
+            fade=20,
+            grain=10,
+            shadows=5,
+        ),
     }
 
     def __init__(
@@ -182,6 +361,14 @@ class ColorGrader:
         tone_curve: Optional[ToneCurve] = None,
         use_gpu: bool = False,
         intensity: float = 1.0,
+        vignette_strength: float = 0.0,
+        halation_strength: float = 0.0,
+        chromatic_aberration_strength: float = 0.0,
+        input_colorspace: str = "rec709",
+        auto_wb: bool = False,
+        denoise_strength: float = 0.0,
+        haze_strength: float = 0.0,
+        gnd_sky_strength: float = 0.0,
     ):
         """
         Initialize the color grader.
@@ -193,6 +380,14 @@ class ColorGrader:
             tone_curve: Optional tone curve for RGB channels
             use_gpu: Enable GPU acceleration if available
             intensity: Scale factor for color adjustments (0.0-1.0, default 1.0)
+            vignette_strength: Radial edge darkening (0.0-1.0, default 0.0 = off)
+            halation_strength: Warm bloom around highlights (0.0-1.0, default 0.0 = off)
+            chromatic_aberration_strength: RGB edge fringing (0.0-1.0, default 0.0 = off)
+            input_colorspace: Input footage colorspace (rec709, dlog, dlog_m, slog3)
+            auto_wb: Enable gray world auto white balance
+            denoise_strength: Spatial denoising strength (0.0-1.0, default 0.0 = off)
+            haze_strength: Atmospheric haze overlay (0.0-1.0, default 0.0 = off)
+            gnd_sky_strength: Graduated ND sky darkening (0.0-1.0, default 0.0 = off)
         """
         self.preset = preset
         self.intensity = max(0.0, min(1.0, intensity))
@@ -227,6 +422,17 @@ class ColorGrader:
 
         self.use_gpu = use_gpu and self._check_gpu_available()
         self._frame_index = 0
+        self.vignette_strength = max(0.0, min(1.0, vignette_strength))
+        self._vignette_mask_cache: Optional[tuple[int, int, np.ndarray]] = None
+        self.halation_strength = max(0.0, min(1.0, halation_strength))
+        self.chromatic_aberration_strength = max(0.0, min(1.0, chromatic_aberration_strength))
+        self.input_colorspace = input_colorspace.lower()
+        self.auto_wb = auto_wb
+        self.denoise_strength = max(0.0, min(1.0, denoise_strength))
+        self.haze_strength = max(0.0, min(1.0, haze_strength))
+        self.gnd_sky_strength = max(0.0, min(1.0, gnd_sky_strength))
+        self._dlog_normalized = False
+        self._reference_histogram: Optional[list] = None
 
     def _check_gpu_available(self) -> bool:
         """Check if CUDA GPU is available."""
@@ -474,6 +680,26 @@ class ColorGrader:
         result = frame.astype(np.float32)
         applied_adjustments = False
 
+        # Phase -2: D-Log / S-Log normalization (must happen before all grading)
+        if self.input_colorspace != "rec709":
+            result = self._normalize_dlog(result)
+            applied_adjustments = True
+
+        # Phase -1: Auto white balance (before creative grading)
+        if self.auto_wb:
+            result = self._apply_auto_wb(result)
+            applied_adjustments = True
+
+        # Phase -0.5: Auto color match (histogram matching to reference)
+        if self._reference_histogram is not None:
+            result = self._apply_auto_color_match(result)
+            applied_adjustments = True
+
+        # Phase -0.25: Noise reduction (before grading to avoid amplifying noise)
+        if self.denoise_strength > 0:
+            result = self._apply_denoise(result, self.denoise_strength)
+            applied_adjustments = True
+
         # Phase 0: LUT and tone curves (direct pixel mapping)
         if self.lut is not None:
             result = self._apply_lut(result, self.lut)
@@ -542,6 +768,31 @@ class ColorGrader:
 
         if self.adjustments.grain > 0:
             result = self._apply_grain(result, self.adjustments.grain)
+            applied_adjustments = True
+
+        # Phase 5: Vignette (radial edge darkening)
+        if self.vignette_strength > 0:
+            result = self._apply_vignette(result, self.vignette_strength)
+            applied_adjustments = True
+
+        # Phase 6: Halation / bloom (warm glow around highlights)
+        if self.halation_strength > 0:
+            result = self._apply_halation(result, self.halation_strength)
+            applied_adjustments = True
+
+        # Phase 7: Chromatic aberration (RGB edge fringing)
+        if self.chromatic_aberration_strength > 0:
+            result = self._apply_chromatic_aberration(result, self.chromatic_aberration_strength)
+            applied_adjustments = True
+
+        # Phase 8: Atmospheric haze (aerial depth effect)
+        if self.haze_strength > 0:
+            result = self._apply_haze(result, self.haze_strength)
+            applied_adjustments = True
+
+        # Phase 9: GND sky correction (graduated exposure darkening)
+        if self.gnd_sky_strength > 0:
+            result = self._apply_gnd_sky(result, self.gnd_sky_strength)
             applied_adjustments = True
 
         # Apply subtle dithering to mask banding in gradients (only if adjustments were made)
@@ -842,24 +1093,37 @@ class ColorGrader:
 
     def _apply_grain(self, frame: np.ndarray, amount: float) -> np.ndarray:
         """
-        Apply film grain effect with temporal coherence and film-like characteristics.
+        Apply film grain with temporal variation, luminance weighting, and configurable size.
+
+        Generates per-frame unique noise weighted by a midtone bell curve (grain is most
+        visible in midtones, less in shadows/highlights). Grain is slightly blurred to
+        simulate photochemical grain structure rather than digital pixel noise.
         """
-        np.random.seed(self._frame_index % 100000)
+        # Use frame_index XOR with spatial hash for unique-per-frame grain
+        seed = (self._frame_index * 2654435761) % (2**31)
+        rng = np.random.RandomState(seed)
 
         h, w = frame.shape[:2]
-        grain_h, grain_w = h // 2, w // 2
+        # Generate grain at half res then upscale for organic feel
+        grain_h, grain_w = max(h // 2, 1), max(w // 2, 1)
 
-        noise = np.random.normal(0, amount / 100 * 25, (grain_h, grain_w))
+        # Gaussian noise scaled by amount
+        noise = rng.normal(0, amount / 100 * 25, (grain_h, grain_w)).astype(np.float32)
+
+        # Slight blur for photochemical grain structure (not pixel-sharp)
+        ksize = 3 if amount < 50 else 5
+        noise = cv2.GaussianBlur(noise, (ksize, ksize), 0)
 
         noise_upscaled = cv2.resize(noise, (w, h), interpolation=cv2.INTER_LINEAR)
 
-        lab = cv2.cvtColor(frame.astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32)
-        luminance = lab[:, :, 0] / 255.0
+        # Luminance-weighted: bell curve peaking at midtones
+        gray = np.mean(frame, axis=2) / 255.0
+        midtone_mask = 1.0 - np.abs(gray - 0.5) * 2.0
+        midtone_mask = np.power(midtone_mask, 0.5)
 
-        midtone_mask = 1 - np.abs(luminance - 0.5) * 2
-        midtone_mask = midtone_mask ** 0.5
-
-        weighted_noise = noise_upscaled * midtone_mask
+        # Also suppress grain in very dark regions (< 10%) to preserve clean blacks
+        shadow_suppression = np.clip(gray / 0.1, 0, 1)
+        weighted_noise = noise_upscaled * midtone_mask * shadow_suppression
 
         result = frame.copy()
         result[:, :, 0] += weighted_noise
@@ -911,6 +1175,360 @@ class ColorGrader:
             result[:, :, c] = result[:, :, c] + dither_pattern
 
         return result
+
+    def _apply_vignette(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Apply radial vignette (edge darkening) effect.
+
+        Uses a precomputed distance mask with sigmoid falloff for cinematic
+        edge darkening. The mask is cached per resolution to avoid recomputation.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Vignette intensity (0.0-1.0)
+
+        Returns:
+            Frame with vignette applied
+        """
+        if strength <= 0.0:
+            return frame
+
+        h, w = frame.shape[:2]
+
+        # Cache the mask per resolution to avoid recomputing every frame
+        if self._vignette_mask_cache is None or self._vignette_mask_cache[:2] != (h, w):
+            cy, cx = h / 2.0, w / 2.0
+            y_coords = np.arange(h, dtype=np.float32).reshape(-1, 1) - cy
+            x_coords = np.arange(w, dtype=np.float32).reshape(1, -1) - cx
+            # Normalize to elliptical distance (accounts for non-square frames)
+            dist = np.sqrt((x_coords / cx) ** 2 + (y_coords / cy) ** 2)
+            # Sigmoid falloff: 1.0 at center, 0 at edges
+            # Steepness controls the transition width
+            mask = 1.0 / (1.0 + np.exp(6.0 * (dist - 0.8)))
+            self._vignette_mask_cache = (h, w, mask)
+
+        mask = self._vignette_mask_cache[2]
+        # Blend: darken = frame * (1 - strength * (1 - mask))
+        vignette_factor = 1.0 - strength * (1.0 - mask)
+        vignette_factor_3d = vignette_factor[:, :, np.newaxis]
+
+        return frame * vignette_factor_3d
+
+    def _apply_halation(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Apply halation/bloom effect: red-orange glow around bright highlights.
+
+        Simulates analog film light reflection where bright areas bleed warm color
+        into surrounding regions. Creates an organic, cinematic feel.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Halation intensity (0.0-1.0)
+
+        Returns:
+            Frame with halation applied
+        """
+        if strength <= 0.0:
+            return frame
+
+        # Extract luminance to find highlights
+        gray = 0.299 * frame[:, :, 2] + 0.587 * frame[:, :, 1] + 0.114 * frame[:, :, 0]  # BGR
+        # Threshold: only bright areas (top 15% of range)
+        threshold = 200.0
+        highlight_mask = np.clip((gray - threshold) / (255.0 - threshold), 0, 1)
+
+        if highlight_mask.max() < 0.01:
+            return frame  # No highlights to bloom
+
+        # Create warm halation color layer (red-orange: BGR 40, 100, 255)
+        halation_r = highlight_mask * 255.0
+        halation_g = highlight_mask * 100.0
+        halation_b = highlight_mask * 40.0
+        halation_layer = np.stack([halation_b, halation_g, halation_r], axis=-1).astype(np.float32)
+
+        # Gaussian blur for bloom spread
+        kernel_size = max(15, int(frame.shape[0] * 0.04)) | 1  # ~4% of height, odd
+        halation_layer = cv2.GaussianBlur(halation_layer, (kernel_size, kernel_size), 0)
+
+        # Screen blend: result = 1 - (1 - base) * (1 - layer)
+        base_norm = frame / 255.0
+        layer_norm = halation_layer / 255.0 * strength
+        blended = 1.0 - (1.0 - base_norm) * (1.0 - layer_norm)
+
+        return blended * 255.0
+
+    def _apply_chromatic_aberration(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Apply chromatic aberration: RGB channel lateral offset toward frame edges.
+
+        Simulates lens fringing where red and blue channels shift outward from center,
+        creating a subtle color separation most visible at frame edges.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: CA intensity (0.0-1.0)
+
+        Returns:
+            Frame with chromatic aberration applied
+        """
+        if strength <= 0.0:
+            return frame
+
+        h, w = frame.shape[:2]
+        # Scale factor: max pixel shift at edges (1-4 pixels depending on strength)
+        max_shift = strength * 4.0
+
+        # Red channel shifts outward (scale up slightly from center)
+        # Blue channel shifts inward (scale down slightly from center)
+        cy, cx = h / 2.0, w / 2.0
+
+        # Build affine matrices for slight scale transforms
+        # Red: scale up by factor, Blue: scale down by factor
+        scale_r = 1.0 + max_shift / max(cx, cy)
+        scale_b = 1.0 - max_shift / max(cx, cy)
+
+        M_r = cv2.getRotationMatrix2D((cx, cy), 0, scale_r)
+        M_b = cv2.getRotationMatrix2D((cx, cy), 0, scale_b)
+
+        frame_u8 = np.clip(frame, 0, 255).astype(np.uint8)
+
+        # Apply per-channel warp
+        b_ch = cv2.warpAffine(frame_u8[:, :, 0], M_b, (w, h), borderMode=cv2.BORDER_REFLECT)
+        g_ch = frame_u8[:, :, 1]  # Green stays centered
+        r_ch = cv2.warpAffine(frame_u8[:, :, 2], M_r, (w, h), borderMode=cv2.BORDER_REFLECT)
+
+        return np.stack([b_ch, g_ch, r_ch], axis=-1).astype(np.float32)
+
+    def _normalize_dlog(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Normalize D-Log / D-Log M / S-Log3 footage to Rec.709 gamma.
+
+        Applies the inverse log curve to expand the compressed dynamic range
+        before creative grading. Without this, presets produce incorrect results
+        on professional DJI/Sony log-encoded footage.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+
+        Returns:
+            Linearized and re-gamma'd frame in Rec.709 space
+        """
+        normalized = frame / 255.0
+
+        if self.input_colorspace in ("dlog", "dlog_m"):
+            # DJI D-Log M linearization curve (approximate)
+            # D-Log M: maps 0-1 log to linear via power + offset
+            linear = np.where(
+                normalized <= 0.14,
+                (normalized - 0.0929) / 6.025,
+                np.power(10.0, (normalized - 0.584) / 0.342) / 106.3,
+            )
+            linear = np.clip(linear, 0, 1)
+        elif self.input_colorspace == "slog3":
+            # Sony S-Log3 linearization
+            linear = np.where(
+                normalized >= 171.2102946929 / 1023.0,
+                np.power(10.0, (normalized * 1023.0 - 420.0) / 261.5) * (0.18 + 0.01) - 0.01,
+                (normalized * 1023.0 - 95.0) * 0.01125000 / (171.2102946929 - 95.0),
+            )
+            linear = np.clip(linear, 0, 1)
+        else:
+            return frame
+
+        # Apply Rec.709 gamma (approximate sRGB)
+        rec709 = np.where(
+            linear < 0.018,
+            linear * 4.5,
+            1.099 * np.power(linear, 0.45) - 0.099,
+        )
+        return np.clip(rec709 * 255.0, 0, 255).astype(np.float32)
+
+    @staticmethod
+    def detect_log_footage(frame: np.ndarray) -> str:
+        """
+        Heuristic detection of log-encoded footage.
+
+        Log footage has characteristically low contrast and mid-range brightness
+        due to dynamic range compression. Returns detected colorspace string.
+
+        Args:
+            frame: Sample frame (uint8 BGR)
+
+        Returns:
+            'dlog' if log footage detected, 'rec709' otherwise
+        """
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        mean_val = np.mean(gray)
+        std_val = np.std(gray)
+        min_val = np.percentile(gray, 2)
+        max_val = np.percentile(gray, 98)
+        dynamic_range = max_val - min_val
+
+        # Log footage: compressed DR (low contrast), mid-range mean, low std
+        if dynamic_range < 120 and 60 < mean_val < 180 and std_val < 40:
+            return "dlog"
+        return "rec709"
+
+    def _apply_auto_wb(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Gray world auto white balance.
+
+        Scales each channel so the mean of each channel matches the overall mean,
+        correcting color casts from mixed lighting or incorrect WB settings.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+
+        Returns:
+            White-balanced frame
+        """
+        mean_b = np.mean(frame[:, :, 0])
+        mean_g = np.mean(frame[:, :, 1])
+        mean_r = np.mean(frame[:, :, 2])
+        overall_mean = (mean_b + mean_g + mean_r) / 3.0
+
+        if mean_b > 0:
+            frame[:, :, 0] *= overall_mean / mean_b
+        if mean_g > 0:
+            frame[:, :, 1] *= overall_mean / mean_g
+        if mean_r > 0:
+            frame[:, :, 2] *= overall_mean / mean_r
+
+        return np.clip(frame, 0, 255)
+
+    def _apply_denoise(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Spatial denoising using OpenCV's fast non-local means.
+
+        Reduces noise in low-light footage while preserving edges.
+        Strength maps to filter strength parameter (h).
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Denoise intensity (0.0-1.0)
+
+        Returns:
+            Denoised frame
+        """
+        if strength <= 0.0:
+            return frame
+
+        # Map 0-1 strength to h parameter (3-15 typical range)
+        h = 3.0 + strength * 12.0
+        frame_u8 = np.clip(frame, 0, 255).astype(np.uint8)
+        denoised = cv2.fastNlMeansDenoisingColored(
+            frame_u8, None, h, h, 7, 21
+        )
+        return denoised.astype(np.float32)
+
+    def _apply_haze(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Apply atmospheric haze / depth fog effect.
+
+        Creates a vertical gradient that simulates aerial perspective,
+        adding haze that increases toward the top of the frame (horizon).
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Haze intensity (0.0-1.0)
+
+        Returns:
+            Frame with atmospheric haze
+        """
+        if strength <= 0.0:
+            return frame
+
+        h, w = frame.shape[:2]
+        # Vertical gradient: strongest at top (y=0), fading to zero at bottom
+        gradient = np.linspace(strength, 0, h, dtype=np.float32)
+        gradient = gradient.reshape(h, 1, 1)
+
+        # Haze color: pale blue-white (BGR)
+        haze_color = np.array([235, 225, 215], dtype=np.float32)
+
+        # Blend: result = frame * (1 - gradient) + haze_color * gradient
+        result = frame * (1 - gradient) + haze_color * gradient
+        return np.clip(result, 0, 255)
+
+    def _apply_gnd_sky(self, frame: np.ndarray, strength: float) -> np.ndarray:
+        """
+        Graduated neutral density sky correction.
+
+        Darkens the upper portion of the frame to balance exposure between
+        bright sky and darker ground, mimicking a physical GND filter.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+            strength: Darkening intensity (0.0-1.0)
+
+        Returns:
+            Frame with graduated sky darkening
+        """
+        if strength <= 0.0:
+            return frame
+
+        h, w = frame.shape[:2]
+        # Gradient: darkest at top, reaching 1.0 (no effect) at middle of frame
+        midpoint = h // 2
+        top_gradient = np.linspace(1.0 - strength * 0.6, 1.0, midpoint, dtype=np.float32)
+        bottom_ones = np.ones(h - midpoint, dtype=np.float32)
+        gradient = np.concatenate([top_gradient, bottom_ones])
+        gradient = gradient.reshape(h, 1, 1)
+
+        return np.clip(frame * gradient, 0, 255)
+
+    def _apply_auto_color_match(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Match frame histogram to reference frame for cross-clip consistency.
+
+        Uses cumulative histogram matching per channel to normalize color
+        across clips from different lighting conditions.
+
+        Args:
+            frame: Input frame (float32, 0-255)
+
+        Returns:
+            Color-matched frame
+        """
+        if self._reference_histogram is None:
+            return frame
+
+        frame_u8 = np.clip(frame, 0, 255).astype(np.uint8)
+        result = np.zeros_like(frame_u8)
+
+        for ch in range(3):
+            # Build CDF for source
+            src_hist, _ = np.histogram(frame_u8[:, :, ch].ravel(), 256, [0, 256])
+            src_cdf = src_hist.cumsum()
+            src_cdf_norm = src_cdf / src_cdf[-1] if src_cdf[-1] > 0 else src_cdf
+
+            ref_cdf = self._reference_histogram[ch]
+
+            # Build mapping: for each source level, find closest reference level
+            mapping = np.zeros(256, dtype=np.uint8)
+            for s in range(256):
+                idx = np.argmin(np.abs(ref_cdf - src_cdf_norm[s]))
+                mapping[s] = idx
+
+            result[:, :, ch] = mapping[frame_u8[:, :, ch]]
+
+        return result.astype(np.float32)
+
+    def set_reference_frame(self, frame: np.ndarray):
+        """
+        Set the reference frame for auto color matching.
+
+        Computes and stores the CDF histogram per channel from the reference frame.
+
+        Args:
+            frame: Reference frame (uint8 BGR)
+        """
+        self._reference_histogram = []
+        for ch in range(3):
+            hist, _ = np.histogram(frame[:, :, ch].ravel(), 256, [0, 256])
+            cdf = hist.cumsum()
+            cdf_norm = cdf / cdf[-1] if cdf[-1] > 0 else cdf
+            self._reference_histogram.append(cdf_norm)
 
     def _apply_teal_orange_grade(self, frame: np.ndarray) -> np.ndarray:
         """Apply teal and orange color grade popular in cinema.

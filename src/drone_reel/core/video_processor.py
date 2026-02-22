@@ -43,6 +43,19 @@ class TransitionType(Enum):
     SLIDE_RIGHT = "slide_right"
     WIPE_LEFT = "wipe_left"
     WIPE_RIGHT = "wipe_right"
+    WHIP_PAN = "whip_pan"
+    GLITCH_RGB = "glitch_rgb"
+    IRIS_IN = "iris_in"
+    IRIS_OUT = "iris_out"
+    FLASH_WHITE = "flash_white"
+    LIGHT_LEAK = "light_leak"
+    HYPERLAPSE_ZOOM = "hyperlapse_zoom"
+    PARALLAX_LEFT = "parallax_left"
+    PARALLAX_RIGHT = "parallax_right"
+    WIPE_DIAGONAL = "wipe_diagonal"
+    WIPE_DIAMOND = "wipe_diamond"
+    FOG_PASS = "fog_pass"
+    VORTEX_ZOOM = "vortex_zoom"
 
 
 @dataclass
@@ -550,6 +563,11 @@ class VideoProcessor:
         if len(clips) == 1:
             return clips[0]
 
+        # Transitions that need overlapping compositing
+        _overlap_transitions = {
+            TransitionType.CROSSFADE,
+        }
+
         # Build timeline with proper overlaps for crossfades
         composed_clips = []
         current_time = 0.0
@@ -561,13 +579,13 @@ class VideoProcessor:
 
             # Calculate next clip start time based on transition type
             if i + 1 < len(clips):
-                if i < len(segments) and segments[i].transition_out == TransitionType.CROSSFADE:
+                if i < len(segments) and segments[i].transition_out in _overlap_transitions:
                     # For crossfade: overlap clips by transition duration
                     # Clamp overlap to max 40% of clip duration to prevent artifacts
                     overlap = min(segments[i].transition_duration, clip.duration * 0.4)
                     current_time += clip.duration - overlap
                 else:
-                    # For hard cuts: no overlap
+                    # For hard cuts and per-clip transitions: no overlap
                     current_time += clip.duration
             else:
                 # Last clip: just add duration
@@ -601,6 +619,32 @@ class VideoProcessor:
             return self._zoom_transition(clip, safe_duration, zoom_in=True, is_start=True)
         elif transition == TransitionType.ZOOM_OUT:
             return self._zoom_transition(clip, safe_duration, zoom_in=False, is_start=True)
+        elif transition == TransitionType.WHIP_PAN:
+            return self._transition_whip_pan(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.GLITCH_RGB:
+            return self._transition_glitch_rgb(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.IRIS_IN:
+            return self._transition_iris(clip, safe_duration, is_start=True, opening=True)
+        elif transition == TransitionType.IRIS_OUT:
+            return self._transition_iris(clip, safe_duration, is_start=True, opening=False)
+        elif transition == TransitionType.FLASH_WHITE:
+            return self._transition_flash_white(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.LIGHT_LEAK:
+            return self._transition_light_leak(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.HYPERLAPSE_ZOOM:
+            return self._transition_hyperlapse_zoom(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.PARALLAX_LEFT:
+            return self._transition_parallax(clip, safe_duration, direction="left", is_start=True)
+        elif transition == TransitionType.PARALLAX_RIGHT:
+            return self._transition_parallax(clip, safe_duration, direction="right", is_start=True)
+        elif transition == TransitionType.WIPE_DIAGONAL:
+            return self._transition_wipe_diagonal(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.WIPE_DIAMOND:
+            return self._transition_wipe_diamond(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.FOG_PASS:
+            return self._transition_fog_pass(clip, safe_duration, is_start=True)
+        elif transition == TransitionType.VORTEX_ZOOM:
+            return self._transition_vortex_zoom(clip, safe_duration, is_start=True)
         return clip
 
     def _apply_transition_out(
@@ -629,6 +673,32 @@ class VideoProcessor:
             return self._zoom_transition(clip, safe_duration, zoom_in=True, is_start=False)
         elif transition == TransitionType.ZOOM_OUT:
             return self._zoom_transition(clip, safe_duration, zoom_in=False, is_start=False)
+        elif transition == TransitionType.WHIP_PAN:
+            return self._transition_whip_pan(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.GLITCH_RGB:
+            return self._transition_glitch_rgb(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.IRIS_IN:
+            return self._transition_iris(clip, safe_duration, is_start=False, opening=True)
+        elif transition == TransitionType.IRIS_OUT:
+            return self._transition_iris(clip, safe_duration, is_start=False, opening=False)
+        elif transition == TransitionType.FLASH_WHITE:
+            return self._transition_flash_white(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.LIGHT_LEAK:
+            return self._transition_light_leak(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.HYPERLAPSE_ZOOM:
+            return self._transition_hyperlapse_zoom(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.PARALLAX_LEFT:
+            return self._transition_parallax(clip, safe_duration, direction="left", is_start=False)
+        elif transition == TransitionType.PARALLAX_RIGHT:
+            return self._transition_parallax(clip, safe_duration, direction="right", is_start=False)
+        elif transition == TransitionType.WIPE_DIAGONAL:
+            return self._transition_wipe_diagonal(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.WIPE_DIAMOND:
+            return self._transition_wipe_diamond(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.FOG_PASS:
+            return self._transition_fog_pass(clip, safe_duration, is_start=False)
+        elif transition == TransitionType.VORTEX_ZOOM:
+            return self._transition_vortex_zoom(clip, safe_duration, is_start=False)
         return clip
 
     def _zoom_transition(
@@ -670,6 +740,477 @@ class VideoProcessor:
             return frame
 
         return clip.transform(zoom_effect)
+
+    def _transition_whip_pan(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+        horizontal: bool = True,
+    ) -> VideoFileClip:
+        """Whip pan transition: directional motion blur streak."""
+        clip_duration = clip.duration
+
+        def whip_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+                # Blur decreases as clip starts (entering from blur)
+                blur_strength = 1.0 - progress
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+                # Blur increases as clip ends (exiting to blur)
+                blur_strength = 1.0 - progress
+
+            if blur_strength < 0.05:
+                return frame
+
+            # Directional motion blur kernel
+            kernel_size = max(3, int(blur_strength * 80)) | 1  # Ensure odd
+            kernel = np.zeros((kernel_size, kernel_size), dtype=np.float32)
+            if horizontal:
+                kernel[kernel_size // 2, :] = 1.0 / kernel_size
+            else:
+                kernel[:, kernel_size // 2] = 1.0 / kernel_size
+
+            blurred = cv2.filter2D(frame, -1, kernel)
+            # Blend original and blurred based on strength for smoother falloff
+            alpha = blur_strength ** 1.5  # Ease-in curve
+            return np.clip(
+                frame.astype(np.float32) * (1 - alpha) + blurred.astype(np.float32) * alpha,
+                0, 255,
+            ).astype(np.uint8)
+
+        return clip.transform(whip_effect)
+
+    def _transition_glitch_rgb(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """RGB channel split glitch transition."""
+        clip_duration = clip.duration
+
+        def glitch_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+                intensity = 1.0 - progress
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+                intensity = 1.0 - progress
+
+            if intensity < 0.05:
+                return frame
+
+            h, w = frame.shape[:2]
+            # Triangle wave: peak at center of transition
+            shift = int(intensity * w * 0.06)  # Max 6% of width
+            if shift < 1:
+                return frame
+
+            result = frame.copy()
+            # Shift R channel right, B channel left (frame is RGB from MoviePy)
+            if shift > 0:
+                result[:, shift:, 0] = frame[:, :-shift, 0]   # R shifts right
+                result[:, :shift, 0] = frame[:, :1, 0]        # Fill left edge
+                result[:, :-shift, 2] = frame[:, shift:, 2]   # B shifts left
+                result[:, -shift:, 2] = frame[:, -1:, 2]      # Fill right edge
+            return result
+
+        return clip.transform(glitch_effect)
+
+    def _transition_iris(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+        opening: bool = True,
+    ) -> VideoFileClip:
+        """Iris wipe transition: circular reveal/close."""
+        clip_duration = clip.duration
+
+        def iris_effect(get_frame, t):
+            frame = get_frame(t)
+            h, w = frame.shape[:2]
+
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if opening:
+                # Opening: circle expands from 0 to full frame
+                radius_frac = progress
+            else:
+                # Closing: circle shrinks from full to 0
+                radius_frac = 1.0 - progress
+
+            if radius_frac >= 1.0:
+                return frame
+            if radius_frac <= 0.0:
+                return np.zeros_like(frame)
+
+            # Build circular mask with feathered edge
+            cy, cx = h / 2, w / 2
+            max_radius = np.sqrt(cx ** 2 + cy ** 2)
+            radius = radius_frac * max_radius
+
+            y_coords = np.arange(h).reshape(-1, 1)
+            x_coords = np.arange(w).reshape(1, -1)
+            dist = np.sqrt((x_coords - cx) ** 2 + (y_coords - cy) ** 2)
+
+            # Feathered edge (3% of max_radius)
+            feather = max(max_radius * 0.03, 2.0)
+            mask = np.clip((radius - dist) / feather, 0.0, 1.0).astype(np.float32)
+            mask_3d = mask[:, :, np.newaxis]
+
+            return (frame.astype(np.float32) * mask_3d).astype(np.uint8)
+
+        return clip.transform(iris_effect)
+
+    def _transition_flash_white(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Non-linear whiteout flash transition: fast rise, slow fall."""
+        clip_duration = clip.duration
+
+        def flash_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+                # Fast fall from white: exponential decay
+                flash_intensity = (1.0 - progress) ** 2.5
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+                # Fast rise to white: exponential
+                flash_intensity = (1.0 - progress) ** 2.5
+
+            if flash_intensity < 0.01:
+                return frame
+
+            white = np.full_like(frame, 255, dtype=np.float32)
+            blended = frame.astype(np.float32) * (1 - flash_intensity) + white * flash_intensity
+            return np.clip(blended, 0, 255).astype(np.uint8)
+
+        return clip.transform(flash_effect)
+
+    def _transition_light_leak(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Light leak transition: diagonal warm gradient sweep."""
+        clip_duration = clip.duration
+
+        def leak_effect(get_frame, t):
+            frame = get_frame(t)
+            h, w = frame.shape[:2]
+
+            if is_start:
+                progress = min(t / duration, 1.0)
+                sweep = 1.0 - progress  # Leak fades away as clip enters
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+                sweep = 1.0 - progress  # Leak grows as clip exits
+
+            if sweep < 0.02:
+                return frame
+
+            # Diagonal gradient: top-left to bottom-right
+            y_coords = np.linspace(0, 1, h).reshape(-1, 1)
+            x_coords = np.linspace(0, 1, w).reshape(1, -1)
+            diag = (x_coords + y_coords) / 2.0  # 0..1 diagonal
+
+            # Sweep position (center of the leak band)
+            center = sweep
+            sigma = 0.15  # Width of the leak band
+            leak_mask = np.exp(-((diag - center) ** 2) / (2 * sigma ** 2)).astype(np.float32)
+            leak_mask *= sweep  # Overall intensity
+
+            # Warm amber color (RGB: 255, 180, 60)
+            leak_color = np.array([255, 180, 60], dtype=np.float32)
+            leak_layer = leak_mask[:, :, np.newaxis] * leak_color
+
+            # Additive blend (screen-like)
+            result = frame.astype(np.float32) + leak_layer * 0.7
+            return np.clip(result, 0, 255).astype(np.uint8)
+
+        return clip.transform(leak_effect)
+
+    def _transition_hyperlapse_zoom(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Hyperlapse zoom: combined speed ramp + zoom fly-through effect."""
+        clip_duration = clip.duration
+
+        def hyperlapse_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+                # Zooming in from wide, decelerating
+                zoom = 1.0 + (1.0 - progress) * 0.4  # 1.4x -> 1.0x
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+                # Zooming out to wide, accelerating
+                zoom = 1.0 + (1.0 - progress) * 0.4
+
+            if zoom <= 1.001:
+                return frame
+
+            h, w = frame.shape[:2]
+            new_h, new_w = int(h * zoom), int(w * zoom)
+            scaled = cv2.resize(frame, (new_w, new_h))
+            start_y = (new_h - h) // 2
+            start_x = (new_w - w) // 2
+            cropped = scaled[start_y:start_y + h, start_x:start_x + w]
+
+            # Add subtle radial blur for motion feel
+            if zoom > 1.1:
+                blur_strength = (zoom - 1.0) * 0.3
+                kernel_size = max(3, int(blur_strength * 20)) | 1
+                blurred = cv2.GaussianBlur(cropped, (kernel_size, kernel_size), 0)
+                # Only blur edges, keep center sharp
+                cy, cx = h / 2, w / 2
+                y_c = np.arange(h).reshape(-1, 1)
+                x_c = np.arange(w).reshape(1, -1)
+                dist = np.sqrt(((x_c - cx) / cx) ** 2 + ((y_c - cy) / cy) ** 2)
+                edge_mask = np.clip(dist - 0.5, 0, 1).astype(np.float32)[:, :, np.newaxis]
+                cropped = (cropped.astype(np.float32) * (1 - edge_mask) +
+                          blurred.astype(np.float32) * edge_mask).astype(np.uint8)
+
+            return cropped
+
+        return clip.transform(hyperlapse_effect)
+
+    def _transition_parallax(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        direction: str = "left",
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Parallax slide: differential speed slide creating depth illusion."""
+        clip_duration = clip.duration
+
+        def parallax_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if progress >= 1.0:
+                return frame
+
+            h, w = frame.shape[:2]
+            # Two layers slide at different speeds (parallax depth)
+            mid_y = h // 2
+            ease = 1.0 - progress  # 1 -> 0
+
+            # Top half (sky/background) moves slower
+            bg_shift = int(ease * w * 0.15)
+            # Bottom half (foreground) moves faster
+            fg_shift = int(ease * w * 0.35)
+
+            if direction == "right":
+                bg_shift, fg_shift = -bg_shift, -fg_shift
+
+            result = frame.copy()
+            # Shift top half
+            if bg_shift != 0:
+                result[:mid_y] = np.roll(frame[:mid_y], bg_shift, axis=1)
+            # Shift bottom half
+            if fg_shift != 0:
+                result[mid_y:] = np.roll(frame[mid_y:], fg_shift, axis=1)
+
+            return result
+
+        return clip.transform(parallax_effect)
+
+    def _transition_wipe_diagonal(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Diagonal wipe: 45-degree line sweep reveal."""
+        clip_duration = clip.duration
+
+        def diagonal_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if progress >= 1.0:
+                return frame
+
+            h, w = frame.shape[:2]
+            # Diagonal coordinate: project (x, y) onto 45-degree line
+            y_coords = np.arange(h).reshape(-1, 1).astype(np.float32) / h
+            x_coords = np.arange(w).reshape(1, -1).astype(np.float32) / w
+            diagonal = (x_coords + y_coords) / 2.0  # 0 at top-left, 1 at bottom-right
+
+            # Feathered edge
+            feather = 0.05
+            if is_start:
+                mask = np.clip((diagonal - (1.0 - progress)) / feather + 0.5, 0, 1)
+            else:
+                mask = np.clip(((1.0 - progress) - diagonal) / feather + 0.5, 0, 1)
+
+            mask = mask[:, :, np.newaxis].astype(np.float32)
+            black = np.zeros_like(frame, dtype=np.float32)
+            result = frame.astype(np.float32) * mask + black * (1 - mask)
+            return result.astype(np.uint8)
+
+        return clip.transform(diagonal_effect)
+
+    def _transition_wipe_diamond(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Diamond wipe: L1 distance expanding diamond from center."""
+        clip_duration = clip.duration
+
+        def diamond_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if progress >= 1.0:
+                return frame
+
+            h, w = frame.shape[:2]
+            cy, cx = h / 2, w / 2
+            y_coords = np.abs(np.arange(h).reshape(-1, 1) - cy) / cy
+            x_coords = np.abs(np.arange(w).reshape(1, -1) - cx) / cx
+            # L1 distance (diamond shape)
+            dist = x_coords + y_coords  # 0 at center, 2 at corners
+
+            max_dist = 2.0
+            threshold = progress * max_dist
+            feather = 0.06 * max_dist
+
+            mask = np.clip((threshold - dist) / feather, 0, 1)
+            mask = mask[:, :, np.newaxis].astype(np.float32)
+
+            black = np.zeros_like(frame, dtype=np.float32)
+            result = frame.astype(np.float32) * mask + black * (1 - mask)
+            return result.astype(np.uint8)
+
+        return clip.transform(diamond_effect)
+
+    def _transition_fog_pass(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Fog pass: procedural fog obscures then reveals clip."""
+        clip_duration = clip.duration
+
+        def fog_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if progress >= 1.0:
+                return frame
+
+            h, w = frame.shape[:2]
+            # Fog density peaks at progress=0 and fades to clear at progress=1
+            fog_density = (1.0 - progress) ** 1.5
+
+            # Multi-frequency fog pattern using sine waves
+            y = np.arange(h, dtype=np.float32).reshape(-1, 1)
+            x = np.arange(w, dtype=np.float32).reshape(1, -1)
+            # Low freq base + medium freq detail
+            fog_pattern = (
+                np.sin(x / w * 3.14 * 2 + progress * 5) * 0.3
+                + np.sin(y / h * 3.14 * 3 + progress * 3) * 0.2
+                + np.sin((x + y) / (w + h) * 3.14 * 5) * 0.15
+                + 0.5
+            )
+            fog_pattern = np.clip(fog_pattern * fog_density, 0, 1)
+            fog_pattern = fog_pattern[:, :, np.newaxis].astype(np.float32)
+
+            # Fog color: white-gray
+            fog_color = np.full_like(frame, 220, dtype=np.float32)
+            result = frame.astype(np.float32) * (1 - fog_pattern) + fog_color * fog_pattern
+            return np.clip(result, 0, 255).astype(np.uint8)
+
+        return clip.transform(fog_effect)
+
+    def _transition_vortex_zoom(
+        self,
+        clip: VideoFileClip,
+        duration: float,
+        is_start: bool = True,
+    ) -> VideoFileClip:
+        """Vortex zoom: radial zoom blur tunnel effect for FPV footage."""
+        clip_duration = clip.duration
+
+        def vortex_effect(get_frame, t):
+            frame = get_frame(t)
+            if is_start:
+                progress = min(t / duration, 1.0)
+            else:
+                time_from_end = clip_duration - t
+                progress = min(time_from_end / duration, 1.0)
+
+            if progress >= 1.0:
+                return frame
+
+            h, w = frame.shape[:2]
+            intensity = (1.0 - progress) ** 2  # Ease out
+
+            if intensity < 0.01:
+                return frame
+
+            # Iterative zoom + average for radial blur
+            zoom_step = 1.0 + intensity * 0.08
+            result = frame.astype(np.float32)
+            n_steps = 3
+            for i in range(1, n_steps + 1):
+                z = 1.0 + (zoom_step - 1.0) * i / n_steps
+                new_h, new_w = int(h * z), int(w * z)
+                if new_h <= h or new_w <= w:
+                    continue
+                scaled = cv2.resize(frame, (new_w, new_h))
+                sy = (new_h - h) // 2
+                sx = (new_w - w) // 2
+                result += scaled[sy:sy + h, sx:sx + w].astype(np.float32)
+
+            result /= (n_steps + 1)
+            return np.clip(result, 0, 255).astype(np.uint8)
+
+        return clip.transform(vortex_effect)
 
     def _transition_cut(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Simple cut transition (no effect)."""
@@ -844,10 +1385,15 @@ class VideoProcessor:
         Select the best transition type based on motion matching between scenes.
 
         Motion-matched cuts follow these principles:
-        - Same direction, similar speed → Hard cut (seamless continuation)
-        - Same direction, different speed → Quick crossfade (0.2s)
-        - Different direction → Longer crossfade (0.4s)
-        - Static scenes → Default crossfade (0.3s)
+        - Same direction, similar speed -> Hard cut (seamless continuation)
+        - Same direction, different speed -> Quick crossfade (0.2s)
+        - Different direction -> Longer crossfade (0.4s)
+        - Static scenes -> Default crossfade (0.3s)
+        - High-energy FPV/fast motion -> Glitch RGB, Vortex Zoom, or Whip Pan
+        - Reveal/dramatic entries -> Iris In
+        - Tilt/golden hour scenes -> Light Leak
+        - Orbit scenes -> Diamond wipe
+        - Altitude changes -> Fog pass
 
         Args:
             scene1: First scene (outgoing)
@@ -886,27 +1432,62 @@ class VideoProcessor:
             # Same direction but different speed - quick crossfade
             return TransitionType.CROSSFADE, 0.2
 
-        # Check for horizontal pan motion - use slide transitions
+        # Check for horizontal pan motion - use whip pan for dramatic effect
         from drone_reel.core.scene_detector import MotionType
 
-        # Scene1 panning right + Scene2 different → slide from right (SLIDE_LEFT)
+        # Fast pan exits -> whip pan (the #1 viral transition)
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
+            MotionType.PAN_RIGHT, MotionType.PAN_LEFT
+        ) and mag1 > 0.03:
+            return TransitionType.WHIP_PAN, 0.3
+
+        # FPV or high-energy motion -> vortex zoom or glitch RGB
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.FPV:
+            if mag1 > 0.05:
+                return TransitionType.VORTEX_ZOOM, 0.3
+            return TransitionType.GLITCH_RGB, 0.2
+
+        # Scene1 panning right + Scene2 different -> parallax or slide
         if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.PAN_RIGHT:
+            if mag1 > 0.02:
+                return TransitionType.PARALLAX_LEFT, 0.4
             return TransitionType.SLIDE_LEFT, 0.4
 
-        # Scene1 panning left + Scene2 different → slide from left (SLIDE_RIGHT)
+        # Scene1 panning left + Scene2 different -> parallax or slide
         if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.PAN_LEFT:
+            if mag1 > 0.02:
+                return TransitionType.PARALLAX_RIGHT, 0.4
             return TransitionType.SLIDE_RIGHT, 0.4
 
-        # Use zoom transitions for reveal/dramatic motion types
-        if isinstance(scene2, EnhancedSceneInfo) and scene2.motion_type == MotionType.REVEAL:
-            return TransitionType.ZOOM_IN, 0.3
-
+        # Orbit scenes -> diamond wipe (geometric match)
         if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
-            MotionType.FLYOVER, MotionType.FPV
+            MotionType.ORBIT_CW, MotionType.ORBIT_CCW
         ):
-            return TransitionType.ZOOM_OUT, 0.3
+            return TransitionType.WIPE_DIAMOND, 0.4
 
-        # Different motion directions - longer crossfade for smooth transition
+        # Use iris in for reveal/dramatic motion types
+        if isinstance(scene2, EnhancedSceneInfo) and scene2.motion_type == MotionType.REVEAL:
+            return TransitionType.IRIS_IN, 0.4
+
+        # Tilt up -> light leak (natural sun direction)
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.TILT_UP:
+            return TransitionType.LIGHT_LEAK, 0.4
+
+        # Tilt down -> fog pass (descending through clouds)
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type == MotionType.TILT_DOWN:
+            return TransitionType.FOG_PASS, 0.5
+
+        # Flyover/approach exits -> hyperlapse zoom
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
+            MotionType.FLYOVER,
+        ):
+            return TransitionType.HYPERLAPSE_ZOOM, 0.4
+
+        # Different motion directions - diagonal wipe for visual variety
+        if mag1 > 0.02 and mag2 > 0.02:
+            return TransitionType.WIPE_DIAGONAL, 0.4
+
+        # Default - longer crossfade for smooth transition
         return TransitionType.CROSSFADE, 0.4
 
     def create_segments_from_scenes(

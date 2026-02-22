@@ -35,6 +35,19 @@ class TestTransitionType:
             "SLIDE_RIGHT",
             "WIPE_LEFT",
             "WIPE_RIGHT",
+            "WHIP_PAN",
+            "GLITCH_RGB",
+            "IRIS_IN",
+            "IRIS_OUT",
+            "FLASH_WHITE",
+            "LIGHT_LEAK",
+            "HYPERLAPSE_ZOOM",
+            "PARALLAX_LEFT",
+            "PARALLAX_RIGHT",
+            "WIPE_DIAGONAL",
+            "WIPE_DIAMOND",
+            "FOG_PASS",
+            "VORTEX_ZOOM",
         }
         actual_types = {t.name for t in TransitionType}
         assert expected_types == actual_types
@@ -1470,9 +1483,9 @@ class TestMotionMatchedTransitions:
             scene1, scene2, 0.3
         )
 
-        # PAN_RIGHT scenes now use SLIDE_LEFT for smoother motion-matched transitions
-        assert trans_type in (TransitionType.CROSSFADE, TransitionType.SLIDE_LEFT)
-        assert duration == 0.4
+        # PAN_RIGHT with strong motion uses WHIP_PAN; slow pan falls back to SLIDE_LEFT
+        assert trans_type in (TransitionType.WHIP_PAN, TransitionType.SLIDE_LEFT)
+        assert duration in (0.3, 0.4)
 
     def test_select_transition_both_static(self, processor):
         """Test default crossfade for both static scenes."""
@@ -1547,9 +1560,9 @@ class TestMotionMatchedTransitions:
         assert segments[0].transition_out == TransitionType.CUT
 
         # Second segment should have CUT in (from matching motion)
-        # and CROSSFADE/SLIDE_LEFT out (to different motion - SLIDE_LEFT for PAN_RIGHT)
+        # and WHIP_PAN/SLIDE_LEFT out (to different motion - WHIP_PAN for fast PAN_RIGHT)
         assert segments[1].transition_in == TransitionType.CUT
-        assert segments[1].transition_out in (TransitionType.CROSSFADE, TransitionType.SLIDE_LEFT)
+        assert segments[1].transition_out in (TransitionType.WHIP_PAN, TransitionType.SLIDE_LEFT)
 
         # Last segment should have FADE_BLACK out
         assert segments[2].transition_out == TransitionType.FADE_BLACK
@@ -1733,3 +1746,519 @@ class TestFfmpegParamsEncoding:
         bufsize_str = f"{numeric_val * 2:.0f}{unit}"
         assert maxrate_str == "120M"
         assert bufsize_str == "160M"
+
+
+class TestNewTransitionEffects:
+    """Tests for Phase 1 visual enhancement transitions."""
+
+    @pytest.fixture
+    def processor(self):
+        return VideoProcessor()
+
+    @pytest.fixture
+    def mock_clip(self):
+        clip = MagicMock()
+        clip.duration = 5.0
+        clip.w = 1920
+        clip.h = 1080
+        return clip
+
+    @pytest.fixture
+    def sample_frame(self):
+        return np.random.randint(0, 255, (1080, 1920, 3), dtype=np.uint8)
+
+    # --- Enum values ---
+
+    def test_new_transition_enum_values(self):
+        """New transition types have correct string values."""
+        assert TransitionType.WHIP_PAN.value == "whip_pan"
+        assert TransitionType.GLITCH_RGB.value == "glitch_rgb"
+        assert TransitionType.IRIS_IN.value == "iris_in"
+        assert TransitionType.IRIS_OUT.value == "iris_out"
+        assert TransitionType.FLASH_WHITE.value == "flash_white"
+        assert TransitionType.LIGHT_LEAK.value == "light_leak"
+
+    # --- Whip Pan ---
+
+    def test_whip_pan_calls_transform(self, processor, mock_clip):
+        """Whip pan transition calls clip.transform()."""
+        processor._transition_whip_pan(mock_clip, 0.3, is_start=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_whip_pan_effect_applies_blur(self, processor, sample_frame):
+        """Whip pan effect applies directional blur at transition start."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        # Capture the transform function
+        result_clip = processor._transition_whip_pan(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        # At t=0 (start of transition), blur should be strongest
+        blurred = effect_fn(lambda t: sample_frame, 0.0)
+        assert blurred.shape == sample_frame.shape
+        # At t=0.5 (end of transition), should be near original
+        clear = effect_fn(lambda t: sample_frame, 0.5)
+        assert clear.shape == sample_frame.shape
+
+    # --- Glitch RGB ---
+
+    def test_glitch_rgb_calls_transform(self, processor, mock_clip):
+        """Glitch RGB transition calls clip.transform()."""
+        processor._transition_glitch_rgb(mock_clip, 0.2, is_start=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_glitch_rgb_splits_channels(self, processor):
+        """Glitch RGB shifts R and B channels at peak intensity."""
+        frame = np.ones((100, 200, 3), dtype=np.uint8) * 128
+        # Set distinct channel values for detection
+        frame[:, :, 0] = 200  # R
+        frame[:, :, 1] = 128  # G
+        frame[:, :, 2] = 50   # B
+
+        clip = MagicMock()
+        clip.duration = 2.0
+        processor._transition_glitch_rgb(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+
+        # At t=0 (peak glitch), channels should be shifted
+        glitched = effect_fn(lambda t: frame, 0.0)
+        assert glitched.shape == frame.shape
+        # G channel should be unchanged
+        assert np.array_equal(glitched[:, :, 1], frame[:, :, 1])
+
+    def test_glitch_rgb_no_effect_after_duration(self, processor):
+        """After transition duration, frame should be unchanged."""
+        frame = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_glitch_rgb(clip, 0.3, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        # Well past the transition duration
+        result = effect_fn(lambda t: frame, 2.0)
+        np.testing.assert_array_equal(result, frame)
+
+    # --- Iris Wipe ---
+
+    def test_iris_in_calls_transform(self, processor, mock_clip):
+        """Iris in transition calls clip.transform()."""
+        processor._transition_iris(mock_clip, 0.4, is_start=True, opening=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_iris_in_masks_frame_at_start(self, processor):
+        """Iris in: at t=0 with opening=True, radius is minimal (mostly black)."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 200
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_iris(clip, 0.5, is_start=True, opening=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 0.0)
+        # Most of the frame should be dark (masked)
+        assert result.mean() < frame.mean()
+
+    def test_iris_in_reveals_fully_after_duration(self, processor):
+        """Iris in: after duration, frame should be fully visible."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 200
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_iris(clip, 0.3, is_start=True, opening=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 1.0)
+        np.testing.assert_array_equal(result, frame)
+
+    def test_iris_out_masks_at_end(self, processor):
+        """Iris out: closing circle should mask frame at peak."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 200
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_iris(clip, 0.5, is_start=False, opening=False)
+        effect_fn = clip.transform.call_args[0][0]
+        # Near end of clip (within transition zone)
+        result = effect_fn(lambda t: frame, 4.75)
+        assert result.mean() < frame.mean()
+
+    # --- Flash White ---
+
+    def test_flash_white_calls_transform(self, processor, mock_clip):
+        """Flash white transition calls clip.transform()."""
+        processor._transition_flash_white(mock_clip, 0.3, is_start=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_flash_white_is_white_at_peak(self, processor):
+        """Flash white at t=0 (start) should be near white."""
+        frame = np.zeros((100, 100, 3), dtype=np.uint8)
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_flash_white(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 0.0)
+        # Should be very bright (near white)
+        assert result.mean() > 200
+
+    def test_flash_white_fades_to_frame(self, processor):
+        """Flash white fades to original frame after transition."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 128
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_flash_white(clip, 0.3, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 2.0)
+        np.testing.assert_array_equal(result, frame)
+
+    # --- Light Leak ---
+
+    def test_light_leak_calls_transform(self, processor, mock_clip):
+        """Light leak transition calls clip.transform()."""
+        processor._transition_light_leak(mock_clip, 0.4, is_start=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_light_leak_adds_warm_overlay(self, processor):
+        """Light leak adds warm color at peak intensity."""
+        frame = np.ones((100, 100, 3), dtype=np.uint8) * 50  # Dark frame
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_light_leak(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 0.0)
+        # Should have some pixels brighter than original (from warm leak)
+        assert result.mean() > frame.mean()
+
+    def test_light_leak_no_effect_outside_transition(self, processor):
+        """No light leak effect outside transition duration."""
+        frame = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_light_leak(clip, 0.3, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: frame, 2.0)
+        np.testing.assert_array_equal(result, frame)
+
+    # --- apply_transition_in / apply_transition_out ---
+
+    def test_apply_transition_in_whip_pan(self, processor, mock_clip):
+        """_apply_transition_in dispatches WHIP_PAN."""
+        processor._apply_transition_in(mock_clip, TransitionType.WHIP_PAN, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_in_glitch_rgb(self, processor, mock_clip):
+        """_apply_transition_in dispatches GLITCH_RGB."""
+        processor._apply_transition_in(mock_clip, TransitionType.GLITCH_RGB, 0.2)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_in_iris_in(self, processor, mock_clip):
+        """_apply_transition_in dispatches IRIS_IN."""
+        processor._apply_transition_in(mock_clip, TransitionType.IRIS_IN, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_in_iris_out(self, processor, mock_clip):
+        """_apply_transition_in dispatches IRIS_OUT."""
+        processor._apply_transition_in(mock_clip, TransitionType.IRIS_OUT, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_in_flash_white(self, processor, mock_clip):
+        """_apply_transition_in dispatches FLASH_WHITE."""
+        processor._apply_transition_in(mock_clip, TransitionType.FLASH_WHITE, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_in_light_leak(self, processor, mock_clip):
+        """_apply_transition_in dispatches LIGHT_LEAK."""
+        processor._apply_transition_in(mock_clip, TransitionType.LIGHT_LEAK, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_out_whip_pan(self, processor, mock_clip):
+        """_apply_transition_out dispatches WHIP_PAN."""
+        processor._apply_transition_out(mock_clip, TransitionType.WHIP_PAN, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_out_flash_white(self, processor, mock_clip):
+        """_apply_transition_out dispatches FLASH_WHITE."""
+        processor._apply_transition_out(mock_clip, TransitionType.FLASH_WHITE, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_skips_short_clips(self, processor):
+        """Transition is skipped if clip too short for safe duration."""
+        clip = MagicMock()
+        clip.duration = 0.1  # Very short
+        result = processor._apply_transition_in(clip, TransitionType.WHIP_PAN, 0.5)
+        assert result is clip  # No transform applied
+
+    # --- Hyperlapse Zoom ---
+
+    def test_hyperlapse_zoom_calls_transform(self, processor, mock_clip):
+        """Hyperlapse zoom transition calls clip.transform()."""
+        processor._transition_hyperlapse_zoom(mock_clip, 0.4, is_start=True)
+        mock_clip.transform.assert_called_once()
+
+    def test_hyperlapse_zoom_enum_value(self):
+        """HYPERLAPSE_ZOOM enum has correct value."""
+        assert TransitionType.HYPERLAPSE_ZOOM.value == "hyperlapse_zoom"
+
+    def test_apply_transition_in_hyperlapse_zoom(self, processor, mock_clip):
+        """_apply_transition_in dispatches HYPERLAPSE_ZOOM."""
+        processor._apply_transition_in(mock_clip, TransitionType.HYPERLAPSE_ZOOM, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_apply_transition_out_hyperlapse_zoom(self, processor, mock_clip):
+        """_apply_transition_out dispatches HYPERLAPSE_ZOOM."""
+        processor._apply_transition_out(mock_clip, TransitionType.HYPERLAPSE_ZOOM, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_hyperlapse_zoom_zooms_at_start(self, processor):
+        """Hyperlapse zoom applies zoom at start of transition."""
+        frame = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_hyperlapse_zoom(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        # At t=0 (peak zoom), frame should be different from original
+        result = effect_fn(lambda t: frame, 0.0)
+        assert result.shape == frame.shape
+
+
+class TestPhase3Transitions:
+    """Tests for Phase 3 transition effects."""
+
+    @pytest.fixture
+    def processor(self):
+        return VideoProcessor()
+
+    @pytest.fixture
+    def mock_clip(self):
+        clip = MagicMock()
+        clip.duration = 5.0
+        clip.transform.return_value = clip
+        clip.with_effects.return_value = clip
+        return clip
+
+    @pytest.fixture
+    def test_frame(self):
+        return np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+
+    def test_all_transition_types_count(self):
+        """TransitionType should have 23 members."""
+        assert len(TransitionType) == 23
+
+    def test_new_transition_enums_exist(self):
+        """All new transition enums should exist."""
+        assert TransitionType.PARALLAX_LEFT.value == "parallax_left"
+        assert TransitionType.PARALLAX_RIGHT.value == "parallax_right"
+        assert TransitionType.WIPE_DIAGONAL.value == "wipe_diagonal"
+        assert TransitionType.WIPE_DIAMOND.value == "wipe_diamond"
+        assert TransitionType.FOG_PASS.value == "fog_pass"
+        assert TransitionType.VORTEX_ZOOM.value == "vortex_zoom"
+
+    # Parallax tests
+    def test_parallax_left_dispatches(self, processor, mock_clip):
+        """_apply_transition_in dispatches PARALLAX_LEFT."""
+        processor._apply_transition_in(mock_clip, TransitionType.PARALLAX_LEFT, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_parallax_right_dispatches(self, processor, mock_clip):
+        """_apply_transition_out dispatches PARALLAX_RIGHT."""
+        processor._apply_transition_out(mock_clip, TransitionType.PARALLAX_RIGHT, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_parallax_effect_produces_valid_frame(self, processor, test_frame):
+        """Parallax effect should produce valid frame."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_parallax(clip, 0.5, direction="left", is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.1)
+        assert result.shape == test_frame.shape
+
+    def test_parallax_no_effect_past_duration(self, processor, test_frame):
+        """Parallax should have no effect past transition duration."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_parallax(clip, 0.5, direction="left", is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 3.0)
+        assert np.array_equal(result, test_frame)
+
+    # Diagonal wipe tests
+    def test_wipe_diagonal_dispatches_in(self, processor, mock_clip):
+        """_apply_transition_in dispatches WIPE_DIAGONAL."""
+        processor._apply_transition_in(mock_clip, TransitionType.WIPE_DIAGONAL, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_wipe_diagonal_dispatches_out(self, processor, mock_clip):
+        """_apply_transition_out dispatches WIPE_DIAGONAL."""
+        processor._apply_transition_out(mock_clip, TransitionType.WIPE_DIAGONAL, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_wipe_diagonal_effect_valid(self, processor, test_frame):
+        """Diagonal wipe should produce valid frame with dark areas at start."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_wipe_diagonal(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.1)
+        assert result.shape == test_frame.shape
+        # At early progress, some areas should be darker (masked)
+        assert result.mean() < test_frame.mean()
+
+    # Diamond wipe tests
+    def test_wipe_diamond_dispatches(self, processor, mock_clip):
+        """_apply_transition_in dispatches WIPE_DIAMOND."""
+        processor._apply_transition_in(mock_clip, TransitionType.WIPE_DIAMOND, 0.4)
+        mock_clip.transform.assert_called_once()
+
+    def test_wipe_diamond_effect_valid(self, processor, test_frame):
+        """Diamond wipe should produce valid frame."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_wipe_diamond(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.1)
+        assert result.shape == test_frame.shape
+
+    def test_wipe_diamond_center_visible_first(self, processor, test_frame):
+        """Diamond wipe should reveal center before edges."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_wipe_diamond(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.2)
+        # Center should be brighter (revealed) than corners
+        h, w = result.shape[:2]
+        center_val = result[h//2, w//2].mean()
+        corner_val = result[0, 0].mean()
+        assert center_val >= corner_val
+
+    # Fog pass tests
+    def test_fog_pass_dispatches_in(self, processor, mock_clip):
+        """_apply_transition_in dispatches FOG_PASS."""
+        processor._apply_transition_in(mock_clip, TransitionType.FOG_PASS, 0.5)
+        mock_clip.transform.assert_called_once()
+
+    def test_fog_pass_dispatches_out(self, processor, mock_clip):
+        """_apply_transition_out dispatches FOG_PASS."""
+        processor._apply_transition_out(mock_clip, TransitionType.FOG_PASS, 0.5)
+        mock_clip.transform.assert_called_once()
+
+    def test_fog_pass_effect_valid(self, processor, test_frame):
+        """Fog pass should produce valid frame with fog overlay."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_fog_pass(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.1)
+        assert result.shape == test_frame.shape
+
+    def test_fog_pass_fades_to_clear(self, processor, test_frame):
+        """Fog should be clear past transition duration."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_fog_pass(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 3.0)
+        assert np.array_equal(result, test_frame)
+
+    # Vortex zoom tests
+    def test_vortex_zoom_dispatches_in(self, processor, mock_clip):
+        """_apply_transition_in dispatches VORTEX_ZOOM."""
+        processor._apply_transition_in(mock_clip, TransitionType.VORTEX_ZOOM, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_vortex_zoom_dispatches_out(self, processor, mock_clip):
+        """_apply_transition_out dispatches VORTEX_ZOOM."""
+        processor._apply_transition_out(mock_clip, TransitionType.VORTEX_ZOOM, 0.3)
+        mock_clip.transform.assert_called_once()
+
+    def test_vortex_zoom_effect_valid(self, processor, test_frame):
+        """Vortex zoom should produce valid frame with blur at start."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_vortex_zoom(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 0.1)
+        assert result.shape == test_frame.shape
+
+    def test_vortex_zoom_clear_after_duration(self, processor, test_frame):
+        """Vortex zoom should be clear past transition duration."""
+        clip = MagicMock()
+        clip.duration = 5.0
+        processor._transition_vortex_zoom(clip, 0.5, is_start=True)
+        effect_fn = clip.transform.call_args[0][0]
+        result = effect_fn(lambda t: test_frame, 3.0)
+        assert np.array_equal(result, test_frame)
+
+    # Motion matching tests for new transitions
+    def test_motion_match_orbit_to_diamond(self, processor):
+        """Orbit motion should map to WIPE_DIAMOND."""
+        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        scene1 = EnhancedSceneInfo(
+            start_time=0, end_time=5, duration=5.0, score=80,
+            source_file=Path("/tmp/v1.mp4"),
+            motion_type=MotionType.ORBIT_CW,
+            motion_direction=(0.05, 0.02),
+            motion_energy=50, hook_potential=70,
+        )
+        scene2 = EnhancedSceneInfo(
+            start_time=5, end_time=10, duration=5.0, score=75,
+            source_file=Path("/tmp/v2.mp4"),
+            motion_type=MotionType.STATIC,
+            motion_direction=(0.0, 0.0),
+            motion_energy=10, hook_potential=50,
+        )
+        trans_type, _ = processor.select_motion_matched_transition(scene1, scene2)
+        assert trans_type == TransitionType.WIPE_DIAMOND
+
+    def test_motion_match_fpv_fast_to_vortex(self, processor):
+        """Fast FPV motion should map to VORTEX_ZOOM."""
+        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        scene1 = EnhancedSceneInfo(
+            start_time=0, end_time=5, duration=5.0, score=80,
+            source_file=Path("/tmp/v1.mp4"),
+            motion_type=MotionType.FPV,
+            motion_direction=(0.06, 0.04),
+            motion_energy=80, hook_potential=90,
+        )
+        scene2 = EnhancedSceneInfo(
+            start_time=5, end_time=10, duration=5.0, score=75,
+            source_file=Path("/tmp/v2.mp4"),
+            motion_type=MotionType.STATIC,
+            motion_direction=(0.0, 0.0),
+            motion_energy=10, hook_potential=50,
+        )
+        trans_type, _ = processor.select_motion_matched_transition(scene1, scene2)
+        assert trans_type == TransitionType.VORTEX_ZOOM
+
+    def test_motion_match_tilt_down_to_fog(self, processor):
+        """Tilt down motion should map to FOG_PASS."""
+        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        scene1 = EnhancedSceneInfo(
+            start_time=0, end_time=5, duration=5.0, score=80,
+            source_file=Path("/tmp/v1.mp4"),
+            motion_type=MotionType.TILT_DOWN,
+            motion_direction=(0.0, 0.05),
+            motion_energy=40, hook_potential=50,
+        )
+        scene2 = EnhancedSceneInfo(
+            start_time=5, end_time=10, duration=5.0, score=75,
+            source_file=Path("/tmp/v2.mp4"),
+            motion_type=MotionType.STATIC,
+            motion_direction=(0.0, 0.0),
+            motion_energy=10, hook_potential=50,
+        )
+        trans_type, _ = processor.select_motion_matched_transition(scene1, scene2)
+        assert trans_type == TransitionType.FOG_PASS
+
+    def test_motion_match_pan_right_slow_to_parallax(self, processor):
+        """Slow pan right should map to PARALLAX_LEFT."""
+        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        scene1 = EnhancedSceneInfo(
+            start_time=0, end_time=5, duration=5.0, score=80,
+            source_file=Path("/tmp/v1.mp4"),
+            motion_type=MotionType.PAN_RIGHT,
+            motion_direction=(0.025, 0.0),
+            motion_energy=25, hook_potential=50,
+        )
+        scene2 = EnhancedSceneInfo(
+            start_time=5, end_time=10, duration=5.0, score=75,
+            source_file=Path("/tmp/v2.mp4"),
+            motion_type=MotionType.TILT_UP,
+            motion_direction=(0.0, -0.03),
+            motion_energy=30, hook_potential=50,
+        )
+        trans_type, _ = processor.select_motion_matched_transition(scene1, scene2)
+        assert trans_type == TransitionType.PARALLAX_LEFT

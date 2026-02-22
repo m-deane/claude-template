@@ -4,14 +4,177 @@ Comprehensive guide to the enhanced ColorGrader functionality in drone-reel.
 
 ## Table of Contents
 
-1. [LUT Support](#lut-support)
-2. [Tone Curves](#tone-curves)
-3. [Selective Color Adjustments](#selective-color-adjustments)
-4. [Improved Shadows/Highlights](#improved-shadowshighlights)
-5. [Enhanced Film Grain](#enhanced-film-grain)
-6. [GPU Acceleration](#gpu-acceleration)
-7. [Preview Mode](#preview-mode)
-8. [Complete Workflow Examples](#complete-workflow-examples)
+1. [Color Science Pipeline](#color-science-pipeline)
+2. [D-Log / S-Log3 Normalization](#d-log--s-log3-normalization)
+3. [Auto White Balance](#auto-white-balance)
+4. [Auto Color Match](#auto-color-match)
+5. [Noise Reduction](#noise-reduction)
+6. [LUT Support](#lut-support)
+7. [Tone Curves](#tone-curves)
+8. [Selective Color Adjustments](#selective-color-adjustments)
+9. [Improved Shadows/Highlights](#improved-shadowshighlights)
+10. [Visual Effects](#visual-effects)
+11. [Enhanced Film Grain](#enhanced-film-grain)
+12. [GPU Acceleration](#gpu-acceleration)
+13. [Preview Mode](#preview-mode)
+14. [Complete Workflow Examples](#complete-workflow-examples)
+
+---
+
+## Color Science Pipeline
+
+The ColorGrader processes frames through a carefully ordered pipeline. Understanding this order helps when combining features:
+
+| Phase | Stage | Description |
+|-------|-------|-------------|
+| -2 | D-Log/S-Log normalization | Convert log-encoded footage to Rec.709 |
+| -1 | Auto white balance | Gray world per-channel correction |
+| -0.5 | Auto color match | Histogram CDF matching to reference frame |
+| -0.25 | Noise reduction | Non-local means spatial denoising |
+| 0 | LUT application | 3D LUT color transform |
+| 0 | Tone curves | RGB spline curves |
+| 0.5 | Shadow lift | LAB-space shadow/highlight recovery |
+| 1 | Basic adjustments | Brightness, contrast (BGR) |
+| 2 | HSV adjustments | Saturation, vibrance, temperature, tint |
+| 3 | LAB adjustments | Shadows, highlights |
+| 4 | Selective color | Per-color range hue/sat/lum |
+| 4 | Fade | Black level lift |
+| 4 | Film grain | Temporal organic noise |
+| 5 | Vignette | Radial edge darkening |
+| 6 | Halation | Warm highlight bloom |
+| 7 | Chromatic aberration | RGB channel offset |
+| 8 | Atmospheric haze | Vertical gradient fog |
+| 9 | GND sky correction | Graduated neutral density |
+| Final | Dithering | Bayer-matrix anti-banding |
+
+Color correction stages (D-Log, AWB, denoise, color match) run before creative grading. Atmospheric effects run after all color work.
+
+---
+
+## D-Log / S-Log3 Normalization
+
+Professional drone cameras (DJI, Sony) shoot in log color spaces for maximum dynamic range. The footage looks flat/washed out and must be normalized before grading.
+
+### Supported Colorspaces
+
+| Colorspace | Camera | Description |
+|-----------|--------|-------------|
+| `rec709` | Standard | No normalization (default) |
+| `dlog` | DJI (generic) | DJI D-Log inverse curve |
+| `dlog_m` | DJI Mini/Air/Mavic | DJI D-Log M linearization |
+| `slog3` | Sony | Sony S-Log3 inverse curve |
+| `auto` | Any | Auto-detect from histogram |
+
+### CLI Usage
+
+```bash
+# Specify colorspace directly
+drone-reel create -i ./clips/ --input-colorspace dlog_m --color drone_aerial
+
+# Auto-detect log footage
+drone-reel create -i ./clips/ --input-colorspace auto --color golden_hour
+```
+
+### Python API
+
+```python
+from drone_reel.core.color_grader import ColorGrader, ColorPreset
+
+# DJI Mini 3 Pro footage
+grader = ColorGrader(
+    preset=ColorPreset.DRONE_AERIAL,
+    input_colorspace="dlog_m",
+)
+result = grader.grade_frame(frame)
+
+# Auto-detect
+is_log = ColorGrader.detect_log_footage(Path("footage.mp4"))
+# Returns "dlog" or "rec709"
+```
+
+---
+
+## Auto White Balance
+
+Gray world auto white balance corrects color casts by scaling each channel so its mean matches the overall frame mean.
+
+### CLI Usage
+
+```bash
+drone-reel create -i ./clips/ --auto-wb --color drone_aerial
+```
+
+### Python API
+
+```python
+grader = ColorGrader(
+    preset=ColorPreset.DRONE_AERIAL,
+    auto_wb=True,
+)
+```
+
+**Best for:** Mixed lighting conditions, indoor-outdoor transitions, correcting blue/orange casts from incorrect camera WB settings.
+
+---
+
+## Auto Color Match
+
+Normalizes color distribution across clips by matching each frame's per-channel histogram CDF to a reference frame. This ensures consistent color across clips from different cameras or lighting conditions.
+
+### CLI Usage
+
+```bash
+drone-reel create -i ./clips/ --auto-color-match --color cinematic
+```
+
+### Python API
+
+```python
+grader = ColorGrader(preset=ColorPreset.CINEMATIC)
+
+# Set reference from first frame
+reference_frame = get_first_frame(video_path)
+grader.set_reference_frame(reference_frame)
+
+# All subsequent frames will match reference color distribution
+for frame in frames:
+    graded = grader.grade_frame(frame)
+```
+
+**Best for:** Multi-camera shoots, inconsistent lighting between clips, ensuring uniform look across a reel.
+
+---
+
+## Noise Reduction
+
+Spatial denoising using OpenCV's non-local means algorithm. Reduces sensor noise while preserving edges and detail.
+
+### CLI Usage
+
+```bash
+# Subtle denoising
+drone-reel create -i ./clips/ --denoise 0.3
+
+# Strong denoising (high-ISO footage)
+drone-reel create -i ./clips/ --denoise 0.8
+```
+
+### Python API
+
+```python
+grader = ColorGrader(
+    denoise_strength=0.5,  # 0.0-1.0, maps to h=3-15 internally
+)
+```
+
+### Strength Guide
+
+| Value | Effect | Use Case |
+|-------|--------|----------|
+| 0.0-0.2 | Minimal | Clean footage, subtle smoothing |
+| 0.2-0.5 | Moderate | Standard drone footage, slight noise |
+| 0.5-0.8 | Strong | High-ISO, low-light footage |
+| 0.8-1.0 | Heavy | Very noisy footage (detail loss expected) |
 
 ---
 
@@ -26,7 +189,14 @@ Load and apply 3D LUTs (Look-Up Tables) in .cube format for professional color g
 - Combines seamlessly with other adjustments
 - Supports any LUT size (typically 17x17x17 or 33x33x33)
 
-### Usage
+### CLI Usage
+
+```bash
+drone-reel create -i ./clips/ --lut cinematic.cube
+drone-reel create -i ./clips/ --lut my_grade.cube --color-intensity 0.5
+```
+
+### Python API
 
 ```python
 from pathlib import Path
@@ -35,19 +205,6 @@ from drone_reel.core.color_grader import ColorGrader
 # Load and apply a LUT
 grader = ColorGrader(lut_path=Path('cinematic.cube'))
 result = grader.grade_frame(frame)
-```
-
-### Creating a LUT File
-
-```python
-# Example .cube file format
-# cinematic.cube
-LUT_3D_SIZE 17
-
-# RGB values (0.0 to 1.0)
-0.0 0.0 0.0
-0.1 0.05 0.03
-...
 ```
 
 ### Combining LUT with Adjustments
@@ -62,7 +219,8 @@ adjustments = ColorAdjustments(
 
 grader = ColorGrader(
     lut_path=Path('my_lut.cube'),
-    adjustments=adjustments
+    adjustments=adjustments,
+    vignette_strength=0.3,
 )
 ```
 
@@ -77,7 +235,6 @@ Create custom tonal mappings using control points with cubic spline interpolatio
 - Per-channel RGB curves
 - Cubic spline interpolation for smooth curves
 - Control point-based interface
-- Excellent for contrast and color grading
 
 ### Basic Usage
 
@@ -118,23 +275,10 @@ ToneCurve(
 #### Fade (Lifted Blacks)
 ```python
 ToneCurve(
-    red_points=[(0, 30), (128, 128), (255, 255)],   # Lift shadows
+    red_points=[(0, 30), (128, 128), (255, 255)],
     green_points=[(0, 30), (128, 128), (255, 255)],
     blue_points=[(0, 30), (128, 128), (255, 255)],
 )
-```
-
-### Per-Channel Color Grading
-
-```python
-# Create different curves for each channel
-tone_curve = ToneCurve(
-    red_points=[(0, 0), (128, 145), (255, 255)],   # More red in midtones
-    green_points=[(0, 0), (128, 125), (255, 250)], # Less green overall
-    blue_points=[(0, 0), (128, 110), (255, 235)],  # Significantly less blue
-)
-
-grader = ColorGrader(tone_curve=tone_curve)
 ```
 
 ---
@@ -142,13 +286,6 @@ grader = ColorGrader(tone_curve=tone_curve)
 ## Selective Color Adjustments
 
 Target specific color ranges (red, orange, yellow, green, cyan, blue, purple, magenta) with independent hue, saturation, and luminance controls.
-
-### Features
-
-- 8 color ranges: red, orange, yellow, green, cyan, blue, purple, magenta
-- Independent hue, saturation, and luminance adjustments per range
-- Uses HSV and LAB color spaces for accurate targeting
-- Minimal impact on adjacent colors
 
 ### Usage
 
@@ -159,24 +296,15 @@ from drone_reel.core.color_grader import (
     SelectiveColorAdjustments,
 )
 
-# Create selective adjustments
 selective = SelectiveColorAdjustments(
-    # Boost skin tones (orange)
-    orange_sat=25,
-    orange_lum=5,
-
-    # Enhance skies (blue/cyan)
-    blue_sat=15,
-    cyan_sat=10,
-
-    # Enrich foliage (green)
-    green_sat=20,
-    green_hue=-5,  # Shift towards cyan for natural look
+    blue_sat=20,      # Enhance sky
+    cyan_sat=15,      # Boost ocean/water
+    green_sat=10,     # Subtle foliage enhancement
+    orange_sat=-5,    # Slightly desaturate warm tones
 )
 
 adjustments = ColorAdjustments(selective_color=selective)
 grader = ColorGrader(adjustments=adjustments)
-
 result = grader.grade_frame(frame)
 ```
 
@@ -193,48 +321,11 @@ result = grader.grade_frame(frame)
 | Purple | 256-285 | Purple flowers, twilight |
 | Magenta | 286-344 | Magenta tones, creative looks |
 
-### Common Adjustments
-
-#### Enhance Skin Tones
-```python
-SelectiveColorAdjustments(
-    orange_sat=20,  # More vibrant
-    orange_lum=5,   # Slightly brighter
-)
-```
-
-#### Teal and Orange Look
-```python
-SelectiveColorAdjustments(
-    orange_sat=30,
-    orange_hue=5,
-    cyan_sat=25,
-    blue_hue=10,
-)
-```
-
-#### Natural Foliage Enhancement
-```python
-SelectiveColorAdjustments(
-    green_sat=25,
-    green_hue=-8,      # Shift towards cyan
-    yellow_sat=15,     # Enhance yellow-green
-    yellow_hue=5,
-)
-```
-
 ---
 
 ## Improved Shadows/Highlights
 
 Enhanced shadow and highlight adjustments using LAB color space for superior color preservation.
-
-### Why LAB Color Space?
-
-- Separates luminance (L) from color (A, B)
-- Better preserves color when adjusting tones
-- Reduces color shifts in shadows and highlights
-- More natural-looking results
 
 ### Usage
 
@@ -250,49 +341,130 @@ grader = ColorGrader(adjustments=adjustments)
 result = grader.grade_frame(frame)
 ```
 
-### Comparison: HSV vs LAB
-
-```python
-# Old implementation (HSV - removed)
-# - Used V channel (value)
-# - Color shifts when adjusting tones
-# - Less control over color preservation
-
-# New implementation (LAB)
-# - Uses L channel (lightness)
-# - Preserves color information
-# - Professional-grade results
-```
-
 ### Best Practices
 
 - **Shadows**: Use positive values (10-50) to lift shadows
 - **Highlights**: Use negative values (-10 to -40) to recover highlights
 - **Combine with curves**: Use tone curves for overall contrast, shadows/highlights for fine-tuning
-- **Don't overdo it**: Excessive adjustments can look unnatural
+
+---
+
+## Visual Effects
+
+### Vignette
+
+Radial edge darkening that draws the eye toward the center of the frame.
+
+```bash
+drone-reel create -i ./clips/ --vignette 0.4
+```
+
+```python
+grader = ColorGrader(vignette_strength=0.4)  # 0.0-1.0
+```
+
+| Value | Effect |
+|-------|--------|
+| 0.1-0.3 | Subtle, barely noticeable |
+| 0.3-0.5 | Standard cinematic vignette |
+| 0.5-0.8 | Strong, dramatic darkening |
+| 0.8-1.0 | Extreme, artistic effect |
+
+---
+
+### Halation
+
+Warm bloom/glow around bright highlights, emulating the light scatter in analog film.
+
+```bash
+drone-reel create -i ./clips/ --halation 0.3
+```
+
+```python
+grader = ColorGrader(halation_strength=0.3)  # 0.0-1.0
+```
+
+**Best for:** Sunset footage, golden hour, warm cinematic looks. Creates a dreamy, filmic glow around bright areas.
+
+---
+
+### Chromatic Aberration
+
+RGB channel offset at frame edges, simulating lens fringing found in vintage or wide-angle lenses.
+
+```bash
+drone-reel create -i ./clips/ --chromatic-aberration 0.2
+```
+
+```python
+grader = ColorGrader(chromatic_aberration_strength=0.2)  # 0.0-1.0
+```
+
+**Best for:** Vintage/analog looks, creative projects. Use subtly (0.1-0.3) for realism or stronger for artistic effect.
+
+---
+
+### Atmospheric Haze
+
+Vertical gradient that blends the frame with a pale blue-white tone, strongest at the top. Simulates aerial perspective/atmospheric depth.
+
+```bash
+drone-reel create -i ./clips/ --haze 0.3
+```
+
+```python
+grader = ColorGrader(haze_strength=0.3)  # 0.0-1.0
+```
+
+**Best for:** High-altitude footage, mountain vistas, creating depth in flat scenes.
+
+---
+
+### GND Sky Correction
+
+Graduated neutral density filter that darkens the top half of the frame. Simulates a physical GND filter to balance bright skies with darker foreground.
+
+```bash
+drone-reel create -i ./clips/ --gnd-sky 0.4
+```
+
+```python
+grader = ColorGrader(gnd_sky_strength=0.4)  # 0.0-1.0
+```
+
+**Best for:** Bright sky/dark ground scenes, landscapes, horizon shots. Darkening factor: `1.0 - strength * 0.6` at the top of frame.
+
+---
+
+### Letterbox
+
+Cinematic letterbox bars (applied in the video processor, not ColorGrader).
+
+```bash
+drone-reel create -i ./clips/ --letterbox 0.1  # 10% of frame height per bar
+```
+
+**Best for:** Cinematic look on vertical format, dramatic presentation.
 
 ---
 
 ## Enhanced Film Grain
 
-Professional film grain simulation with temporal coherence and film-like characteristics.
+Professional film grain simulation with temporal coherence, organic structure, and shadow suppression.
 
 ### Features
 
-- **Temporal coherence**: Grain pattern changes between frames naturally
-- **Lower resolution generation**: Generates noise at half resolution, upscales for authentic film look
-- **Luminance-weighted**: Stronger in midtones, weaker in shadows/highlights (like real film)
-- **Seeded randomness**: Same frame index produces same grain for consistency
+- **Hash-based temporal seed**: Frame-index hash `(frame_index * 2654435761) % 2^31` ensures reproducible but varied grain per frame
+- **Organic structure**: GaussianBlur applied to raw noise for film-like clumping
+- **Shadow suppression**: Grain is suppressed in dark areas (weighted by `clip(gray / 0.1, 0, 1)`)
+- **Midtone weighting**: Stronger in midtones, weaker in highlights (like real film)
 
 ### Usage
 
 ```python
 from drone_reel.core.color_grader import ColorAdjustments, ColorGrader
 
-adjustments = ColorAdjustments(
-    grain=30,  # Range: 0-100
-)
-
+adjustments = ColorAdjustments(grain=30)  # Range: 0-100
 grader = ColorGrader(adjustments=adjustments)
 
 # Process multiple frames with temporal coherence
@@ -310,61 +482,24 @@ for i, frame in enumerate(video_frames):
 | 50-70 | Heavy | Strong vintage/retro |
 | 70-100 | Extreme | Artistic/experimental |
 
-### Technical Details
-
-```python
-# Grain implementation highlights:
-# 1. Seed based on frame index for temporal coherence
-np.random.seed(frame_index % 100000)
-
-# 2. Generate at lower resolution
-grain_h, grain_w = h // 2, w // 2
-noise = np.random.normal(0, amount / 100 * 25, (grain_h, grain_w))
-
-# 3. Upscale for film-like characteristics
-noise_upscaled = cv2.resize(noise, (w, h), interpolation=cv2.INTER_LINEAR)
-
-# 4. Weight by luminance (stronger in midtones)
-midtone_mask = 1 - np.abs(luminance - 0.5) * 2
-weighted_noise = noise_upscaled * midtone_mask
-```
-
 ---
 
 ## GPU Acceleration
 
 Optional GPU acceleration using CUDA for faster processing.
 
-### Features
-
-- Automatic GPU detection
-- Graceful fallback to CPU
-- Accelerated operations: brightness, contrast, basic transformations
-- Complex operations (LUTs, curves) run on CPU even in GPU mode
-
 ### Usage
 
 ```python
 from drone_reel.core.color_grader import ColorGrader
 
-# Enable GPU if available
 grader = ColorGrader(use_gpu=True)
 
-# Check if GPU is being used
 if grader.use_gpu:
     print("Using GPU acceleration")
 else:
     print("GPU not available, using CPU")
 ```
-
-### GPU vs CPU Performance
-
-| Operation | GPU Speedup | Notes |
-|-----------|-------------|-------|
-| Brightness/Contrast | 2-5x | Simple arithmetic operations |
-| Saturation/Color | Minimal | Requires color space conversions |
-| LUT Application | No speedup | Complex indexing operations |
-| Tone Curves | No speedup | Lookup table operations |
 
 ### Requirements
 
@@ -372,25 +507,11 @@ else:
 - NVIDIA GPU with CUDA capability
 - Appropriate CUDA drivers installed
 
-### When to Use GPU
-
-- **Yes**: Processing large batches of high-resolution videos
-- **Yes**: Real-time video processing
-- **No**: Single frame processing
-- **No**: When GPU isn't available (automatic fallback)
-
 ---
 
 ## Preview Mode
 
 Fast preview rendering at reduced resolution for quick iteration.
-
-### Features
-
-- Configurable scale factor (default 25%)
-- Applies all color grading operations
-- Significantly faster than full resolution
-- Perfect for tweaking settings
 
 ### Usage
 
@@ -409,222 +530,118 @@ preview = grader.grade_frame_preview(frame, scale=0.5)
 final = grader.grade_frame(frame)
 ```
 
-### Typical Workflow
-
-```python
-# 1. Create your color grade
-adjustments = ColorAdjustments(...)
-tone_curve = ToneCurve(...)
-grader = ColorGrader(adjustments=adjustments, tone_curve=tone_curve)
-
-# 2. Iterate quickly with previews
-for adjustment_value in range(0, 50, 5):
-    adjustments.contrast = adjustment_value
-    preview = grader.grade_frame_preview(test_frame, scale=0.25)
-    # Display or save preview for review
-
-# 3. Apply final grade at full resolution
-for frame in video_frames:
-    result = grader.grade_frame(frame)
-```
-
-### Performance Comparison
-
-| Resolution | Scale | Processing Time | Speedup |
-|------------|-------|-----------------|---------|
-| 3840x2160 (4K) | 1.0 | 100 ms | 1x |
-| 1920x1080 (1080p) | 0.5 | 25 ms | 4x |
-| 960x540 | 0.25 | 6 ms | 16x |
-| 480x270 | 0.125 | 1.5 ms | 64x |
-
 ---
 
 ## Complete Workflow Examples
 
-### Example 1: Cinematic Drone Footage
+### Example 1: DJI D-Log M Drone Footage
 
 ```python
 from pathlib import Path
+from drone_reel.core.color_grader import ColorGrader, ColorPreset
+
+# D-Log footage with auto white balance, film grain, and vignette
+grader = ColorGrader(
+    preset=ColorPreset.DRONE_AERIAL,
+    input_colorspace="dlog_m",
+    auto_wb=True,
+    intensity=0.7,
+    vignette_strength=0.3,
+    halation_strength=0.2,
+)
+
+for i, frame in enumerate(video_frames):
+    graded = grader.grade_frame(frame, frame_index=i)
+```
+
+### Example 2: Consistent Multi-Clip Color
+
+```python
+# Match all clips to the first clip's color distribution
+grader = ColorGrader(
+    preset=ColorPreset.CINEMATIC,
+    denoise_strength=0.3,
+)
+
+# Set reference from hero clip
+reference = get_first_frame(Path("hero_clip.mp4"))
+grader.set_reference_frame(reference)
+
+# Grade all clips - they'll match the reference color
+for clip_path in clip_paths:
+    grader.grade_video(clip_path, output_dir / clip_path.name)
+```
+
+### Example 3: Cinematic Kodak Film Look
+
+```python
 from drone_reel.core.color_grader import (
-    ColorAdjustments,
-    ColorGrader,
-    SelectiveColorAdjustments,
-    ToneCurve,
+    ColorAdjustments, ColorGrader, ColorPreset,
+    SelectiveColorAdjustments, ToneCurve,
 )
 
-# 1. Define selective color adjustments
 selective = SelectiveColorAdjustments(
-    blue_sat=20,      # Enhance sky
-    cyan_sat=15,      # Boost ocean/water
-    green_sat=10,     # Subtle foliage enhancement
-    orange_sat=-5,    # Slightly desaturate warm tones
+    blue_sat=20,
+    cyan_sat=15,
+    green_sat=10,
+    orange_sat=-5,
 )
 
-# 2. Create S-curve for contrast
 tone_curve = ToneCurve(
     red_points=[(0, 0), (64, 50), (192, 205), (255, 255)],
     green_points=[(0, 0), (64, 48), (192, 207), (255, 255)],
     blue_points=[(0, 0), (64, 45), (192, 210), (255, 250)],
 )
 
-# 3. Define overall adjustments
 adjustments = ColorAdjustments(
     brightness=3,
     contrast=15,
-    saturation=-8,     # Slight desaturation for cinematic look
-    temperature=5,     # Warm tone
-    shadows=12,        # Lift shadows
-    highlights=-8,     # Recover highlights
-    fade=5,            # Subtle fade effect
-    grain=15,          # Light film grain
+    saturation=-8,
+    temperature=5,
+    shadows=12,
+    highlights=-8,
+    fade=5,
+    grain=15,
     selective_color=selective,
 )
 
-# 4. Create grader with optional LUT
 grader = ColorGrader(
     adjustments=adjustments,
     tone_curve=tone_curve,
-    lut_path=Path('cinematic.cube'),  # Optional
-    use_gpu=True,
+    vignette_strength=0.35,
+    halation_strength=0.25,
+    chromatic_aberration_strength=0.1,
 )
 
-# 5. Process video
 for i, frame in enumerate(video_frames):
-    graded_frame = grader.grade_frame(frame, frame_index=i)
+    graded = grader.grade_frame(frame, frame_index=i)
 ```
 
-### Example 2: Vintage Film Look
+### Example 4: Atmospheric Mountain Footage
 
 ```python
-# Vintage warm film aesthetic
-selective = SelectiveColorAdjustments(
-    red_hue=5,
-    red_sat=15,
-    yellow_sat=20,
-    blue_sat=-30,    # Heavily desaturate blues
-)
-
-tone_curve = ToneCurve(
-    # Lifted blacks, rolled highlights
-    red_points=[(0, 25), (128, 135), (255, 240)],
-    green_points=[(0, 20), (128, 130), (255, 235)],
-    blue_points=[(0, 15), (128, 120), (255, 225)],
-)
-
-adjustments = ColorAdjustments(
-    contrast=-10,      # Reduce contrast
-    saturation=-25,    # Heavy desaturation
-    temperature=20,    # Strong warm tone
-    fade=25,           # Strong fade
-    grain=40,          # Heavy grain
-    selective_color=selective,
-)
-
 grader = ColorGrader(
-    adjustments=adjustments,
-    tone_curve=tone_curve,
+    preset=ColorPreset.SNOW_MOUNTAIN,
+    input_colorspace="dlog_m",
+    auto_wb=True,
+    haze_strength=0.25,
+    gnd_sky_strength=0.5,
+    vignette_strength=0.2,
+    denoise_strength=0.3,
+    intensity=0.8,
 )
 ```
 
-### Example 3: Teal and Orange Blockbuster
+### Example 5: Cyberpunk Night City
 
 ```python
-# Popular Hollywood color grade
-selective = SelectiveColorAdjustments(
-    orange_sat=35,
-    orange_hue=5,
-    red_sat=25,
-    yellow_sat=20,
-    cyan_sat=30,
-    cyan_hue=-5,
-    blue_sat=20,
-    blue_hue=10,
-)
-
-tone_curve = ToneCurve(
-    red_points=[(0, 0), (64, 55), (192, 200), (255, 255)],
-    green_points=[(0, 0), (64, 50), (192, 205), (255, 255)],
-    blue_points=[(0, 0), (64, 60), (192, 195), (255, 255)],
-)
-
-adjustments = ColorAdjustments(
-    contrast=18,
-    saturation=10,
-    temperature=10,
-    tint=-8,           # Slight green shift
-    shadows=8,
-    highlights=-12,
-    selective_color=selective,
-)
-
 grader = ColorGrader(
-    adjustments=adjustments,
-    tone_curve=tone_curve,
+    preset=ColorPreset.CYBERPUNK_NEON,
+    chromatic_aberration_strength=0.3,
+    halation_strength=0.4,
+    vignette_strength=0.5,
+    intensity=0.8,
 )
-```
-
-### Example 4: Natural Documentary Style
-
-```python
-# Clean, natural look with subtle enhancements
-selective = SelectiveColorAdjustments(
-    green_sat=15,
-    green_hue=-5,
-    blue_sat=10,
-    orange_sat=5,     # Subtle skin tone enhancement
-)
-
-tone_curve = ToneCurve(
-    # Gentle S-curve
-    red_points=[(0, 0), (64, 60), (192, 200), (255, 255)],
-    green_points=[(0, 0), (64, 60), (192, 200), (255, 255)],
-    blue_points=[(0, 0), (64, 60), (192, 200), (255, 255)],
-)
-
-adjustments = ColorAdjustments(
-    brightness=2,
-    contrast=8,
-    saturation=5,
-    shadows=10,
-    highlights=-5,
-    selective_color=selective,
-)
-
-grader = ColorGrader(
-    adjustments=adjustments,
-    tone_curve=tone_curve,
-)
-```
-
-### Example 5: High-Performance Batch Processing
-
-```python
-import cv2
-from pathlib import Path
-
-# Setup for fast batch processing
-grader = ColorGrader(
-    preset=ColorPreset.DRONE_AERIAL,
-    use_gpu=True,
-)
-
-input_dir = Path('input_videos')
-output_dir = Path('output_videos')
-
-for video_path in input_dir.glob('*.mp4'):
-    print(f"Processing {video_path.name}")
-
-    # Use preview to verify settings
-    cap = cv2.VideoCapture(str(video_path))
-    ret, first_frame = cap.read()
-    cap.release()
-
-    preview = grader.grade_frame_preview(first_frame, scale=0.25)
-    cv2.imwrite(f'preview_{video_path.stem}.jpg', preview)
-
-    # Process full video
-    output_path = output_dir / f'graded_{video_path.name}'
-    grader.grade_video(video_path, output_path)
 ```
 
 ---
@@ -642,6 +659,15 @@ Main color grading class with all features.
 - `lut_path: Path` - Path to .cube LUT file
 - `tone_curve: ToneCurve` - Tone curve adjustments
 - `use_gpu: bool` - Enable GPU acceleration (default: False)
+- `intensity: float` - Scale all adjustments (0.0-1.0, default: 1.0)
+- `vignette_strength: float` - Radial edge darkening (0.0-1.0, default: 0.0)
+- `halation_strength: float` - Warm highlight bloom (0.0-1.0, default: 0.0)
+- `chromatic_aberration_strength: float` - RGB edge fringing (0.0-1.0, default: 0.0)
+- `input_colorspace: str` - Input colorspace: `rec709`, `dlog`, `dlog_m`, `slog3` (default: `rec709`)
+- `auto_wb: bool` - Enable gray world auto white balance (default: False)
+- `denoise_strength: float` - Spatial denoising (0.0-1.0, default: 0.0)
+- `haze_strength: float` - Atmospheric haze overlay (0.0-1.0, default: 0.0)
+- `gnd_sky_strength: float` - Graduated ND sky darkening (0.0-1.0, default: 0.0)
 
 #### `ColorAdjustments`
 Color adjustment parameters dataclass.
@@ -682,36 +708,27 @@ Tone curve definition dataclass.
 #### `ColorGrader.grade_frame(frame, frame_index=None)`
 Apply color grading to a single frame.
 
-**Parameters:**
 - `frame: np.ndarray` - Input BGR frame
-- `frame_index: int` - Optional frame index for temporal effects
-
-**Returns:** `np.ndarray` - Graded BGR frame
+- `frame_index: int` - Optional frame index for temporal effects (grain)
+- Returns: `np.ndarray` - Graded BGR frame
 
 #### `ColorGrader.grade_frame_preview(frame, scale=0.25)`
 Apply color grading at reduced resolution.
 
-**Parameters:**
-- `frame: np.ndarray` - Input BGR frame
-- `scale: float` - Scale factor (default: 0.25)
+#### `ColorGrader.grade_video(input_path, output_path, progress_callback=None)`
+Apply color grading to an entire video file.
 
-**Returns:** `np.ndarray` - Graded BGR frame at reduced resolution
+#### `ColorGrader.set_reference_frame(frame)`
+Set reference frame for auto color matching.
+
+#### `ColorGrader.detect_log_footage(video_path)` *(static)*
+Detect if footage is log-encoded. Returns `"dlog"` or `"rec709"`.
 
 #### `ColorGrader.load_lut(lut_path)`
-Load a .cube LUT file.
-
-**Parameters:**
-- `lut_path: Path` - Path to .cube file
-
-**Returns:** `np.ndarray` - 3D LUT array
+Load a .cube LUT file. Returns 3D LUT array.
 
 #### `ColorGrader.apply_curve(frame)`
-Apply tone curve to frame.
-
-**Parameters:**
-- `frame: np.ndarray` - Input BGR frame (float32)
-
-**Returns:** `np.ndarray` - Frame with curve applied
+Apply tone curve to frame (float32 BGR input).
 
 ---
 
@@ -722,7 +739,9 @@ Apply tone curve to frame.
 3. **Load LUTs once** and reuse the grader instance
 4. **Minimize selective color adjustments** for better performance
 5. **Reduce grain amount** if processing time is critical
-6. **Process in batches** when handling multiple videos
+6. **D-Log normalization** adds minimal overhead (single-pass per frame)
+7. **Denoise** is the most expensive operation - use only when needed
+8. **Auto color match** requires a reference frame set before grading
 
 ## Troubleshooting
 
@@ -731,21 +750,20 @@ Apply tone curve to frame.
 - Check LUT_3D_SIZE is specified
 - Ensure correct number of entries (size^3)
 
+### D-Log Footage Still Looks Flat
+- Verify `--input-colorspace` matches your camera's log mode
+- Use `auto` to let drone-reel detect the colorspace
+- Combine with a preset for creative grading after normalization
+
+### Colors Inconsistent Across Clips
+- Use `--auto-color-match` to normalize all clips to the first
+- Combine with `--auto-wb` for additional correction
+- Check that clips were shot in the same colorspace
+
 ### GPU Not Working
 - Verify OpenCV has CUDA support: `cv2.cuda.getCudaEnabledDeviceCount()`
 - Install opencv-contrib-python with CUDA
 - Update GPU drivers
-
-### Colors Look Wrong
-- Check color space (should be BGR for OpenCV)
-- Verify adjustment ranges (-100 to 100, etc.)
-- Review selective color hue ranges
-
-### Performance Issues
-- Use preview mode for iteration
-- Reduce frame resolution
-- Disable grain for faster processing
-- Use simpler tone curves (fewer control points)
 
 ---
 
@@ -755,10 +773,4 @@ Apply tone curve to frame.
 - [Color Grading Theory](https://en.wikipedia.org/wiki/Color_grading)
 - [LAB Color Space](https://en.wikipedia.org/wiki/CIELAB_color_space)
 - [Film Grain Characteristics](https://en.wikipedia.org/wiki/Film_grain)
-
----
-
-## Credits
-
-Enhanced ColorGrader implementation by the drone-reel team.
-Built with OpenCV, NumPy, and SciPy.
+- [DJI D-Log Color Science](https://store.dji.com/guides/dji-d-log/)
