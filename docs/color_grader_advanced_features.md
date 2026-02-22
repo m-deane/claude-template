@@ -5,7 +5,7 @@ Comprehensive guide to the enhanced ColorGrader functionality in drone-reel.
 ## Table of Contents
 
 1. [Color Science Pipeline](#color-science-pipeline)
-2. [D-Log / S-Log3 Normalization](#d-log--s-log3-normalization)
+2. [D-Log / S-Log3 Normalization](#d-log-s-log3-normalization)
 3. [Auto White Balance](#auto-white-balance)
 4. [Auto Color Match](#auto-color-match)
 5. [Noise Reduction](#noise-reduction)
