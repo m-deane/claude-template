@@ -2262,3 +2262,132 @@ class TestPhase3Transitions:
         )
         trans_type, _ = processor.select_motion_matched_transition(scene1, scene2)
         assert trans_type == TransitionType.PARALLAX_LEFT
+
+
+class TestWriteClip:
+    """Tests for VideoProcessor.write_clip() method."""
+
+    @pytest.fixture
+    def processor(self):
+        """Create a VideoProcessor with test settings."""
+        with patch.object(VideoProcessor, '_detect_best_encoder', return_value='libx264'):
+            return VideoProcessor(
+                output_fps=30,
+                video_bitrate="5M",
+                audio_bitrate="128k",
+            )
+
+    def test_write_clip_creates_output_file(self, processor, tmp_path):
+        """Test that write_clip creates the output file."""
+        # Create a minimal synthetic clip
+        mock_clip = MagicMock()
+        mock_clip.duration = 2.0
+        mock_clip.fps = 30
+
+        output_path = tmp_path / "test_clip.mp4"
+        mock_clip.write_videofile = MagicMock()
+
+        result = processor.write_clip(mock_clip, output_path)
+
+        assert result == output_path
+        mock_clip.write_videofile.assert_called_once()
+
+    def test_write_clip_creates_parent_directories(self, processor, tmp_path):
+        """Test that write_clip creates parent directories if missing."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "sub" / "dir" / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        assert output_path.parent.exists()
+
+    def test_write_clip_uses_bt709_colorspace(self, processor, tmp_path):
+        """Test that write_clip includes BT.709 color space params."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        ffmpeg_params = call_kwargs.kwargs.get("ffmpeg_params", [])
+        assert "-colorspace" in ffmpeg_params
+        assert "bt709" in ffmpeg_params
+
+    def test_write_clip_uses_faststart(self, processor, tmp_path):
+        """Test that write_clip includes faststart for streaming."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        ffmpeg_params = call_kwargs.kwargs.get("ffmpeg_params", [])
+        assert "+faststart" in ffmpeg_params
+
+    def test_write_clip_uses_aac_audio(self, processor, tmp_path):
+        """Test that write_clip uses AAC audio codec."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        assert call_kwargs.kwargs.get("audio_codec") == "aac"
+
+    def test_write_clip_uses_configured_bitrate(self, processor, tmp_path):
+        """Test that write_clip uses the configured bitrate."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        assert call_kwargs.kwargs.get("bitrate") == "5M"
+
+    def test_write_clip_includes_vbv_caps(self, processor, tmp_path):
+        """Test that write_clip adds maxrate/bufsize VBV params."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        ffmpeg_params = call_kwargs.kwargs.get("ffmpeg_params", [])
+        assert "-maxrate" in ffmpeg_params
+        assert "-bufsize" in ffmpeg_params
+
+    def test_write_clip_raises_on_encoding_failure(self, processor, tmp_path):
+        """Test that write_clip wraps encoding errors in RuntimeError."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile.side_effect = Exception("FFmpeg error")
+
+        output_path = tmp_path / "clip.mp4"
+        with pytest.raises(RuntimeError, match="Failed to write clip"):
+            processor.write_clip(mock_clip, output_path)
+
+    def test_write_clip_uses_configured_fps(self, processor, tmp_path):
+        """Test that write_clip uses the processor's configured FPS."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        call_kwargs = mock_clip.write_videofile.call_args
+        assert call_kwargs.kwargs.get("fps") == 30
+
+    def test_write_clip_does_not_close_clip(self, processor, tmp_path):
+        """Test that write_clip does NOT close the clip (caller responsibility)."""
+        mock_clip = MagicMock()
+        mock_clip.write_videofile = MagicMock()
+
+        output_path = tmp_path / "clip.mp4"
+        processor.write_clip(mock_clip, output_path)
+
+        mock_clip.close.assert_not_called()

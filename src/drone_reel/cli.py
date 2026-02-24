@@ -1281,6 +1281,478 @@ def analyze(input_path: Path):
     console.print(f"\n[bold]Total scenes:[/bold] {len(scenes)}")
 
 
+@main.command(name="extract-clips")
+@click.option(
+    "--input", "-i",
+    "input_path",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Video file or directory of videos to extract clips from",
+)
+@click.option(
+    "--output-dir", "-o",
+    "output_dir",
+    type=click.Path(path_type=Path),
+    default="./clips",
+    help="Directory for extracted clip files",
+)
+@click.option(
+    "--count", "-n",
+    type=click.IntRange(1, 100),
+    default=10,
+    help="Maximum number of clips to extract (1-100)",
+)
+@click.option(
+    "--min-score",
+    type=click.FloatRange(0, 100),
+    default=30.0,
+    help="Minimum scene score threshold (0-100)",
+)
+@click.option(
+    "--min-duration",
+    type=click.FloatRange(0.5, 300),
+    default=2.0,
+    help="Minimum clip duration in seconds",
+)
+@click.option(
+    "--max-duration",
+    type=click.FloatRange(1.0, 300),
+    default=10.0,
+    help="Maximum clip duration in seconds",
+)
+@click.option(
+    "--quality", "-q",
+    type=click.Choice(["low", "medium", "high", "ultra"]),
+    default="high",
+    help="Output quality (low=5M, medium=10M, high=15M, ultra=25M bitrate)",
+)
+@click.option(
+    "--resolution",
+    type=click.Choice(["source", "hd", "2k", "4k"]),
+    default="source",
+    help="Output resolution (source=keep original)",
+)
+@click.option(
+    "--sort", "-s",
+    type=click.Choice(["score", "chronological", "duration"]),
+    default="score",
+    help="Output ordering / naming order",
+)
+@click.option(
+    "--no-filter",
+    is_flag=True,
+    default=False,
+    help="Skip quality filtering (extract all detected scenes)",
+)
+@click.option(
+    "--enhanced",
+    is_flag=True,
+    default=False,
+    help="Run enhanced analysis (subject detection, hook potential) for better ranking. Slower.",
+)
+@click.option(
+    "--json", "write_json",
+    is_flag=True,
+    default=False,
+    help="Write a sidecar manifest.json with scene metadata",
+)
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    default=False,
+    help="Overwrite existing clips in output directory",
+)
+def extract_clips(
+    input_path,
+    output_dir,
+    count,
+    min_score,
+    min_duration,
+    max_duration,
+    quality,
+    resolution,
+    sort,
+    no_filter,
+    enhanced,
+    write_json,
+    overwrite,
+):
+    """Extract top scenes from a video file as individual clips."""
+    import gc
+    import json as json_module
+
+    from drone_reel.utils.file_utils import VIDEO_EXTENSIONS, is_video_file
+    from drone_reel.utils.resource_guard import preflight_check
+    from drone_reel.core.video_processor import ClipSegment
+
+    # --- Validate parameters ---
+    if min_duration >= max_duration:
+        console.print(
+            f"[red]Error:[/red] --min-duration ({min_duration}s) must be less than "
+            f"--max-duration ({max_duration}s)"
+        )
+        raise SystemExit(1)
+
+    # --- Find video files ---
+    if input_path.is_file():
+        if not is_video_file(input_path):
+            formats = ", ".join(sorted(VIDEO_EXTENSIONS))
+            console.print(f"[red]Error:[/red] Not a supported video file: {input_path.name}")
+            console.print(f"[dim]Supported formats: {formats}[/dim]")
+            raise SystemExit(1)
+        video_files = [input_path]
+    else:
+        video_files = find_video_files(input_path)
+
+    if not video_files:
+        formats = ", ".join(sorted(VIDEO_EXTENSIONS))
+        console.print(f"[red]Error:[/red] No video files found in input path")
+        console.print(f"[dim]Supported formats: {formats}[/dim]")
+        raise SystemExit(1)
+
+    # --- Verify output directory is writable ---
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        try:
+            output_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            console.print(f"[red]Error:[/red] Cannot create output directory: {e}")
+            raise SystemExit(1)
+    elif not os.access(output_dir, os.W_OK):
+        console.print(f"[red]Error:[/red] Output directory is not writable: {output_dir}")
+        raise SystemExit(1)
+
+    # --- Quality and resolution presets ---
+    quality_presets = {
+        "low": ("5M", "128k"),
+        "medium": ("10M", "192k"),
+        "high": ("15M", "192k"),
+        "ultra": ("25M", "320k"),
+    }
+    video_bitrate, audio_bitrate = quality_presets.get(quality, ("15M", "192k"))
+
+    resolution_heights = {"hd": 1080, "2k": 1440, "4k": 2160}
+    resolution_height = resolution_heights.get(resolution, 1080)
+
+    # Scale bitrate for higher resolutions
+    if resolution == "4k":
+        bitrate_map = {"low": "15M", "medium": "25M", "high": "40M", "ultra": "80M"}
+        video_bitrate = bitrate_map.get(quality, "40M")
+    elif resolution == "2k":
+        bitrate_map = {"low": "8M", "medium": "15M", "high": "25M", "ultra": "45M"}
+        video_bitrate = bitrate_map.get(quality, "25M")
+
+    # --- Resource preflight check ---
+    issues = preflight_check(
+        output_path=output_dir / "clip_001.mp4",
+        resolution_height=resolution_height,
+        fps=30,
+        clip_count=count,
+        stabilize=False,
+        video_bitrate=video_bitrate,
+        duration=count * 5.0,
+    )
+
+    for issue in issues:
+        level = issue["level"]
+        msg = issue["message"]
+        if level == "error":
+            console.print(f"[red]Error:[/red] {msg}")
+        else:
+            console.print(f"[yellow]Warning:[/yellow] {msg}")
+
+    if any(issue["level"] == "error" for issue in issues):
+        raise SystemExit(1)
+
+    # --- Header ---
+    file_label = input_path.name if input_path.is_file() else f"{len(video_files)} files"
+    console.print(Panel.fit(
+        f"[bold blue]Clip Extractor[/bold blue]\n"
+        f"Source: {file_label} | Top {count} clips | {quality} quality",
+        border_style="blue",
+    ))
+
+    # --- Scene detection ---
+    scene_detector = SceneDetector()
+    all_scenes = []
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Detecting scenes...", total=len(video_files))
+
+        for video_path in video_files:
+            try:
+                if enhanced:
+                    scenes = scene_detector.detect_scenes_enhanced(video_path)
+                else:
+                    scenes = scene_detector.detect_scenes(video_path)
+                all_scenes.extend(scenes)
+            except Exception as e:
+                console.print(
+                    f"  [yellow]Warning:[/yellow] Skipping {video_path.name}: {e}"
+                )
+            progress.advance(task)
+
+    if not all_scenes:
+        console.print(
+            "\n[yellow]Warning:[/yellow] Detected 0 scenes."
+        )
+        console.print(
+            "[dim]Tip: The video may have no distinct scene changes. "
+            "Try a lower scene threshold or use a video editing tool "
+            "to manually mark segments.[/dim]"
+        )
+        raise SystemExit(1)
+
+    console.print(f"  Detected {len(all_scenes)} scenes")
+
+    # --- Motion analysis (for filtering) ---
+    analysis = analyze_scenes_batch(all_scenes, include_sharpness=True)
+
+    motion_map = {id(s): analysis[id(s)]["motion_energy"] for s in all_scenes}
+    brightness_map = {id(s): analysis[id(s)]["brightness"] for s in all_scenes}
+    shake_map = {id(s): analysis[id(s)]["shake_score"] for s in all_scenes}
+
+    # --- Filtering ---
+    if no_filter:
+        candidates = list(all_scenes)
+        scenes_filtered = 0
+        dark_filtered = 0
+        shaky_filtered = 0
+    else:
+        sf = SceneFilter()
+        result = sf.filter_scenes(all_scenes, motion_map, brightness_map, shake_map)
+        candidates = result.all_passing
+        scenes_filtered = result.dark_scenes_filtered + result.shaky_scenes_filtered
+        dark_filtered = result.dark_scenes_filtered
+        shaky_filtered = result.shaky_scenes_filtered
+
+    # --- Apply min-score threshold ---
+    candidates = [s for s in candidates if s.score >= min_score]
+
+    # --- Apply duration constraints ---
+    candidates = [s for s in candidates if s.duration >= min_duration]
+
+    duration_too_short = len(all_scenes) - len(candidates) - scenes_filtered
+
+    # --- Report filtering ---
+    filter_details = []
+    if dark_filtered > 0:
+        filter_details.append(f"{dark_filtered} too dark")
+    if shaky_filtered > 0:
+        filter_details.append(f"{shaky_filtered} too shaky")
+    if duration_too_short > 0:
+        filter_details.append(f"{duration_too_short} too short/low score")
+
+    if filter_details:
+        console.print(
+            f"  Passed filter: {len(candidates)} scenes "
+            f"({sum([dark_filtered, shaky_filtered, duration_too_short])} filtered: "
+            f"{', '.join(filter_details)})"
+        )
+    else:
+        console.print(f"  Passed filter: {len(candidates)} scenes")
+
+    # --- Check for empty candidates ---
+    if not candidates:
+        console.print(
+            f"\n[yellow]Warning:[/yellow] No scenes passed quality filters."
+        )
+        console.print(
+            f"[dim]Tip: Try --no-filter to extract all scenes, "
+            f"or lower --min-score (currently {min_score})[/dim]"
+        )
+        raise SystemExit(1)
+
+    # --- Sort ---
+    if sort == "score":
+        candidates.sort(key=lambda s: s.score, reverse=True)
+    elif sort == "chronological":
+        candidates.sort(key=lambda s: (str(s.source_file), s.start_time))
+    elif sort == "duration":
+        candidates.sort(key=lambda s: s.duration, reverse=True)
+
+    # --- Limit to count ---
+    selected = candidates[:count]
+
+    # --- Extract and write clips ---
+    processor = VideoProcessor(
+        output_fps=30,
+        video_bitrate=video_bitrate,
+        audio_bitrate=audio_bitrate,
+    )
+
+    extracted_count = 0
+    skipped_count = 0
+    failed_count = 0
+    total_duration = 0.0
+    total_size_bytes = 0
+    manifest_clips = []
+
+    console.print()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("{task.completed}/{task.total}"),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Extracting clips...", total=len(selected))
+
+        for i, scene in enumerate(selected):
+            clip_duration = min(scene.duration, max_duration)
+            score_int = int(scene.score)
+            filename = f"clip_{i + 1:03d}_s{score_int}.mp4"
+            output_file = output_dir / filename
+
+            # Check for existing file
+            if output_file.exists() and not overwrite:
+                console.print(
+                    f"  [yellow]Skipping[/yellow] {filename} (already exists)"
+                )
+                skipped_count += 1
+                progress.advance(task)
+                continue
+
+            segment = ClipSegment(
+                scene=scene,
+                start_offset=0.0,
+                duration=clip_duration,
+            )
+
+            clip = None
+            try:
+                clip = processor.extract_clip(segment)
+
+                # Resize if resolution is not 'source'
+                if resolution != "source":
+                    target_height = resolution_heights[resolution]
+                    # Calculate width maintaining aspect ratio
+                    aspect = clip.w / clip.h
+                    target_width = int(target_height * aspect)
+                    # Ensure even dimensions for codec compatibility
+                    target_width = target_width + (target_width % 2)
+                    target_height = target_height + (target_height % 2)
+                    clip = clip.resized((target_width, target_height))
+
+                processor.write_clip(clip, output_file)
+
+                file_size = output_file.stat().st_size
+                total_size_bytes += file_size
+                total_duration += clip_duration
+                extracted_count += 1
+
+                console.print(
+                    f"  {i + 1:>3}/{len(selected)}  {filename}   "
+                    f"{format_duration(scene.start_time)}-"
+                    f"{format_duration(scene.end_time)}  "
+                    f"{clip_duration:.1f}s  score: {score_int}"
+                )
+
+                # Build manifest entry
+                manifest_entry = {
+                    "filename": filename,
+                    "source_file": str(scene.source_file.name),
+                    "start_time": round(scene.start_time, 2),
+                    "end_time": round(scene.end_time, 2),
+                    "duration": round(clip_duration, 2),
+                    "score": round(scene.score, 1),
+                }
+                # Add enhanced fields if available
+                if hasattr(scene, "motion_energy"):
+                    manifest_entry["motion_energy"] = round(scene.motion_energy, 1)
+                if hasattr(scene, "motion_type"):
+                    manifest_entry["motion_type"] = scene.motion_type.name
+                if hasattr(scene, "hook_tier"):
+                    manifest_entry["hook_tier"] = scene.hook_tier.name
+                if hasattr(scene, "is_golden_hour"):
+                    manifest_entry["is_golden_hour"] = scene.is_golden_hour
+                manifest_clips.append(manifest_entry)
+
+            except Exception as e:
+                console.print(
+                    f"  [red]Failed[/red] {filename}: {e}"
+                )
+                failed_count += 1
+            finally:
+                if clip is not None:
+                    try:
+                        if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                            clip._source_clip_ref.close()
+                        clip.close()
+                    except Exception:
+                        pass
+                gc.collect()
+
+            progress.advance(task)
+
+    # --- Summary ---
+    total_size_mb = total_size_bytes / (1024 * 1024)
+
+    if extracted_count == 0 and skipped_count > 0:
+        console.print(
+            f"\n  All {skipped_count} clips already exist in {output_dir}/"
+        )
+        console.print("  Use --overwrite to replace existing files.")
+    elif failed_count > 0:
+        console.print(
+            f"\n  Extracted {extracted_count} of {len(selected)} clips "
+            f"({failed_count} failed). Check disk space."
+        )
+    else:
+        console.print(
+            f"\n  Extracted {extracted_count} clips to {output_dir}/ "
+            f"(total: {total_duration:.1f}s, {total_size_mb:.1f} MB)"
+        )
+
+    # --- Write JSON manifest ---
+    if write_json and manifest_clips:
+        manifest = {
+            "version": 1,
+            "source_files": [
+                {
+                    "path": str(vf.resolve()),
+                    "name": vf.name,
+                }
+                for vf in video_files
+            ],
+            "extraction_params": {
+                "count": count,
+                "min_score": min_score,
+                "min_duration": min_duration,
+                "max_duration": max_duration,
+                "quality": quality,
+                "resolution": resolution,
+                "sort": sort,
+                "enhanced": enhanced,
+                "filtered": not no_filter,
+            },
+            "clips": manifest_clips,
+            "summary": {
+                "total_clips": extracted_count,
+                "total_duration": round(total_duration, 1),
+                "total_size_mb": round(total_size_mb, 1),
+                "avg_score": round(
+                    sum(c["score"] for c in manifest_clips) / len(manifest_clips), 1
+                ) if manifest_clips else 0,
+                "scenes_detected": len(all_scenes),
+                "scenes_filtered": scenes_filtered,
+            },
+        }
+
+        manifest_path = output_dir / "manifest.json"
+        with open(manifest_path, "w") as f:
+            json_module.dump(manifest, f, indent=2)
+        console.print(f"  Manifest written to {manifest_path}")
+
+
 @main.command()
 @click.option(
     "--input", "-i",

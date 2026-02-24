@@ -258,6 +258,71 @@ class VideoProcessor:
             source_clip.close()
             raise
 
+    def write_clip(
+        self,
+        clip: VideoFileClip,
+        output_path: Path,
+    ) -> Path:
+        """
+        Write a single clip to disk with configured encoding parameters.
+
+        Uses the same BT.709 color space, faststart, and VBV bitrate enforcement
+        as the main stitch_clips pipeline.
+
+        Args:
+            clip: MoviePy VideoFileClip to write (from extract_clip()).
+            output_path: Destination .mp4 file path. Parent directories
+                are created automatically.
+
+        Returns:
+            The output_path after successful write.
+
+        Raises:
+            RuntimeError: If encoding fails.
+        """
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Build ffmpeg_params — same block as stitch_clips (lines 483-503)
+        ffmpeg_params = [
+            "-pix_fmt", "yuv420p",
+            "-colorspace", "bt709",
+            "-color_primaries", "bt709",
+            "-color_trc", "bt709",
+            "-movflags", "+faststart",
+        ]
+
+        # Add maxrate/bufsize for VBV bitrate enforcement
+        if self.video_bitrate:
+            numeric_str = self.video_bitrate.rstrip("MmKk")
+            try:
+                numeric_val = float(numeric_str)
+                unit = self.video_bitrate[len(numeric_str):].upper()
+                maxrate_val = numeric_val * 1.5
+                bufsize_val = numeric_val * 2
+                maxrate_str = f"{maxrate_val:.0f}{unit}"
+                bufsize_str = f"{bufsize_val:.0f}{unit}"
+                ffmpeg_params += ["-maxrate", maxrate_str, "-bufsize", bufsize_str]
+            except (ValueError, IndexError):
+                pass
+
+        try:
+            clip.write_videofile(
+                str(output_path),
+                fps=self.output_fps,
+                codec=self.output_codec,
+                audio_codec="aac",
+                preset=self.preset,
+                threads=self.threads,
+                bitrate=self.video_bitrate,
+                audio_bitrate=self.audio_bitrate,
+                ffmpeg_params=ffmpeg_params,
+                logger=None,
+            )
+        except Exception as e:
+            raise RuntimeError(f"Failed to write clip to {output_path}: {e}") from e
+
+        return output_path
+
     def _extract_clip_parallel(
         self,
         segment: ClipSegment,
