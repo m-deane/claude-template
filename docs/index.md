@@ -15,6 +15,7 @@ AI-powered CLI tool to create Instagram-style vertical reels from drone footage.
 - **Speed ramping** with slow-motion at scenic moments
 - **Text overlays** with animated lower thirds
 - **Audio ducking** with automatic intro/outro volume fades
+- **Clip extraction** from long raw footage with quality-ranked scene selection
 - **Platform export presets** for Instagram, TikTok, YouTube Shorts
 
 ## Quick Start
@@ -36,6 +37,10 @@ drone-reel create --input ./clips/ --resolution 4k --quality ultra --stabilize-a
 
 # D-Log footage with auto white balance and aerial haze
 drone-reel create --input ./clips/ --input-colorspace dlog_m --auto-wb --haze 0.3 --color drone_aerial
+
+# Extract best clips from a long raw video, then build a reel
+drone-reel extract-clips -i raw_footage.mp4 -o ./clips -n 15
+drone-reel create -i ./clips/ -m music.mp3 -o reel.mp4
 ```
 
 ## Documentation

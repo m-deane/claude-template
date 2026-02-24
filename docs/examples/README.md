@@ -43,6 +43,81 @@ drone-reel create -i ./clips/ -m track.mp3 -d 45 --preview
 
 ---
 
+## Clip Extraction
+
+Long raw drone recordings often contain hours of footage with only a handful of
+great moments. The `extract-clips` command detects scene boundaries, scores each
+scene on sharpness, color, motion, and hook potential, then exports the top-ranked
+scenes as individual clip files. These clips feed directly into the `create`
+pipeline.
+
+---
+
+### Extract the Best Scenes (Beginner)
+
+One command to pull the 10 best scenes from a raw video, then build a reel
+from those clips.
+
+```bash
+# Extract the 10 best scenes from a raw drone video
+drone-reel extract-clips -i DJI_0001.mp4 -o ./clips
+
+# Then create a reel from those clips
+drone-reel create -i ./clips/ -m music.mp3 -o reel.mp4 --duration 30
+```
+
+---
+
+### Full Extract Pipeline with Manifest (Intermediate)
+
+Extract more clips with enhanced scoring, a minimum quality threshold, and a
+JSON manifest that records each scene's metadata for inspection.
+
+```bash
+# Extract 20 clips with enhanced scoring and JSON manifest
+drone-reel extract-clips -i ./raw_shoots/ \
+  -o ./clips \
+  -n 20 \
+  --enhanced \
+  --min-score 40 \
+  --json \
+  --quality high
+
+# The manifest.json records scene scores for inspection
+cat clips/manifest.json | python -m json.tool | head -30
+
+# Build a reel from the best clips
+drone-reel create -i ./clips/ -m track.mp3 -o reel.mp4 \
+  --color drone_aerial \
+  --beat-mode downbeat \
+  --duration 30
+```
+
+---
+
+### Python API: Extract and Build (Advanced)
+
+Use `SceneDetector` to detect scenes and `VideoProcessor.write_clip()` to
+export individual clips programmatically.
+
+```python
+from pathlib import Path
+from drone_reel import SceneDetector, VideoProcessor
+
+detector = SceneDetector(threshold=25.0)
+scenes = detector.detect_scenes(Path("./raw_footage.mp4"))
+scenes.sort(key=lambda s: s.score, reverse=True)
+
+processor = VideoProcessor(output_fps=30)
+for i, scene in enumerate(scenes[:10]):
+    processor.write_clip(scene, Path(f"./clips/clip_{i:02d}.mp4"))
+```
+
+See [`extract_and_reel.py`](extract_and_reel.py) for a complete end-to-end
+script that extracts, filters, and builds a reel in one pass.
+
+---
+
 ## Beginner
 
 No Python required. These examples use the CLI only.
@@ -1455,6 +1530,7 @@ cut_points = beat_sync.get_cut_points(beat_info, target_duration=45.0)
 
 | File | Level | Description |
 |------|-------|-------------|
+| [`extract_and_reel.py`](extract_and_reel.py) | Intermediate | Extract best clips from raw footage, then build a reel |
 | [`basic_reel.py`](basic_reel.py) | Beginner | Simple reel without music |
 | [`beat_synced_reel.py`](beat_synced_reel.py) | Intermediate | Beat-synced with energy-mapped transitions |
 | [`custom_workflow.py`](custom_workflow.py) | Intermediate | Full manual control: filter, sequence, custom grade |

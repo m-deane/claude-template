@@ -222,6 +222,23 @@ segments = processor.create_segments_from_scenes(
 
 Extract a single clip segment from its source video.
 
+**`write_clip(clip: VideoFileClip, output_path: Path) -> Path`**
+
+Write a single clip to disk using the same BT.709 color space, faststart, and VBV bitrate parameters as `stitch_clips()`. Parent directories are created automatically. Caller is responsible for closing the clip after writing.
+
+```python
+segment = segments[0]
+clip = processor.extract_clip(segment, target_size=(1080, 1920))
+try:
+    processor.write_clip(clip, Path("scene_01.mp4"))
+finally:
+    clip.close()
+```
+
+- **Parameters**: `clip` (VideoFileClip) — clip from `extract_clip()`; `output_path` (Path) — destination `.mp4` file path
+- **Returns**: `Path` — the output path after successful write
+- **Raises**: `RuntimeError` if encoding fails
+
 **`get_video_info(video_path: Path) -> dict`**
 
 Get information about a video file (duration, fps, size).

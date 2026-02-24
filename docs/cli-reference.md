@@ -152,6 +152,55 @@ drone-reel create -i ./clips/ --lut my_grade.cube --chromatic-aberration 0.3
 
 ---
 
+## extract-clips
+
+Extract top-scoring scenes from a video file as individual clips.
+
+```bash
+drone-reel extract-clips [OPTIONS]
+```
+
+### Options
+
+| Option | Short | Type | Default | Description |
+|--------|-------|------|---------|-------------|
+| `--input PATH` | `-i` | path | required | Video file or directory of videos to extract clips from |
+| `--output-dir PATH` | `-o` | path | `./clips` | Directory for extracted clip files |
+| `--count INT` | `-n` | int (1-100) | `10` | Maximum number of clips to extract |
+| `--min-score FLOAT` | | float (0-100) | `30.0` | Minimum scene score threshold |
+| `--min-duration FLOAT` | | float (0.5-300) | `2.0` | Minimum clip duration in seconds |
+| `--max-duration FLOAT` | | float (1.0-300) | `10.0` | Maximum clip duration in seconds |
+| `--quality CHOICE` | `-q` | choice | `high` | Output quality: `low` (5M), `medium` (10M), `high` (15M), `ultra` (25M) bitrate |
+| `--resolution CHOICE` | | choice | `source` | Output resolution: `source`, `hd` (1080p), `2k` (1440p), `4k` (2160p) |
+| `--sort CHOICE` | `-s` | choice | `score` | Output order: `score` (best first), `chronological`, `duration` (longest first) |
+| `--no-filter` | | flag | off | Skip quality filtering -- extract all detected scenes |
+| `--enhanced` | | flag | off | Run enhanced analysis (subject detection, hook potential) for better ranking. Slower. |
+| `--json` | | flag | off | Write a sidecar `manifest.json` with scene metadata and extraction params |
+| `--overwrite` | | flag | off | Overwrite existing clips in output directory |
+
+### Output Format
+
+Extracted clips are named with a zero-padded index and the scene score: `clip_NNN_sSCORE.mp4` (e.g. `clip_001_s85.mp4`). When `--sort score` (the default), clips are numbered in descending score order so `clip_001` is always the highest-scoring scene.
+
+### Examples
+
+```bash
+# Basic: extract top 10 clips from a single file
+drone-reel extract-clips -i drone_footage.mp4 -o ./clips
+
+# Extract 20 clips, enhanced scoring, with JSON manifest
+drone-reel extract-clips -i footage.mp4 -o ./clips -n 20 --enhanced --json
+
+# Extract from a whole directory, keep original resolution
+drone-reel extract-clips -i ./raw_shoots/ -o ./clips -n 30 --resolution source
+
+# Extract then create a reel from the clips
+drone-reel extract-clips -i footage.mp4 -o ./clips -n 15 --json
+drone-reel create -i ./clips/ -m music.mp3 -o reel.mp4 --duration 30
+```
+
+---
+
 ## analyze
 
 Analyze a video file and display detected scenes.
