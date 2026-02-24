@@ -4,6 +4,6 @@
 3. update docs to reflect the new features - DONE
 4. cut longer clips into interesting smaller clips - DONE
 5. test extract smaller clips - DONE (demo verified end-to-end with synthetic video)
-6. refresh and relaunch the docs
-7. check for mock implementations and workarounds
+6. refresh and relaunch the docs - DONE
+7. check for mock implementations and workarounds - DONE (none found, codebase clean)
 8. full example and test suite with example drone clips - low quality
