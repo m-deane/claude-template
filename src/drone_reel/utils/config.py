@@ -3,7 +3,7 @@
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from drone_reel.core.color_grader import ColorPreset
 from drone_reel.core.reframer import AspectRatio, ReframeMode
@@ -139,7 +139,7 @@ def save_config(config: Config, config_path: Optional[Path] = None) -> Path:
     return config_path
 
 
-def merge_cli_args(config: Config, **cli_args) -> Config:
+def merge_cli_args(config: Config, **cli_args: Any) -> Config:
     """
     Merge CLI arguments into config, CLI args take precedence.
 

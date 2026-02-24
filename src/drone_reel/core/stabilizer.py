@@ -5,18 +5,23 @@ Uses OpenCV feature tracking and perspective transforms to reduce
 camera shake while preserving intentional camera movements.
 """
 
+from __future__ import annotations
+
 import cv2
 import numpy as np
-from typing import Optional, Callable
+from typing import TYPE_CHECKING, Optional, Callable
+
+if TYPE_CHECKING:
+    from moviepy import VideoClip
 
 
 def stabilize_clip(
-    clip,
+    clip: VideoClip,
     smoothing_radius: int = 30,
     border_crop: float = 0.05,
     shake_score: float = 50.0,
     progress_callback: Optional[Callable[[float], None]] = None,
-):
+) -> VideoClip:
     """
     Stabilize a MoviePy video clip using feature-based tracking.
 
@@ -235,7 +240,7 @@ def smooth_trajectory(trajectory: np.ndarray, radius: int) -> np.ndarray:
     return smoothed
 
 
-def calculate_shake_score(clip, sample_frames: int = 10) -> float:
+def calculate_shake_score(clip: VideoClip, sample_frames: int = 10) -> float:
     """
     Calculate a shake score for a video clip.
 
