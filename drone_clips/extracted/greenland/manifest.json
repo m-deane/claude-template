@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source_files": [
+    {
+      "path": "/Users/matthewdeane/Documents/Data Science/python/_projects/_p-ai-drone-video/drone_clips/greenland_summit.webm",
+      "name": "greenland_summit.webm"
+    }
+  ],
+  "extraction_params": {
+    "count": 3,
+    "min_score": 30.0,
+    "min_duration": 2.0,
+    "max_duration": 10.0,
+    "quality": "high",
+    "resolution": "source",
+    "sort": "score",
+    "enhanced": false,
+    "filtered": true
+  },
+  "clips": [
+    {
+      "filename": "clip_001_s44.mp4",
+      "source_file": "greenland_summit.webm",
+      "start_time": 40.0,
+      "end_time": 50.0,
+      "duration": 10.0,
+      "score": 44.4
+    },
+    {
+      "filename": "clip_002_s43.mp4",
+      "source_file": "greenland_summit.webm",
+      "start_time": 50.0,
+      "end_time": 60.0,
+      "duration": 10.0,
+      "score": 43.5
+    },
+    {
+      "filename": "clip_003_s42.mp4",
+      "source_file": "greenland_summit.webm",
+      "start_time": 60.0,
+      "end_time": 63.79,
+      "duration": 3.79,
+      "score": 42.6
+    }
+  ],
+  "summary": {
+    "total_clips": 3,
+    "total_duration": 23.8,
+    "total_size_mb": 21.9,
+    "avg_score": 43.5,
+    "scenes_detected": 7,
+    "scenes_filtered": 1
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source_files": [
+    {
+      "path": "/Users/matthewdeane/Documents/Data Science/python/_projects/_p-ai-drone-video/drone_clips/germia_pool.webm",
+      "name": "germia_pool.webm"
+    }
+  ],
+  "extraction_params": {
+    "count": 3,
+    "min_score": 60.0,
+    "min_duration": 2.0,
+    "max_duration": 10.0,
+    "quality": "high",
+    "resolution": "source",
+    "sort": "score",
+    "enhanced": false,
+    "filtered": true
+  },
+  "clips": [
+    {
+      "filename": "clip_001_s70.mp4",
+      "source_file": "germia_pool.webm",
+      "start_time": 60.0,
+      "end_time": 68.47,
+      "duration": 8.47,
+      "score": 70.4
+    },
+    {
+      "filename": "clip_002_s69.mp4",
+      "source_file": "germia_pool.webm",
+      "start_time": 40.0,
+      "end_time": 50.0,
+      "duration": 10.0,
+      "score": 69.0
+    },
+    {
+      "filename": "clip_003_s68.mp4",
+      "source_file": "germia_pool.webm",
+      "start_time": 50.0,
+      "end_time": 60.0,
+      "duration": 10.0,
+      "score": 68.9
+    }
+  ],
+  "summary": {
+    "total_clips": 3,
+    "total_duration": 28.5,
+    "total_size_mb": 50.9,
+    "avg_score": 69.4,
+    "scenes_detected": 7,
+    "scenes_filtered": 0
+  }
+}

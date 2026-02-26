@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source_files": [
+    {
+      "path": "/Users/matthewdeane/Documents/Data Science/python/_projects/_p-ai-drone-video/drone_clips/snowdonia.webm",
+      "name": "snowdonia.webm"
+    }
+  ],
+  "extraction_params": {
+    "count": 3,
+    "min_score": 60.0,
+    "min_duration": 2.0,
+    "max_duration": 10.0,
+    "quality": "high",
+    "resolution": "source",
+    "sort": "score",
+    "enhanced": false,
+    "filtered": true
+  },
+  "clips": [
+    {
+      "filename": "clip_001_s71.mp4",
+      "source_file": "snowdonia.webm",
+      "start_time": 62.47,
+      "end_time": 64.53,
+      "duration": 2.07,
+      "score": 71.1
+    },
+    {
+      "filename": "clip_002_s69.mp4",
+      "source_file": "snowdonia.webm",
+      "start_time": 18.67,
+      "end_time": 22.87,
+      "duration": 4.2,
+      "score": 69.4
+    },
+    {
+      "filename": "clip_003_s65.mp4",
+      "source_file": "snowdonia.webm",
+      "start_time": 58.27,
+      "end_time": 60.3,
+      "duration": 2.03,
+      "score": 65.0
+    }
+  ],
+  "summary": {
+    "total_clips": 3,
+    "total_duration": 8.3,
+    "total_size_mb": 14.8,
+    "avg_score": 68.5,
+    "scenes_detected": 18,
+    "scenes_filtered": 6
+  }
+}
