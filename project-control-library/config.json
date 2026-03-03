@@ -1,0 +1,24 @@
+{
+  "projects_root": "~/projects",
+  "managed_projects": [],
+  "port_registry": {},
+  "token_budget": {
+    "daily_limit": 1000000,
+    "alert_threshold": 0.8
+  },
+  "models": {
+    "planning": "claude-opus-4-6",
+    "implementation": "claude-sonnet-4-6",
+    "quick": "claude-haiku-4-5-20251001"
+  },
+  "housekeeping": {
+    "auto_commit": true,
+    "auto_docs": true,
+    "auto_consolidate_plans": true,
+    "clean_root_directory": true
+  },
+  "template": {
+    "base": "claude-template",
+    "auto_sync": false
+  }
+}

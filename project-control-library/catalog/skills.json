@@ -1,0 +1,67 @@
+{
+  "skills": [
+    {
+      "name": "give-me-a-prompt",
+      "project": "project-control-library",
+      "path": ".claude/skills/give-me-a-prompt/SKILL.md",
+      "description": "Generate well-structured prompts with success criteria linked to a target project's CLAUDE.md",
+      "phases": ["context-gathering", "problem-diagnosis", "plan-implementation", "generate-prompt"],
+      "model": "opus",
+      "status": "active"
+    },
+    {
+      "name": "create-demo-notebooks",
+      "project": "project-control-library",
+      "path": ".claude/skills/create-demo-notebooks/SKILL.md",
+      "description": "Generate Python Jupyter demo notebooks showcasing project features",
+      "phases": ["discovery", "generation", "output"],
+      "model": "sonnet",
+      "status": "active"
+    },
+    {
+      "name": "create-an-agent-team",
+      "project": "project-control-library",
+      "path": ".claude/skills/create-an-agent-team/SKILL.md",
+      "description": "Design and deploy multi-agent teams with Opus planning and Sonnet implementation",
+      "phases": ["plan", "review", "implement", "post-task"],
+      "model": "opus+sonnet",
+      "status": "active"
+    },
+    {
+      "name": "launch",
+      "project": "project-control-library",
+      "path": ".claude/skills/launch/SKILL.md",
+      "description": "Start services on unused ports without disrupting other projects",
+      "phases": ["port-discovery", "launch", "verification"],
+      "model": "sonnet",
+      "status": "active"
+    },
+    {
+      "name": "finalise-session",
+      "project": "project-control-library",
+      "path": ".claude/skills/finalise-session/SKILL.md",
+      "description": "End-of-session housekeeping, docs, commits, and directory cleanup",
+      "phases": ["housekeeping", "cleanup", "status-report", "git-commit"],
+      "model": "sonnet",
+      "status": "active"
+    },
+    {
+      "name": "mcp-builder",
+      "project": "claude-template",
+      "path": ".claude/skills/mcp-builder/SKILL.md",
+      "description": "Guide for creating high-quality MCP servers",
+      "phases": ["research", "implementation", "review", "evaluation"],
+      "model": "opus",
+      "status": "active"
+    },
+    {
+      "name": "webapp-testing",
+      "project": "claude-template",
+      "path": ".claude/skills/webapp-testing/SKILL.md",
+      "description": "Playwright-based web application testing",
+      "phases": ["reconnaissance", "automation", "verification"],
+      "model": "sonnet",
+      "status": "active"
+    }
+  ]
+}

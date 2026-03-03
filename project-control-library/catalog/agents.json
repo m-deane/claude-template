@@ -1,0 +1,100 @@
+{
+  "agents": [
+    {
+      "name": "code-reviewer",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Code quality, security, and maintainability review"
+    },
+    {
+      "name": "command-expert",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "CLI command development specialist"
+    },
+    {
+      "name": "context-manager",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Context management for multi-agent workflows"
+    },
+    {
+      "name": "debugger",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Error investigation and bug fixing"
+    },
+    {
+      "name": "docusaurus-expert",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Documentation site specialist (Docusaurus)"
+    },
+    {
+      "name": "error-detective",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Log analysis and error pattern detection"
+    },
+    {
+      "name": "ml-engineer",
+      "project": "claude-template",
+      "model": "opus",
+      "description": "Machine learning model development and MLOps"
+    },
+    {
+      "name": "prompt-engineer",
+      "project": "claude-template",
+      "model": "opus",
+      "description": "AI prompt optimization for LLMs"
+    },
+    {
+      "name": "python-pro",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Python optimization, decorators, async patterns"
+    },
+    {
+      "name": "sql-expert",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Database schema design and query optimization"
+    },
+    {
+      "name": "task-decomposition-expert",
+      "project": "claude-template",
+      "model": "opus",
+      "description": "Complex goal breakdown and workflow architecture"
+    },
+    {
+      "name": "technical-researcher",
+      "project": "claude-template",
+      "model": "opus",
+      "description": "Technical analysis and architecture research"
+    },
+    {
+      "name": "test-engineer",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Test automation and quality assurance"
+    },
+    {
+      "name": "typescript-pro",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "TypeScript type system, generics, strict mode"
+    },
+    {
+      "name": "ui-ux-designer",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "User-centered design and interface systems"
+    },
+    {
+      "name": "unused-code-cleaner",
+      "project": "claude-template",
+      "model": "sonnet",
+      "description": "Dead code detection and removal"
+    }
+  ]
+}

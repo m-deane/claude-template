@@ -1,0 +1,109 @@
+{
+  "commands": [
+    {
+      "name": "batch-commit",
+      "project": "project-control-library",
+      "description": "Commit changes across all managed projects"
+    },
+    {
+      "name": "batch-update-docs",
+      "project": "project-control-library",
+      "description": "Update documentation across all managed projects"
+    },
+    {
+      "name": "batch-init",
+      "project": "project-control-library",
+      "description": "Re-initialize projects from latest base template"
+    },
+    {
+      "name": "batch-review",
+      "project": "project-control-library",
+      "description": "Run project review across all repositories"
+    },
+    {
+      "name": "batch-production-readiness",
+      "project": "project-control-library",
+      "description": "Production readiness check for all projects"
+    },
+    {
+      "name": "batch-housekeeping",
+      "project": "project-control-library",
+      "description": "Run full housekeeping across all projects"
+    },
+    {
+      "name": "batch-update-rules",
+      "project": "project-control-library",
+      "description": "Push updated CLAUDE rules to all projects"
+    },
+    {
+      "name": "catalog",
+      "project": "project-control-library",
+      "description": "View/update catalog of skills, hooks, plugins, agents"
+    },
+    {
+      "name": "ultra-think",
+      "project": "claude-template",
+      "description": "Deep multi-dimensional analysis"
+    },
+    {
+      "name": "code-review",
+      "project": "claude-template",
+      "description": "Comprehensive code quality review"
+    },
+    {
+      "name": "architecture-review",
+      "project": "claude-template",
+      "description": "Architecture patterns assessment"
+    },
+    {
+      "name": "generate-tests",
+      "project": "claude-template",
+      "description": "Generate comprehensive test suites"
+    },
+    {
+      "name": "create-pr",
+      "project": "claude-template",
+      "description": "Create PR with auto-generated description"
+    },
+    {
+      "name": "workflow-orchestrator",
+      "project": "claude-template",
+      "description": "Complex workflow automation"
+    },
+    {
+      "name": "security-scan",
+      "project": "claude-template",
+      "description": "Security audit for vulnerabilities"
+    },
+    {
+      "name": "dependency-update",
+      "project": "claude-template",
+      "description": "Check and update dependencies"
+    },
+    {
+      "name": "generate-api-documentation",
+      "project": "claude-template",
+      "description": "Auto-generate API reference docs"
+    },
+    {
+      "name": "refactor-code",
+      "project": "claude-template",
+      "description": "Intelligent code refactoring"
+    },
+    {
+      "name": "explain-code",
+      "project": "claude-template",
+      "description": "Detailed code explanation with breakdown"
+    },
+    {
+      "name": "update-docs",
+      "project": "claude-template",
+      "description": "Systematic documentation updates"
+    },
+    {
+      "name": "todo",
+      "project": "claude-template",
+      "description": "Manage project todos"
+    }
+  ]
+}

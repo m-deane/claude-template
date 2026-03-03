@@ -1,0 +1,11 @@
+{
+  "hooks": [
+    {
+      "name": "session-init",
+      "project": "project-control-library",
+      "trigger": "SessionStart",
+      "description": "Registers projects and cleans port registry on session start",
+      "status": "recommended"
+    }
+  ]
+}
