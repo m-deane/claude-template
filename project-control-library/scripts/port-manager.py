@@ -41,8 +41,11 @@ PORT_RANGES = {
 def load_config():
     """Load the control library config."""
     if CONFIG_PATH.exists():
-        with open(CONFIG_PATH) as f:
-            return json.load(f)
+        try:
+            with open(CONFIG_PATH) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: {CONFIG_PATH} is malformed JSON, using defaults")
     return {"port_registry": {}}
 
 

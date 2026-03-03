@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/project-scanner.py --register 2>/dev/null; python3 scripts/port-manager.py --cleanup 2>/dev/null; echo 'Project control library initialized.'"
+          }
+        ]
+      }
+    ]
+  }
+}

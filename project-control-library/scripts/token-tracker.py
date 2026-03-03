@@ -21,8 +21,11 @@ CONFIG_PATH = Path(__file__).parent.parent / "config.json"
 
 def load_usage():
     if DATA_PATH.exists():
-        with open(DATA_PATH) as f:
-            return json.load(f)
+        try:
+            with open(DATA_PATH) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: {DATA_PATH} is malformed JSON, using defaults")
     return {"sessions": [], "daily_totals": {}}
 
 
@@ -33,8 +36,11 @@ def save_usage(data):
 
 def load_config():
     if CONFIG_PATH.exists():
-        with open(CONFIG_PATH) as f:
-            return json.load(f)
+        try:
+            with open(CONFIG_PATH) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: {CONFIG_PATH} is malformed JSON, using defaults")
     return {"token_budget": {"daily_limit": 1000000, "alert_threshold": 0.8}}
 
 

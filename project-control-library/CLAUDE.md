@@ -29,28 +29,27 @@ A solo developer or small team managing 5-20 active repositories needs a single 
 ~/projects/
 ├── project-control-library/          # THIS LIBRARY (the control plane)
 │   ├── CLAUDE.md                     # This file
+│   ├── README.md                     # Human-facing quick start guide
 │   ├── .claude/
 │   │   ├── CLAUDE.md                 # Behavioral directives
+│   │   ├── settings.json             # Hook configuration (SessionStart)
 │   │   ├── skills/                   # 5 core skills (see below)
 │   │   ├── commands/                 # Slash commands for batch ops
-│   │   ├── agents/                   # Specialized control agents
-│   │   └── hooks/                    # Session lifecycle hooks
+│   │   └── hooks/                    # Hook documentation and reference
 │   ├── .claude_plans/
-│   │   └── control-library-plan.md   # Implementation plan
+│   │   └── BOOTSTRAP_PROMPT.md       # Bootstrap prompt and implementation plan
 │   ├── scripts/                      # Python/bash utility scripts
 │   │   ├── port-manager.py           # Safe port allocation
 │   │   ├── project-scanner.py        # Discover and index all repos
 │   │   ├── token-tracker.py          # Token usage monitoring
 │   │   └── housekeeping.sh           # Directory cleanup automation
-│   ├── templates/                    # Base templates (from claude-template)
-│   │   └── claude-template/          # Symlink or copy of base template
 │   ├── catalog/                      # Registry of all skills, hooks, plugins
 │   │   ├── skills.json               # Skill catalog with metadata
+│   │   ├── commands.json             # Command catalog
 │   │   ├── hooks.json                # Hook catalog
-│   │   ├── agents.json               # Agent catalog
+│   │   ├── agents.json               # Agent catalog (from managed projects)
 │   │   └── plugins.json              # Plugin catalog
-│   ├── status/                       # Per-project status tracking
-│   │   └── {project-name}.status.md  # Auto-generated status files
+│   ├── status/                       # Per-project status tracking (auto-generated)
 │   └── config.json                   # Global configuration
 ├── claude-template/                  # Base template repo
 ├── project-a/                        # Managed project
@@ -169,6 +168,10 @@ When updating templates across projects:
     "auto_docs": true,
     "auto_consolidate_plans": true,
     "clean_root_directory": true
+  },
+  "template": {
+    "base": "claude-template",
+    "auto_sync": false
   }
 }
 ```
@@ -178,18 +181,27 @@ When updating templates across projects:
 ```bash
 # Discover and register all projects in ~/projects
 python scripts/project-scanner.py
+python scripts/project-scanner.py --register    # Register in config.json
+python scripts/project-scanner.py --status      # Status report for all projects
 
-# Check port availability
-python scripts/port-manager.py --check 3000-4000
+# Port management
+python scripts/port-manager.py --check 3000-4000   # Check port range
+python scripts/port-manager.py --scan               # Show port registry
+python scripts/port-manager.py --find dev            # Find next available dev port
+python scripts/port-manager.py --register PORT PID PROJECT SERVICE
+python scripts/port-manager.py --release PORT
+python scripts/port-manager.py --cleanup             # Remove stale entries
 
-# Track token usage for current session
-python scripts/token-tracker.py --session
+# Token usage tracking
+python scripts/token-tracker.py --session            # Today's usage
+python scripts/token-tracker.py --report             # Full report with daily/project breakdown
+python scripts/token-tracker.py --budget             # Budget status and alerts
+python scripts/token-tracker.py --log INPUT OUTPUT PROJECT TASK
 
 # Run full housekeeping on a project
 bash scripts/housekeeping.sh ~/projects/my-project
-
-# Generate project status report
-python scripts/project-scanner.py --status
+bash scripts/housekeeping.sh --dry-run ~/projects/my-project
+bash scripts/housekeeping.sh --all                   # All managed projects
 ```
 
 ## Quality Gates

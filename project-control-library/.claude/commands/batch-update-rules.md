@@ -10,7 +10,7 @@ Push core CLAUDE rules to all projects: $ARGUMENTS
 
 ## Process
 
-1. **Read source rules**: Load `project-control-library/templates/claude-template/.claude/CLAUDE.md`
+1. **Read source rules**: Load `~/projects/claude-template/.claude/CLAUDE.md` (the base template's behavioral directives)
 2. **For each managed project**:
    a. Read current `.claude/CLAUDE.md`
    b. Compare with source template

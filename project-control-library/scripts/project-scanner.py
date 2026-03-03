@@ -16,15 +16,28 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-PROJECTS_ROOT = Path.home() / "projects"
 CONFIG_PATH = Path(__file__).parent.parent / "config.json"
+DEFAULT_PROJECTS_ROOT = Path.home() / "projects"
 
 
 def load_config():
     if CONFIG_PATH.exists():
-        with open(CONFIG_PATH) as f:
-            return json.load(f)
-    return {"projects_root": str(PROJECTS_ROOT), "managed_projects": [], "port_registry": {}}
+        try:
+            with open(CONFIG_PATH) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: {CONFIG_PATH} is malformed JSON, using defaults")
+    return {"projects_root": str(DEFAULT_PROJECTS_ROOT), "managed_projects": [], "port_registry": {}}
+
+
+def get_projects_root():
+    """Read projects_root from config.json, fall back to ~/projects."""
+    config = load_config()
+    root = config.get("projects_root", str(DEFAULT_PROJECTS_ROOT))
+    return Path(root).expanduser()
+
+
+PROJECTS_ROOT = get_projects_root()
 
 
 def save_config(config):
@@ -190,7 +203,8 @@ def generate_status(project_name=None):
 
         print(f"## {p['name']}")
         print(f"  Branch: {git['branch']}")
-        print(f"  Clean: {'yes' if git['clean'] else f'NO ({git[\"uncommitted_files\"]} files)'}")
+        clean_status = "yes" if git["clean"] else f"NO ({git['uncommitted_files']} files)"
+        print(f"  Clean: {clean_status}")
         print(f"  Last commit: {git['last_commit']}")
         print(f"  Stack: {p['stack']}")
         if p.get("skills_count", 0) > 0:

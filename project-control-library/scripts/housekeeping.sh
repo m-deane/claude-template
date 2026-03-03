@@ -138,7 +138,7 @@ clean_project() {
                     log_action "Moved: $filename -> $dest/"
                 fi
             fi
-            ((moved++))
+            moved=$(( moved + 1 ))
         fi
     done
 
