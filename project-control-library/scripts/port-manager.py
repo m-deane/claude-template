@@ -20,7 +20,6 @@ Port ranges by convention:
 import argparse
 import json
 import os
-import signal
 import socket
 import subprocess
 import sys
@@ -196,15 +195,30 @@ def main():
     args = parser.parse_args()
 
     if args.check:
-        start, end = map(int, args.check.split("-"))
+        try:
+            parts = args.check.split("-")
+            if len(parts) != 2:
+                parser.error("Range must be START-END, e.g., 3000-4000")
+            start, end = int(parts[0]), int(parts[1])
+        except ValueError:
+            parser.error("Range must be numeric START-END, e.g., 3000-4000")
         check_range(start, end)
     elif args.scan:
         scan_all()
     elif args.find:
         find_available(args.find)
     elif args.register:
-        port, pid, project, service = args.register
-        register_port(int(port), int(pid), project, service)
+        port_str, pid_str, project, service = args.register
+        try:
+            port = int(port_str)
+            pid = int(pid_str)
+        except ValueError:
+            parser.error("PORT and PID must be numeric")
+        if not (1 <= port <= 65535):
+            parser.error("Port must be between 1 and 65535")
+        if pid < 0:
+            parser.error("PID must be non-negative")
+        register_port(port, pid, project, service)
     elif args.release is not None:
         release_port(args.release)
     elif args.cleanup:

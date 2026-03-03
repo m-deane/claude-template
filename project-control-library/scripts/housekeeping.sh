@@ -142,26 +142,29 @@ clean_project() {
         fi
     done
 
+    # Exclusion pattern for find commands (skip dependency/build/vcs directories)
+    local -a FIND_EXCLUDE=(-not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/.next/*' -not -path '*/dist/*' -not -path '*/.cache/*')
+
     # 3. Clean .DS_Store files
     local ds_count
-    ds_count=$(find "$project_path" -name ".DS_Store" 2>/dev/null | wc -l)
+    ds_count=$(find "$project_path" "${FIND_EXCLUDE[@]}" -name ".DS_Store" 2>/dev/null | wc -l)
     if [[ "$ds_count" -gt 0 ]]; then
         if $DRY_RUN; then
             log_dry "Delete $ds_count .DS_Store files"
         else
-            find "$project_path" -name ".DS_Store" -delete
+            find "$project_path" "${FIND_EXCLUDE[@]}" -name ".DS_Store" -delete
             log_action "Deleted $ds_count .DS_Store files"
         fi
     fi
 
     # 4. Clean old temp files
     local tmp_count
-    tmp_count=$(find "$project_path" \( -name "*.tmp" -o -name "*.bak" \) -mtime +7 2>/dev/null | wc -l)
+    tmp_count=$(find "$project_path" "${FIND_EXCLUDE[@]}" \( -name "*.tmp" -o -name "*.bak" \) -mtime +7 2>/dev/null | wc -l)
     if [[ "$tmp_count" -gt 0 ]]; then
         if $DRY_RUN; then
             log_dry "Delete $tmp_count stale temp files (>7 days old)"
         else
-            find "$project_path" \( -name "*.tmp" -o -name "*.bak" \) -mtime +7 -delete
+            find "$project_path" "${FIND_EXCLUDE[@]}" \( -name "*.tmp" -o -name "*.bak" \) -mtime +7 -delete
             log_action "Deleted $tmp_count stale temp files"
         fi
     fi

@@ -185,8 +185,9 @@ git diff --stat
 ### 4.2 Commit with Descriptive Message
 
 ```bash
-# Stage all housekeeping changes
-git add -A
+# Stage housekeeping changes (exclude secrets and env files)
+# Verify .gitignore covers .env files before staging
+git add -A ':!.env' ':!.env.local' ':!.env.production' ':!*.pem' ':!*.key'
 
 # Commit with session summary
 git commit -m "session: [summary of what was done this session]

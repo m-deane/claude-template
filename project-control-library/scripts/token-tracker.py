@@ -188,7 +188,14 @@ def main():
         show_report()
     elif args.log:
         input_t, output_t, project, task = args.log
-        log_usage(int(input_t), int(output_t), project, task)
+        try:
+            input_tokens = int(input_t)
+            output_tokens = int(output_t)
+        except ValueError:
+            parser.error("INPUT and OUTPUT must be numeric token counts")
+        if input_tokens < 0 or output_tokens < 0:
+            parser.error("Token counts must be non-negative")
+        log_usage(input_tokens, output_tokens, project, task)
     elif args.budget:
         show_budget()
     else:
