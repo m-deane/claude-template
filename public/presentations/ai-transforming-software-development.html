@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The AI-Augmented Team: How AI Is Transforming Software Development</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+  <style>
+    /* ========================================
+       DESIGN SYSTEM — CSS Custom Properties
+       ======================================== */
+    :root {
+      /* Colors */
+      --color-bg-primary: #0f172a;
+      --color-bg-secondary: #1e293b;
+      --color-bg-surface: #334155;
+      --color-accent: #06b6d4;
+      --color-accent-light: #22d3ee;
+      --color-warning: #f59e0b;
+      --color-positive: #10b981;
+      --color-negative: #f43f5e;
+      --color-text-primary: #f8fafc;
+      --color-text-secondary: #94a3b8;
+      --color-text-muted: #64748b;
+
+      /* Typography */
+      --font-heading: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+      /* Scale */
+      --text-hero: 96px;
+      --text-title: 42px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-small: 20px;
+      --text-caption: 16px;
+
+      /* Spacing */
+      --slide-padding: 60px;
+      --element-gap: 24px;
+    }
+
+    /* ========================================
+       GLOBAL OVERRIDES
+       ======================================== */
+    .reveal {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--color-text-primary);
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    .reveal .slides section {
+      padding: var(--slide-padding);
+      box-sizing: border-box;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: var(--font-heading);
+      color: var(--color-text-primary);
+      text-transform: none;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.5em;
+    }
+
+    .reveal h1 { font-size: var(--text-title); font-weight: 700; }
+    .reveal h2 { font-size: var(--text-heading); font-weight: 600; }
+    .reveal h3 { font-size: var(--text-body); font-weight: 600; }
+
+    .reveal p, .reveal li {
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+    }
+
+    .reveal strong {
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    .reveal .source {
+      font-size: var(--text-caption);
+      color: var(--color-text-muted);
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    /* ========================================
+       SLIDE TYPES
+       ======================================== */
+
+    /* --- Title Slide --- */
+    .slide-title {
+      background: linear-gradient(135deg, var(--color-bg-primary) 0%, #0c1220 50%, var(--color-bg-secondary) 100%);
+      text-align: center !important;
+      justify-content: center !important;
+      align-items: center !important;
+    }
+    .slide-title h1 {
+      font-size: 48px;
+      font-weight: 800;
+      max-width: 900px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .slide-title .subtitle {
+      font-size: var(--text-body);
+      color: var(--color-text-secondary);
+      max-width: 700px;
+      font-weight: 400;
+    }
+    .slide-title .meta {
+      margin-top: 48px;
+      font-size: var(--text-caption);
+      color: var(--color-text-muted);
+    }
+    .slide-title::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* --- Section Divider --- */
+    .slide-section {
+      background: var(--color-bg-primary);
+      align-items: flex-start !important;
+      justify-content: center !important;
+    }
+    .slide-section .section-number {
+      font-size: 120px;
+      font-weight: 800;
+      color: var(--color-accent);
+      opacity: 0.3;
+      line-height: 1;
+      margin-bottom: -20px;
+    }
+    .slide-section h1 {
+      font-size: 44px;
+      font-weight: 700;
+      max-width: 700px;
+    }
+    .slide-section .section-subtitle {
+      font-size: var(--text-body);
+      color: var(--color-text-secondary);
+      margin-top: 8px;
+    }
+
+    /* --- Stat Slide --- */
+    .slide-stat {
+      background: var(--color-bg-primary);
+      text-align: center !important;
+      align-items: center !important;
+    }
+    .slide-stat .big-number {
+      font-size: var(--text-hero);
+      font-weight: 800;
+      color: var(--color-accent);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .slide-stat .big-number.warning {
+      color: var(--color-warning);
+    }
+    .slide-stat h1 {
+      font-size: 28px;
+      max-width: 800px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .slide-stat .stat-context {
+      margin-top: 32px;
+      display: flex;
+      gap: 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .slide-stat .stat-item {
+      text-align: center;
+    }
+    .slide-stat .stat-item .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      display: block;
+    }
+    .slide-stat .stat-item .stat-label {
+      font-size: var(--text-caption);
+      color: var(--color-text-muted);
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* --- Split Slide --- */
+    .slide-split {
+      background: var(--color-bg-primary);
+    }
+    .slide-split .split-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      width: 100%;
+      align-items: start;
+    }
+    .slide-split .split-col {
+      padding: 24px;
+    }
+    .slide-split .split-col h3 {
+      font-size: 22px;
+      color: var(--color-accent);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .slide-split .split-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .slide-split .split-col li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      font-size: var(--text-small);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .slide-split .split-col li::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-warning);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .slide-split .split-col:last-child li::before {
+      background: var(--color-text-muted);
+    }
+
+    /* --- Chart/Data Slide --- */
+    .slide-chart {
+      background: var(--color-bg-primary);
+    }
+    .slide-chart .chart-container {
+      width: 100%;
+      margin-top: 24px;
+    }
+    .slide-chart .bar-group {
+      display: grid;
+      grid-template-columns: 200px 1fr 80px;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .slide-chart .bar-label {
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      text-align: right;
+    }
+    .slide-chart .bar-track {
+      height: 36px;
+      background: var(--color-bg-surface);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .slide-chart .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+    .slide-chart .bar-fill.accent {
+      background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+    }
+    .slide-chart .bar-fill.muted {
+      background: var(--color-text-muted);
+    }
+    .slide-chart .bar-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+
+    /* --- Icons/Grid Slide --- */
+    .slide-icons {
+      background: var(--color-bg-primary);
+    }
+    .slide-icons .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+      width: 100%;
+    }
+    .slide-icons .icon-card {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 28px 24px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .slide-icons .icon-card .icon-value {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--color-accent);
+      margin-bottom: 8px;
+    }
+    .slide-icons .icon-card .icon-label {
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+    }
+
+    /* --- Comparison/Three-Column --- */
+    .slide-compare {
+      background: var(--color-bg-primary);
+    }
+    .slide-compare .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+      width: 100%;
+    }
+    .slide-compare .compare-col {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 28px 24px;
+      border-top: 3px solid var(--color-warning);
+    }
+    .slide-compare .compare-col h3 {
+      font-size: 20px;
+      color: var(--color-warning);
+      margin-bottom: 16px;
+    }
+    .slide-compare .compare-col .risk-stat {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--color-warning);
+      margin-bottom: 12px;
+    }
+    .slide-compare .compare-col p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .slide-compare .compare-col .countermeasure {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 3px solid var(--color-positive);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 15px;
+      color: var(--color-positive);
+      margin-top: auto;
+    }
+
+    /* --- Timeline Slide --- */
+    .slide-timeline {
+      background: var(--color-bg-primary);
+    }
+    .slide-timeline .timeline-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 32px;
+      position: relative;
+      width: 100%;
+      gap: 12px;
+    }
+    .slide-timeline .timeline-container::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 5%;
+      right: 5%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-text-muted), var(--color-accent), var(--color-accent-light));
+      z-index: 0;
+    }
+    .slide-timeline .timeline-item {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .slide-timeline .timeline-dot {
+      width: 20px;
+      height: 20px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      margin: 30px auto 16px;
+      border: 3px solid var(--color-bg-primary);
+      box-shadow: 0 0 0 3px var(--color-accent);
+    }
+    .slide-timeline .timeline-dot.highlight {
+      width: 28px;
+      height: 28px;
+      margin-top: 26px;
+      background: var(--color-accent-light);
+      box-shadow: 0 0 0 3px var(--color-accent-light), 0 0 20px rgba(6, 182, 212, 0.3);
+    }
+    .slide-timeline .timeline-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+    .slide-timeline .timeline-desc {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+      padding: 0 4px;
+    }
+    .slide-timeline .timeline-pct {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--color-accent);
+      margin-bottom: 4px;
+    }
+
+    /* --- Trend/Quote Slide --- */
+    .slide-trend {
+      background: var(--color-bg-primary);
+    }
+    .slide-trend .trend-visual {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      margin: 32px 0;
+    }
+    .slide-trend .trend-numbers {
+      display: flex;
+      gap: 32px;
+      align-items: flex-end;
+    }
+    .slide-trend .trend-point {
+      text-align: center;
+    }
+    .slide-trend .trend-point .trend-value {
+      font-size: 48px;
+      font-weight: 800;
+      display: block;
+    }
+    .slide-trend .trend-point .trend-year {
+      font-size: 16px;
+      color: var(--color-text-muted);
+      display: block;
+    }
+    .slide-trend .trend-arrow {
+      font-size: 36px;
+      color: var(--color-warning);
+    }
+    .slide-trend .trend-insight {
+      background: var(--color-bg-secondary);
+      border-left: 3px solid var(--color-accent);
+      padding: 20px 24px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 24px;
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    /* --- Comparison Before/After --- */
+    .slide-before-after {
+      background: var(--color-bg-primary);
+    }
+    .slide-before-after .ba-container {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: center;
+      width: 100%;
+    }
+    .slide-before-after .ba-col {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 32px 28px;
+    }
+    .slide-before-after .ba-col h3 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .slide-before-after .ba-col.before h3 { color: var(--color-text-muted); }
+    .slide-before-after .ba-col.after h3 { color: var(--color-accent); }
+    .slide-before-after .ba-arrow {
+      font-size: 36px;
+      color: var(--color-accent);
+      text-align: center;
+    }
+    .slide-before-after .ba-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 17px;
+    }
+    .slide-before-after .ba-step .step-num {
+      background: var(--color-bg-surface);
+      color: var(--color-text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .slide-before-after .ba-col.after .ba-step .step-num {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--color-accent);
+    }
+
+    /* --- Playbook/Best Practices --- */
+    .slide-playbook {
+      background: var(--color-bg-primary);
+    }
+    .slide-playbook .playbook-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .slide-playbook .playbook-item {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 24px 20px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .slide-playbook .playbook-item .pb-number {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .slide-playbook .playbook-item .pb-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+    }
+    .slide-playbook .playbook-item .pb-desc {
+      font-size: 15px;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    /* --- CTA Slide --- */
+    .slide-cta {
+      background: linear-gradient(135deg, var(--color-bg-primary) 0%, #0c1220 100%);
+    }
+    .slide-cta .cta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 32px;
+      width: 100%;
+    }
+    .slide-cta .cta-card {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 32px 24px;
+      border-top: 3px solid var(--color-accent);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .slide-cta .cta-card .cta-timeframe {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .slide-cta .cta-card .cta-owner {
+      font-size: 16px;
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+    .slide-cta .cta-card .cta-action {
+      font-size: 18px;
+      color: var(--color-text-primary);
+      line-height: 1.5;
+    }
+    .slide-cta .cta-closing {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 22px;
+      color: var(--color-text-secondary);
+      font-style: italic;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* --- Gap Chart Slide --- */
+    .slide-gap {
+      background: var(--color-bg-primary);
+    }
+    .slide-gap .gap-visual {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 32px;
+      width: 100%;
+    }
+    .slide-gap .gap-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 80px;
+      align-items: center;
+      gap: 16px;
+    }
+    .slide-gap .gap-label {
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      text-align: right;
+    }
+    .slide-gap .gap-bar-track {
+      height: 40px;
+      background: var(--color-bg-surface);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .slide-gap .gap-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+    }
+    .slide-gap .gap-bar-fill.high {
+      background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+    }
+    .slide-gap .gap-bar-fill.low {
+      background: var(--color-warning);
+    }
+    .slide-gap .gap-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .slide-gap .gap-value.high { color: var(--color-accent); }
+    .slide-gap .gap-value.low { color: var(--color-warning); }
+    .slide-gap .gap-annotation {
+      text-align: center;
+      margin-top: 16px;
+      padding: 16px 24px;
+      background: var(--color-bg-secondary);
+      border-radius: 8px;
+      font-size: 20px;
+      color: var(--color-warning);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       UTILITY STYLES
+       ======================================== */
+    .reveal .text-accent { color: var(--color-accent); }
+    .reveal .text-warning { color: var(--color-warning); }
+    .reveal .text-positive { color: var(--color-positive); }
+    .reveal .text-muted { color: var(--color-text-muted); }
+
+    /* Speaker notes styling */
+    .reveal aside.notes {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Slide number styling */
+    .reveal .slide-number {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      background: none;
+      right: 20px;
+      bottom: 16px;
+    }
+
+    /* Print-PDF adjustments */
+    @media print {
+      .reveal .slides section {
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ==========================================
+           SLIDE 1: Title Slide
+           ========================================== -->
+      <section class="slide-title">
+        <h1>The AI-Augmented Team</h1>
+        <p class="subtitle">How Artificial Intelligence Is Transforming Software Development<br>— What the Data Actually Shows</p>
+        <p class="meta">March 2026</p>
+        <aside class="notes">
+          Good morning. I'm [NAME], and for the next fifteen minutes I'm going to walk you through what the research actually says about AI tools in software development. Not the hype. Not the vendor marketing. The controlled studies, the industry surveys, the data from millions of lines of code.
+
+          I'll cover three things: where the productivity gains are real, where the risks are real, and what the teams that are doing this well have in common. We'll close with three concrete actions you can take starting this week.
+
+          Let me start with a number that reframes this entire conversation.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 2: Opening Stat — 46%
+           ========================================== -->
+      <section class="slide-stat">
+        <div class="big-number">46%</div>
+        <h1>of code written by active GitHub Copilot users is now AI-generated</h1>
+        <div class="stat-context">
+          <div class="stat-item">
+            <span class="stat-value">27%</span>
+            <span class="stat-label">2022 (Copilot launch)</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">20M</span>
+            <span class="stat-label">Active users</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">90%</span>
+            <span class="stat-label">Fortune 100 adoption</span>
+          </div>
+        </div>
+        <p class="source">Sources: GitHub Blog (2023, 2025), Second Talent analysis</p>
+        <aside class="notes">
+          Forty-six percent. [PAUSE] That is the share of accepted code that GitHub Copilot now generates for its active users. In 2022, when Copilot launched, that number was twenty-seven percent. In under three years, it nearly doubled. And this is not a fringe tool. Twenty million developers are using Copilot today. Ninety percent of Fortune 100 companies have adopted it.
+
+          So here is the question I want you to sit with for the rest of this talk: does your team have a deliberate policy for this? Not "are people using AI tools" — of course they are. The question is whether you have a shared standard for how AI-generated code gets reviewed, tested, and merged. Because if you don't, you are absorbing this shift informally. And as we'll see in a few minutes, informal adoption is where the problems concentrate.
+
+          Some of you might be thinking: "Forty-six percent sounds high. That can't all be production-critical code." You're right to be skeptical. A lot of that is boilerplate, test scaffolding, documentation. But that is exactly the point. The repetitive work that used to eat your afternoons? That is what's being automated first. The question is whether your team is capturing that benefit with guardrails, or without them.
+
+          To understand why this matters so much right now, let's look at the environment these tools landed in.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 3: Situation — Pressures
+           ========================================== -->
+      <section class="slide-split">
+        <h1>The Compounding Pressures on Engineering Teams</h1>
+        <div class="split-container">
+          <div class="split-col">
+            <h3>What's demanded</h3>
+            <ul>
+              <li>Codebase complexity increasing year over year</li>
+              <li>Tight developer labor market for senior talent</li>
+              <li>Business expectations: faster releases, higher quality, lower cost</li>
+            </ul>
+          </div>
+          <div class="split-col">
+            <h3>What teams have</h3>
+            <ul>
+              <li>Same sprint cadence as three years ago</li>
+              <li>Rising burnout risk across the team</li>
+              <li>Technical debt compounding with no time to address it</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">
+          None of this is happening in a vacuum. Every engineering team I talk to is living the same tension. On one side, you have codebases getting more complex year over year. You have a talent market that is still competitive for senior engineers. You have business stakeholders who want faster releases, higher quality, and lower cost — all at the same time.
+
+          On the other side, what do you actually have? The same sprint cadence you had three years ago. Rising burnout risk. Technical debt that keeps compounding because there is never time to address it.
+
+          AI tools did not arrive because Silicon Valley thought it would be fun. They arrived because there is genuine demand for ways to do more with the same engineering headcount. That context matters for how we evaluate them.
+
+          So the tools arrived. Teams adopted them. And here's where it gets complicated.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 4: Complication — Adoption Gap
+           ========================================== -->
+      <section class="slide-gap">
+        <h1>The Gap Between Adoption and Impact</h1>
+        <div class="gap-visual">
+          <div class="gap-row">
+            <span class="gap-label">Developer adoption</span>
+            <div class="gap-bar-track">
+              <div class="gap-bar-fill high" style="width: 76%;"></div>
+            </div>
+            <span class="gap-value high">76%</span>
+          </div>
+          <div class="gap-row">
+            <span class="gap-label">Profitable AI projects</span>
+            <div class="gap-bar-track">
+              <div class="gap-bar-fill low" style="width: 47%;"></div>
+            </div>
+            <span class="gap-value low">47%</span>
+          </div>
+          <div class="gap-row">
+            <span class="gap-label">AI "high performers"</span>
+            <div class="gap-bar-track">
+              <div class="gap-bar-fill low" style="width: 6%;"></div>
+            </div>
+            <span class="gap-value low">6%</span>
+          </div>
+          <div class="gap-annotation">
+            DORA 2024: 25% ↑ AI adoption → 7.2% ↓ delivery stability
+          </div>
+        </div>
+        <p class="source">Sources: Stack Overflow 2024, McKinsey, DORA 2024 Report</p>
+        <aside class="notes">
+          Look at this gap. Seventy-six percent of developers say they are using or plan to use AI tools. Adoption is not the problem. But only forty-seven percent of IT leaders say their AI projects were actually profitable last year. McKinsey found that only six percent of organizations qualify as AI high performers — meaning they see more than five percent impact on their bottom line. The DORA team — the same group that brought us the Accelerate metrics — found something even more specific. A twenty-five percent increase in AI adoption correlates with a seven point two percent decrease in delivery stability.
+
+          Let that sink in. More AI, less stability. [PAUSE]
+
+          Why? Not because the tools are bad. Because AI makes it easy to write more code, which means larger changesets, which means more risk per deployment. The tools work. But unstructured adoption produces a pattern where teams ship more code and accumulate more risk simultaneously. That gap you see on this slide? That is not a tools problem. It is a process problem.
+
+          So let's get into the evidence. Starting with what the tools actually deliver when used well.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 5: Section Divider — Pillar 1
+           ========================================== -->
+      <section class="slide-section">
+        <div class="section-number">01</div>
+        <h1>The Productivity Gains Are Real</h1>
+        <p class="section-subtitle">What controlled research actually shows</p>
+        <aside class="notes">
+          Pillar one. The productivity evidence. I want to be specific here about methodology — not just headline numbers, but where those numbers come from and what they measure.
+
+          Here's what the controlled studies show.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 6: Productivity Evidence (Chart)
+           ========================================== -->
+      <section class="slide-chart">
+        <h1>Controlled Research: What AI Tools Do to Development Speed</h1>
+        <div class="chart-container">
+          <div class="bar-group">
+            <span class="bar-label">Task completion</span>
+            <div class="bar-track">
+              <div class="bar-fill accent" style="width: 55%;"></div>
+            </div>
+            <span class="bar-value">55%↑</span>
+          </div>
+          <div class="bar-group">
+            <span class="bar-label">PR cycle time</span>
+            <div class="bar-track">
+              <div class="bar-fill accent" style="width: 75%;"></div>
+            </div>
+            <span class="bar-value">75%↓</span>
+          </div>
+          <div class="bar-group">
+            <span class="bar-label">Documentation</span>
+            <div class="bar-track">
+              <div class="bar-fill accent" style="width: 50%;"></div>
+            </div>
+            <span class="bar-value">2x faster</span>
+          </div>
+          <div class="bar-group">
+            <span class="bar-label">Weekly tasks</span>
+            <div class="bar-track">
+              <div class="bar-fill accent" style="width: 26%;"></div>
+            </div>
+            <span class="bar-value">26%↑</span>
+          </div>
+          <div class="bar-group">
+            <span class="bar-label">Code refactoring</span>
+            <div class="bar-track">
+              <div class="bar-fill accent" style="width: 35%;"></div>
+            </div>
+            <span class="bar-value">35%↑</span>
+          </div>
+        </div>
+        <p class="source">Sources: GitHub + Accenture (4,800 devs), McKinsey, independent 4,867-developer study</p>
+        <aside class="notes">
+          This is the slide I want you to look at carefully, because these are not blog posts or tweets. These are controlled studies with comparison groups.
+
+          Start at the top. GitHub partnered with Accenture and ran a study across forty-eight hundred developers. Same JavaScript task. Half used Copilot, half didn't. The Copilot group finished fifty-five percent faster. One hour eleven minutes versus two hours forty-one minutes. That is not a marginal gain. [PAUSE]
+
+          Move down. A separate study of nearly five thousand developers found twenty-six percent more weekly tasks completed with AI assistance. McKinsey found that code documentation takes half the time. Refactoring tasks take about two-thirds the time.
+
+          And the one that should get the attention of anyone who has ever waited on a PR review: pull request cycle time dropped from nine point six days to two point four days. A seventy-five percent reduction. That is not just developer productivity. That is organizational throughput.
+
+          But here is the nuance you need to know. [PAUSE] These gains are not uniform. The biggest improvements are in boilerplate generation, documentation, and test scaffolding. When it comes to system design, architecture decisions, complex debugging — the gains are much smaller. AI tools are not replacing your senior engineers' judgment. They are eliminating the low-cognition work that was burying it.
+
+          One more thing. Research shows it takes about eleven weeks for a developer to fully internalize the workflow shift. So if your team tried Copilot for two weeks and said "it's not that useful" — they stopped too early.
+
+          Beyond raw speed, there's another metric that matters more than most leaders realize.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 7: Developer Experience (Icons)
+           ========================================== -->
+      <section class="slide-icons">
+        <h1>AI Tools Are Changing How Developers Feel About Their Work</h1>
+        <div class="icon-grid">
+          <div class="icon-card">
+            <div class="icon-value">95%</div>
+            <div class="icon-label">report enjoying coding more with AI assistance</div>
+          </div>
+          <div class="icon-card">
+            <div class="icon-value">2x</div>
+            <div class="icon-label">more likely to report being in a flow state</div>
+          </div>
+          <div class="icon-card">
+            <div class="icon-value">73%</div>
+            <div class="icon-label">say AI helps them stay in flow</div>
+          </div>
+          <div class="icon-card">
+            <div class="icon-value">87%</div>
+            <div class="icon-label">say AI preserves mental effort on repetitive tasks</div>
+          </div>
+          <div class="icon-card">
+            <div class="icon-value">60%</div>
+            <div class="icon-label">report increased overall job satisfaction</div>
+          </div>
+          <div class="icon-card">
+            <div class="icon-value">70%</div>
+            <div class="icon-label">say AI is not a threat to their job</div>
+          </div>
+        </div>
+        <p class="source">Sources: GitHub, McKinsey, Stack Overflow Developer Survey 2024</p>
+        <aside class="notes">
+          Ninety-five percent of Copilot users report enjoying coding more. Developers using AI tools are twice as likely to report being in a flow state. Seventy-three percent say AI helps them stay in flow. Eighty-seven percent say it preserves mental effort during repetitive tasks. [PAUSE]
+
+          Now, I know what some of you are thinking. "Developer happiness is a nice-to-have." But here is why it is a business metric. Burnout from repetitive, low-cognition work is one of the top documented causes of senior engineer attrition. And replacing a senior engineer costs you — what, six months of ramp time for their replacement? More?
+
+          If AI tools reduce the toil that drives your best people out, the compounding benefit is retention. And retention in senior engineers is worth more than any productivity percentage point on this slide.
+
+          So the gains are real. But they do not arrive for free. Let's talk about where the risks concentrate.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 8: Section Divider — Pillar 2
+           ========================================== -->
+      <section class="slide-section">
+        <div class="section-number">02</div>
+        <h1>The Risks Are Specific and Manageable</h1>
+        <p class="section-subtitle">What to watch for — and what to do about it</p>
+        <aside class="notes">
+          Pillar two. The risks. This is the section I would most want you to take notes on, because it is the part that most teams skip when they read the productivity headlines.
+
+          There are three distinct risk categories. Each one is well-documented, and each one has a direct countermeasure.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 9: Risk Map (Three Columns)
+           ========================================== -->
+      <section class="slide-compare">
+        <h1>Where AI-Generated Code Introduces Risk</h1>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h3>Security Risk</h3>
+            <div class="risk-stat">48%</div>
+            <p>of AI-generated code contains potential security vulnerabilities. Enterprises report 10,000+ new findings/month.</p>
+            <div class="countermeasure">&#10003; Security scanning as a CI/CD gate — automated, mandatory</div>
+          </div>
+          <div class="compare-col">
+            <h3>Technical Debt</h3>
+            <div class="risk-stat">8.3% → 12.3%</div>
+            <p>Copy-paste code rose 48% (2020–2024). Refactoring activity dropped from 25% to under 10%.</p>
+            <div class="countermeasure">&#10003; Track debt metrics alongside velocity metrics</div>
+          </div>
+          <div class="compare-col">
+            <h3>Delivery Stability</h3>
+            <div class="risk-stat">-7.2%</div>
+            <p>Delivery stability decrease per 25% AI adoption increase. Root cause: larger changesets.</p>
+            <div class="countermeasure">&#10003; Enforce smaller PRs as a team norm with AI tools</div>
+          </div>
+        </div>
+        <p class="source">Sources: DORA 2024, GitClear (211M lines of code), Qodo, industry security research</p>
+        <aside class="notes">
+          Three columns on this slide. Three risk categories. Let me walk through each one.
+
+          First: security. Forty-eight percent of AI-generated code contains potential security vulnerabilities. That is not my number — that is from industry-wide security research. Enterprises using AI coding assistants are reporting over ten thousand new security findings per month attributable to AI-generated code. The countermeasure is straightforward: security scanning has to be a CI/CD gate, not an afterthought.
+
+          Second: technical debt. GitClear analyzed two hundred and eleven million changed lines of code from 2020 to 2024. Copy-pasted code rose from eight point three percent to twelve point three percent. Refactoring activity — which is how you pay down technical debt — sank from twenty-five percent to under ten percent. [PAUSE] Forty percent of developers say AI has increased technical debt. The countermeasure: you have to track debt metrics alongside velocity metrics.
+
+          Third: delivery stability. This is the DORA finding I mentioned earlier. AI makes it easy to write more code per PR. Larger PRs fail more often. The countermeasure is almost comically simple: enforce smaller PRs as a team norm when using AI tools.
+
+          Here is the important framing. [PAUSE] These risks are specific and well-characterized. Each one has a known engineering response. You know what to watch for. The question is whether you build the countermeasures before or after the problems show up in production.
+
+          There's one more risk signal worth examining — and it's actually good news in disguise.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 10: Trust Gap (Trend)
+           ========================================== -->
+      <section class="slide-trend">
+        <h1>Developer Trust in AI Is Falling — That Is Actually a Good Sign</h1>
+        <div class="trend-visual">
+          <div class="trend-numbers">
+            <div class="trend-point">
+              <span class="trend-value" style="color: var(--color-warning);">42%</span>
+              <span class="trend-year">2024</span>
+            </div>
+            <div class="trend-arrow">→</div>
+            <div class="trend-point">
+              <span class="trend-value" style="color: var(--color-warning);">33%</span>
+              <span class="trend-year">2025</span>
+            </div>
+          </div>
+          <div style="margin-left: 48px;">
+            <p style="font-size: 22px; margin-bottom: 8px;"><strong>71%</strong> refuse to merge without manual review</p>
+            <p style="font-size: 22px; margin-bottom: 8px;">Only <strong>3%</strong> highly trust AI-generated code</p>
+            <p style="font-size: 22px;"><strong>67%</strong> spend more time debugging AI code</p>
+          </div>
+        </div>
+        <div class="trend-insight">
+          High performers maintain structured review regardless of trust level — <strong class="text-accent">the workflow is the protection</strong>.
+        </div>
+        <p class="source">Sources: Stack Overflow 2024–2025, DORA 2024 Report</p>
+        <aside class="notes">
+          Developer trust in AI-generated code dropped from forty-two percent in 2024 to thirty-three percent in 2025. Only three percent of developers say they highly trust AI-generated code. Seventy-one percent refuse to merge AI-generated code without manual review. [PAUSE]
+
+          You might look at those numbers and think: "That's a problem." I want to reframe it. Declining trust reflects maturity, not failure. Think about it this way. A junior team that blindly trusts AI output? That is the team accumulating the security debt and the technical debt we just talked about. A senior team that reflexively rejects AI output? They are leaving fifty-five percent productivity gains on the table.
+
+          The winning posture is somewhere specific: use the tools, distrust the output by default, and verify systematically. That is not cynicism. That is engineering discipline applied to a new kind of tool. The seventy-one percent who refuse to merge without review? They are doing it right.
+
+          The teams that manage these risks don't abandon AI. They double down, because they've built the governance to extract compounding value. That brings us to the forward-looking question.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 11: Section Divider — Pillar 3
+           ========================================== -->
+      <section class="slide-section">
+        <div class="section-number">03</div>
+        <h1>The Strategic Edge Comes From Full-SDLC Integration</h1>
+        <p class="section-subtitle">From code completion to agentic workflows</p>
+        <aside class="notes">
+          Pillar three. This section looks forward. The first two pillars are about the current state. This pillar is about the twelve to twenty-four month horizon — where the real competitive differentiation is going to emerge.
+
+          Most teams are using AI for exactly one thing. That's a mistake.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 12: SDLC Pipeline (Timeline)
+           ========================================== -->
+      <section class="slide-timeline">
+        <h1>AI Across the Full Software Development Lifecycle</h1>
+        <div class="timeline-container">
+          <div class="timeline-item">
+            <div class="timeline-pct">~30%</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Planning</div>
+            <div class="timeline-desc">Requirements, dependencies, forecasting</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-pct">72%</div>
+            <div class="timeline-dot highlight"></div>
+            <div class="timeline-label">Code Gen</div>
+            <div class="timeline-desc">Completion, boilerplate, scaffolding</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-pct">67%</div>
+            <div class="timeline-dot highlight"></div>
+            <div class="timeline-label">Review</div>
+            <div class="timeline-desc">PR summaries, security flags, style</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-pct">56%</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Testing</div>
+            <div class="timeline-desc">Test gen, regression, coverage</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-pct">67%</div>
+            <div class="timeline-dot highlight"></div>
+            <div class="timeline-label">Docs</div>
+            <div class="timeline-desc">Inline docs, changelogs, architecture</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-pct">~20%</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Deploy</div>
+            <div class="timeline-desc">Anomaly detection, rollback, SRE</div>
+          </div>
+        </div>
+        <div style="margin-top: 48px; text-align: center;">
+          <p style="font-size: 22px; color: var(--color-accent); font-weight: 600;">Teams using AI across 4+ SDLC phases: quality +31–45%, time-to-market +16–30%</p>
+          <p style="font-size: 16px; color: var(--color-text-muted); margin-top: 8px;">Top performers are 6–7x more likely to scale to 4+ AI use cases — McKinsey</p>
+        </div>
+        <aside class="notes">
+          Here is where most teams are today. Code generation: seventy-two percent. Documentation: sixty-seven percent. Code review and optimization: sixty-seven percent. Testing and debugging: fifty-six percent. [PAUSE] Notice the pattern? Almost all of that is in two phases of the development lifecycle: writing code and testing code.
+
+          But look at what happens when teams go broader. McKinsey found that top-performing AI teams are six to seven times more likely to have scaled to four or more AI use cases simultaneously. Organizations using AI across four or more SDLC phases see software quality improvements of thirty-one to forty-five percent, and time-to-market improvements of sixteen to thirty percent. Those are not incremental gains. Those are structural advantages.
+
+          Take a look at this pipeline on the slide. [PAUSE] How many of those six stages is your team actively using AI in? If the answer is one or two, you are capturing maybe a third of the available productivity gain. Google has twenty-one percent of their code AI-assisted across their full pipeline. That is the direction this is heading.
+
+          And this pipeline integration? It's about to get a lot more interesting.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 13: Agentic Horizon (Before/After)
+           ========================================== -->
+      <section class="slide-before-after">
+        <h1>The Next Shift: From AI Assistants to AI Agents</h1>
+        <div class="ba-container">
+          <div class="ba-col before">
+            <h3>AI Assistant (Today)</h3>
+            <div class="ba-step"><span class="step-num">1</span><span>Developer writes a prompt</span></div>
+            <div class="ba-step"><span class="step-num">2</span><span>AI responds with suggestion</span></div>
+            <div class="ba-step"><span class="step-num">3</span><span>Developer reviews and integrates</span></div>
+            <div class="ba-step"><span class="step-num">4</span><span>Repeat for each task</span></div>
+          </div>
+          <div class="ba-arrow">→</div>
+          <div class="ba-col after">
+            <h3>AI Agent (Emerging)</h3>
+            <div class="ba-step"><span class="step-num">1</span><span>Developer specifies intent</span></div>
+            <div class="ba-step"><span class="step-num">2</span><span>Agent plans multi-step approach</span></div>
+            <div class="ba-step"><span class="step-num">3</span><span>Agent executes, tests, iterates</span></div>
+            <div class="ba-step"><span class="step-num">4</span><span>Developer reviews final output</span></div>
+          </div>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;">
+          <span style="font-size: 18px; color: var(--color-text-secondary);"><strong class="text-accent">99%</strong> of AI developers exploring agents — IBM</span>
+          <span style="font-size: 18px; color: var(--color-text-secondary);"><strong class="text-accent">$37B</strong> enterprise AI spend in 2025 (3.2x YoY)</span>
+          <span style="font-size: 18px; color: var(--color-text-secondary);"><strong class="text-accent">$97.9B</strong> projected market by 2030</span>
+        </div>
+        <aside class="notes">
+          Everything we have talked about so far is AI as an assistant. You prompt it. It responds. You integrate the output. That model is already shifting. [PAUSE]
+
+          IBM and Morning Consult surveyed a thousand developers building AI applications. Ninety-nine percent are exploring or actively developing AI agents for their workflows. Not assistants. Agents. The difference matters. An assistant responds to your prompt. An agent takes a specification, plans its approach, executes across multiple steps, tests its own output, and reports back. Your role shifts from writing code to specifying intent and reviewing results.
+
+          McKinsey is now predicting that individual contributors will spend part of their time functioning as — and this is their phrase — "engineering managers directing a junior team of asynchronous agents." [PAUSE]
+
+          Look at the market signal. Enterprise AI spending went from eleven and a half billion dollars in 2024 to thirty-seven billion in 2025. That is a three point two X jump in a single year. The AI coding assistant market alone is projected to hit nearly a hundred billion dollars by 2030.
+
+          Here is why this matters for you today. The teams that are building governance and review processes for AI assistants right now? They are the teams that will be ready to safely adopt agentic workflows when those tools mature. The teams that have not started? They will be eighteen months behind. And in this market, eighteen months is a long time.
+
+          So what does it actually look like when a team does all of this well?
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 14: The Playbook (Grid)
+           ========================================== -->
+      <section class="slide-playbook">
+        <h1>What High-Performing AI-Augmented Teams Have in Common</h1>
+        <div class="playbook-grid">
+          <div class="playbook-item">
+            <span class="pb-number">01</span>
+            <span class="pb-title">Written AI Policy</span>
+            <span class="pb-desc">Approved tools, review standards, security gates</span>
+          </div>
+          <div class="playbook-item">
+            <span class="pb-number">02</span>
+            <span class="pb-title">Measure Before & After</span>
+            <span class="pb-desc">Deploy frequency, failure rate, PR cycle time</span>
+          </div>
+          <div class="playbook-item">
+            <span class="pb-number">03</span>
+            <span class="pb-title">Small PRs Enforced</span>
+            <span class="pb-desc">Counters the batch-size risk DORA identified</span>
+          </div>
+          <div class="playbook-item">
+            <span class="pb-number">04</span>
+            <span class="pb-title">Security as CI/CD Gate</span>
+            <span class="pb-desc">Automated, mandatory, not optional</span>
+          </div>
+          <div class="playbook-item">
+            <span class="pb-number">05</span>
+            <span class="pb-title">Full-SDLC Adoption</span>
+            <span class="pb-desc">Docs, testing, review — not just code completion</span>
+          </div>
+          <div class="playbook-item">
+            <span class="pb-number">06</span>
+            <span class="pb-title">Autonomy + Guardrails</span>
+            <span class="pb-desc">Give the policy, not the workflow prescription</span>
+          </div>
+        </div>
+        <aside class="notes">
+          If you are going to photograph one slide from this talk, make it this one. [PAUSE]
+
+          Six things that the high-performing teams have in common. One: a written AI tool policy. Which tools are approved, what the mandatory review standard is, how security scanning applies. Two: measurement before and after. Deployment frequency, change failure rate, PR cycle time. You cannot manage what you do not measure. Three: small PRs enforced. This directly counters the batch-size risk that DORA identified. Four: security scanning as a CI/CD gate. Not optional. Not manual. Automated and mandatory. Five: whole-SDLC adoption. Not just code completion — documentation, testing, review, deployment. Six: developer autonomy within guardrails. Give your engineers the policy, not a workflow prescription. Trust them to calibrate within the boundaries you set.
+
+          How many of these six does your team have today? [PAUSE] If the answer is fewer than three, you have a clear roadmap for the next quarter.
+
+          Let me leave you with three things you can do, starting this week.
+        </aside>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 15: Call to Action
+           ========================================== -->
+      <section class="slide-cta">
+        <h1>Three Actions. Three Time Horizons.</h1>
+        <div class="cta-grid">
+          <div class="cta-card">
+            <span class="cta-timeframe">This Week</span>
+            <span class="cta-owner">Individual action</span>
+            <span class="cta-action">Pick one task category. Run a 2-week experiment with an AI tool. Measure before and after. Document what you learn.</span>
+          </div>
+          <div class="cta-card">
+            <span class="cta-timeframe">This Sprint</span>
+            <span class="cta-owner">Team action</span>
+            <span class="cta-action">Write your AI tool policy: approved tools, mandatory review standard, security scanning. Takes 1 hour. Prevents 6 months of drift.</span>
+          </div>
+          <div class="cta-card">
+            <span class="cta-timeframe">This Quarter</span>
+            <span class="cta-owner">Leadership action</span>
+            <span class="cta-action">Establish a measurement baseline. Deploy frequency, change failure rate, PR cycle time. Make the data visible to the team.</span>
+          </div>
+        </div>
+        <p class="cta-closing">"The tools are already good enough. The question is whether your process is ready for them."</p>
+        <aside class="notes">
+          Three actions. Three time horizons. Each one has a clear owner.
+
+          This week. Individual action. Pick one task category — boilerplate generation, test case writing, or PR summaries. Run a deliberate two-week experiment with an AI tool. Measure your output before and after. Document what you learn. This costs you nothing but attention.
+
+          This sprint. Team action. Write your AI tool policy. It's one document with three things in it: which AI tools are approved, what the mandatory human review standard is, and how security scanning applies to AI-generated code. This takes one hour. It prevents six months of inconsistency and drift. [PAUSE]
+
+          This quarter. Leadership action. Establish a measurement baseline. Deployment frequency. Change failure rate. PR cycle time. Measure these before and after structured AI adoption. Make the data visible to the team. You cannot improve what you are not tracking.
+
+          Remember where we started. Forty-six percent. [PAUSE] That number is not going down. The shift is here. The teams that will look back on this period as a turning point are the ones that started building structured, disciplined AI-augmented workflows now — not the ones that waited for the tools to get better.
+
+          The tools are already good enough. The question is whether your process is ready for them. [PAUSE]
+
+          Thank you.
+        </aside>
+      </section>
+
+    </div><!-- /slides -->
+  </div><!-- /reveal -->
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      showNotes: false,
+      width: 1280,
+      height: 720,
+      margin: 0,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      center: false
+    });
+  </script>
+</body>
+</html>
