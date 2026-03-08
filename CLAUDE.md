@@ -1,153 +1,81 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working in this repository.
 
 ## Project Overview
 
-**Digital Filofax** - A web-based personal organization system for managing tasks, habits, calendar events, memos, ideas, finance, contacts, goals, reflections, and more.
+**Presentation Creator** — A Claude Code template and multi-agent prompt system that produces professional presentations (HTML/reveal.js, PDF, PPTX) from a topic + parameters input.
 
-**Stack**: Next.js 15 (App Router) + TypeScript + tRPC v11 RC + Prisma 6 + NextAuth v5 beta + Tailwind/shadcn + PostgreSQL (Supabase)
+**What this repo is**: A reusable Claude Code project template, pre-configured with agents, slash commands, skills, and workflow prompts. The primary deliverable is the Presentation Creator agent team prompt.
 
-**Scale**: 38 pages, 30 tRPC routers, 38 Prisma models (1144-line schema), 320 tests
+## Repository Structure
 
-## Commands
+```
+.claude_prompts/
+  presentation-creator-prompt.md  # Main 4-agent presentation system (PRIMARY ARTIFACT)
+  claude.md                        # Standard implementation workflow
+  iterative-testing-prompt.md      # Iterative browser-based testing workflow
+  personal-org-app-prompt.md       # Personal org app build prompt
 
-```bash
-# Development
-npm run dev              # Dev server with Turbopack (localhost:3000)
-npm run build            # Production build
-npm run lint             # ESLint
+.claude/
+  CLAUDE.md                        # Behavioral directives
+  TEMPLATE_GUIDE.md                # How to use this template for new projects
+  agents/                          # Specialized sub-agent definitions
+  commands/                        # Slash command definitions
+  skills/                          # MCP skill definitions
+  example_prompt.md                # Prompt template starting point
 
-# Testing (vitest)
-npm test                 # Run all 320 tests
-npm run test:watch       # Watch mode
-npm run test:coverage    # Coverage report
-npx vitest run tests/routers/tasks.test.ts          # Single file
-npx vitest run -t "should create a task"             # Single test by name
-
-# Database
-npm run db:generate      # Regenerate Prisma client after schema changes
-npm run db:push          # Push schema changes to database
-npm run db:studio        # Open Prisma Studio GUI
-npm run db:seed          # Seed database
-
-# Dev with auth bypass (no OAuth needed)
-DEV_AUTH_BYPASS=true npm run dev
+.claude_plans/                     # Planning and research documents
+.claude_research/                  # Background research
+review/                            # Evaluation outputs (use case analysis, audit, test HTML files, verdict)
+docs/                              # API reference
 ```
 
-## Architecture
+## Presentation Creator System
 
-**Data Flow**: React Components → tRPC hooks (`api.*`) → tRPC routers (`protectedProcedure`) → Prisma → PostgreSQL
+The core system is `.claude_prompts/presentation-creator-prompt.md` — a 4-agent pipeline:
 
-**Key Directories**:
-- `src/app/dashboard/` - All protected dashboard routes (25+ feature pages)
-- `src/server/api/routers/` - 29 tRPC router files (registered in `root.ts`)
-- `src/server/api/trpc.ts` - tRPC context, middleware, procedure definitions
-- `src/components/ui/` - shadcn/ui base components
-- `src/lib/` - Utilities (trpc.ts hooks, modules.ts, urgency.ts, import/export)
-- `src/types/index.ts` - Shared TypeScript types and Zod schemas
-- `prisma/schema.prisma` - Full database schema
-- `tests/` - All test files (vitest)
-- `.claude_plans/` - Planning documents and review reports
+| Agent | Role | Output |
+|---|---|---|
+| Agent 1: Research & Content Strategist | SCR narrative arc, Minto Pyramid, audience analysis | Content outline |
+| Agent 2: Slide Architect & Designer | 12 slide type templates, design system, CSS tokens | Slide design spec |
+| Agent 3: Script Writer | Speaker notes, timing (130 wpm model), transitions | Complete script |
+| Agent 4: Production Engineer | reveal.js HTML, PDF instructions, PPTX spec | Final deliverables |
 
-**Router Structure** (30 routers in `src/server/api/root.ts`):
-Tasks, categories, contexts, habits, memos, ideas, calendar, tags, preferences, daily, focus, goals, contacts, reflections, review, yearly (nested sub-routers: `yearly.goals.*`, `yearly.reflection.*`), templates, vision, finance, someday, journal, roles, github, search, export, analytics, import, collaboration, suggestions
-
-**Path Alias**: `@/` maps to `src/`
-
-## Critical Patterns
-
-### All queries MUST be user-scoped
-```typescript
-// Every query filters by userId from session
-where: { userId: ctx.session.user.id, ...filters }
+**Invocation example**:
+```yaml
+topic: "Why Teams Should Adopt AI Coding Assistants"
+audience: "Engineering leadership (CTOs, VPs of Engineering)"
+purpose: "Get buy-in to roll out AI coding tools company-wide"
+duration: "10 minutes"
+tone: "Professional but direct"
+output_formats: ["html"]
+brand_colors: ["#0f172a", "#3b82f6", "#f8fafc"]
 ```
 
-### All errors must use TRPCError
-```typescript
-import { TRPCError } from "@trpc/server";
-throw new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
-// NEVER: throw new Error("Task not found")
-```
+## Evaluation Results
 
-### All Zod string inputs must have .max() bounds
-```typescript
-z.string().max(500)       // search fields
-z.string().max(5000)      // notes/descriptions
-z.array(z.string().max(1000)).max(50)  // string arrays
-```
+The system has been formally evaluated. Key findings in `review/`:
 
-### Component pattern with cache invalidation
-```typescript
-"use client";
-import { api } from "@/lib/trpc";
+- **Fulfillment score**: 74/100 (estimated 88–92/100 post-fixes)
+- `review/use_case_analysis.md` — 5 canonical use cases + success criteria
+- `review/implementation_audit.md` — 10-dimension scored audit
+- `review/test_output_1.html` / `test_output_2.html` — Live generated presentations
+- `review/test_results.md` — Scored test results
+- `review/final_verdict.md` — Full verdict, improvement backlog, success criteria baseline
 
-export function MyComponent() {
-  const { data, isLoading } = api.router.getAll.useQuery();
-  const utils = api.useUtils();
-  const mutation = api.router.create.useMutation({
-    onSuccess: () => utils.router.getAll.invalidate(),
-  });
-}
-```
-
-### Prisma query patterns
-- Use `include` for related data (avoid N+1)
-- Use `orderBy` for consistent ordering
-- Use `$transaction` / `Promise.all` for multi-model operations
-- Use `updateMany` with `userId` in where clause for secure bulk updates
-
-## Adding Features
-
-1. **Schema**: Edit `prisma/schema.prisma` → `npm run db:generate` → `npm run db:push`
-2. **Router**: Create in `src/server/api/routers/`, register in `src/server/api/root.ts`
-3. **Module**: Add module ID to `src/lib/modules.ts` if feature should be toggleable
-4. **UI**: Build page in `src/app/dashboard/[feature]/page.tsx`
-5. **Wire**: Connect with `api.[router].[procedure].useQuery/useMutation()`
-
-## Testing
-
-**Framework**: vitest 4.0.18 with mocked Prisma client
-
-**Test structure**: Tests simulate router logic by calling mock Prisma methods directly and verifying correct arguments (user scoping, ownership checks, etc.)
-
-**Key files**:
-- `tests/helpers.ts` - `createMockContext()`, `createMockPrismaClient()`, test user constants
-- `tests/routers/*.test.ts` - Router tests (tasks, habits, goals, daily, collaboration, finance, contacts, reflections, calendar)
-- `tests/lib/*.test.ts` - Utility tests (import, export, modules)
-- `vitest.config.ts` - Config with `@/` path alias, v8 coverage provider
-
-**Mocks required in every router test file**:
-```typescript
-vi.mock("@/server/db", () => ({ db: {} }));
-vi.mock("@/server/auth", () => ({ auth: vi.fn().mockResolvedValue(null) }));
-```
-
-## Authentication
-
-- `protectedProcedure` enforces authentication - throws `UNAUTHORIZED` if no session
-- All user data filtered by `ctx.session.user.id`
-- Providers: GitHub OAuth, Google OAuth, Credentials (dev only)
-- Dev bypass: `DEV_AUTH_BYPASS=true` skips OAuth, uses a seeded dev user
-- NextAuth v5 beta with PrismaAdapter (database sessions in prod, JWT in dev)
-
-## Known Trade-offs
-
-- `z.any()` in preferences.ts (dashboardLayout) and templates.ts (content) - required for Prisma Json field spread compatibility
-- `any` type for editingTask in `tasks/page.tsx` and GoalData in `goals/page.tsx` - intentionally simplified for UI
-- `github.ts` getIssues/getPullRequests/getStats return empty arrays with `integrationRequired: true` (awaiting GitHub OAuth integration)
-- `suggestions.ts` uses rule-based heuristics, not actual AI
-
-## Troubleshooting
-
-- **Dev server MODULE_NOT_FOUND errors**: Clear `.next` cache: `rm -rf .next && npm run dev`
-- **Dev server crash (exit 144)**: Kill process and restart: `lsof -ti :3000 | xargs kill -9`
-- **Prisma client out of date**: Run `npm run db:generate` after any schema changes
+**Production-quality pass thresholds** (from `review/final_verdict.md`):
+- Slide count within ±2 of duration target
+- 100% of slides have speaker notes
+- 0 slides with >50 words of body text
+- HTML opens without errors in Chrome, `S` key opens speaker notes
+- Narrative arc traceable: hook → 3 MECE pillars → specific CTA
+- Timing estimate accurate within ±15% (measured at 130 words/minute)
 
 ## Workflow Rules
 
-- Always verify changes: `npm run lint && npm run build`
-- All tests must pass: `npm test` (320 tests)
-- No mocks, stubs, TODOs, or placeholder implementations
 - Planning documents go in `.claude_plans/`
-- Never modify `.env` files, `node_modules/`, `.git/`, `.next/`
+- Research documents go in `.claude_research/`
+- Evaluation outputs go in `review/`
+- New prompt variants go in `.claude_prompts/`
+- No TODOs or placeholder implementations in prompt files

@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<!--
+  Gen AI for FM&I — Upskilling Session
+  =====================================
+  Usage:
+    - Open in browser: file:///path/to/presentation.html
+    - Speaker notes:   Press S (opens notes window)
+    - Fullscreen:      Press F
+    - Overview:        Press O
+    - Print to PDF:    Add ?print-pdf to URL, then Cmd+P → Save as PDF
+                       e.g. file:///path/to/presentation.html?print-pdf
+  Built with reveal.js v5 (CDN). Requires internet connection on first load.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gen AI for FM&I — Tools, Workflows, and What's Next</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+<style>
+/* ============================================================
+   DESIGN SYSTEM TOKENS
+   ============================================================ */
+:root {
+  --color-primary:      #0a1628;
+  --color-secondary:    #1e3a5f;
+  --color-accent:       #00a3e0;
+  --color-accent-warm:  #f5a623;
+  --color-surface:      #f0f4f8;
+  --color-text-primary: #0a1628;
+  --color-text-light:   #ffffff;
+  --color-text-muted:   #64748b;
+  --color-green-bg:     #e8f5e9;
+  --color-green-text:   #2e7d32;
+  --color-amber-bg:     #fff8e1;
+  --color-red-bg:       #ffeaea;
+  --color-red-text:     #c62828;
+
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  --slide-padding: 50px;
+}
+
+/* ============================================================
+   REVEAL BASE OVERRIDES
+   ============================================================ */
+.reveal { font-family: var(--font-body); }
+.reveal .slides section { padding: var(--slide-padding); box-sizing: border-box; }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-heading); text-transform: none; letter-spacing: -0.01em; }
+.reveal p, .reveal li { line-height: 1.55; }
+.reveal pre { box-shadow: none; margin: 0; }
+.reveal pre code { font-family: var(--font-mono); border-radius: 6px; padding: 16px; font-size: 0.72em; line-height: 1.5; }
+.reveal .progress { color: var(--color-accent); }
+.reveal .controls { color: var(--color-accent); }
+
+/* ============================================================
+   LAYOUT HELPERS
+   ============================================================ */
+.slide-inner {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+}
+.slide-inner.center { align-items: center; text-align: center; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; width: 100%; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; width: 100%; }
+.four-quad { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; width: 100%; flex: 1; }
+
+/* ============================================================
+   TEXT UTILITIES
+   ============================================================ */
+.t-title    { font-size: 2.2em; font-weight: 700; line-height: 1.15; }
+.t-heading  { font-size: 1.6em; font-weight: 700; line-height: 1.2; }
+.t-body     { font-size: 1.1em; line-height: 1.55; }
+.t-caption  { font-size: 0.82em; line-height: 1.4; }
+.t-stat     { font-size: 2.8em; font-weight: 700; line-height: 1.0; }
+.t-big      { font-size: 3.6em; font-weight: 700; line-height: 1.0; }
+.t-light    { color: var(--color-text-light); }
+.t-muted    { color: var(--color-text-muted); }
+.t-accent   { color: var(--color-accent); }
+.t-warm     { color: var(--color-accent-warm); }
+.t-primary  { color: var(--color-text-primary); }
+.t-green    { color: var(--color-green-text); }
+.t-red      { color: var(--color-red-text); }
+.bold       { font-weight: 700; }
+.italic     { font-style: italic; }
+.upper      { text-transform: uppercase; letter-spacing: 0.08em; }
+.center     { text-align: center; }
+.mb4  { margin-bottom: 4px; }
+.mb8  { margin-bottom: 8px; }
+.mb12 { margin-bottom: 12px; }
+.mb16 { margin-bottom: 16px; }
+.mb24 { margin-bottom: 24px; }
+.mb32 { margin-bottom: 32px; }
+.mt8  { margin-top: 8px; }
+.mt16 { margin-top: 16px; }
+.mt24 { margin-top: 24px; }
+
+/* ============================================================
+   CARD & SURFACE COMPONENTS
+   ============================================================ */
+.card {
+  background: var(--color-secondary);
+  border-radius: 8px;
+  padding: 20px 22px;
+  border-top: 3px solid var(--color-accent);
+}
+.card-surface {
+  background: white;
+  border-radius: 8px;
+  padding: 20px 22px;
+  border-left: 4px solid var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.card-green {
+  background: var(--color-green-bg);
+  border-radius: 8px;
+  padding: 20px 22px;
+  border-left: 4px solid var(--color-green-text);
+}
+.card-red {
+  background: var(--color-red-bg);
+  border-radius: 8px;
+  padding: 20px 22px;
+  border-left: 4px solid var(--color-red-text);
+}
+.card-amber {
+  background: var(--color-amber-bg);
+  border-radius: 8px;
+  padding: 20px 22px;
+  border-left: 4px solid var(--color-accent-warm);
+}
+.accent-bar {
+  width: 4px; background: var(--color-accent);
+  height: 100%; position: absolute; left: 0; top: 0;
+  border-radius: 2px;
+}
+.accent-rule {
+  width: 120px; height: 4px;
+  background: var(--color-accent);
+  margin: 16px auto;
+  border-radius: 2px;
+}
+.accent-rule-left {
+  width: 80px; height: 4px;
+  background: var(--color-accent);
+  margin: 12px 0;
+  border-radius: 2px;
+}
+.divider { width: 100%; height: 1px; background: rgba(255,255,255,0.15); margin: 16px 0; }
+.divider-dark { width: 100%; height: 1px; background: rgba(10,22,40,0.12); margin: 16px 0; }
+
+/* ============================================================
+   STAT BOX
+   ============================================================ */
+.stat-box {
+  border-radius: 8px;
+  padding: 24px 20px;
+  text-align: center;
+  border-bottom: 4px solid var(--color-accent);
+}
+.stat-box-green { background: var(--color-green-bg); border-bottom-color: var(--color-green-text); }
+.stat-box-amber { background: var(--color-amber-bg); border-bottom-color: var(--color-accent-warm); }
+
+/* ============================================================
+   TABLE STYLES
+   ============================================================ */
+.slide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82em;
+}
+.slide-table th {
+  background: var(--color-secondary);
+  color: var(--color-text-light);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+.slide-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  vertical-align: top;
+}
+.slide-table tr:nth-child(even) td { background: rgba(0,163,224,0.05); }
+.slide-table-dark th { background: rgba(255,255,255,0.15); }
+.slide-table-dark td { color: var(--color-text-light); border-bottom-color: rgba(255,255,255,0.1); }
+.slide-table-dark tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+
+/* ============================================================
+   DEMO BADGE
+   ============================================================ */
+.demo-badge {
+  display: inline-block;
+  background: var(--color-accent-warm);
+  color: white;
+  font-weight: 700;
+  font-size: 0.72em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.demo-slide-border {
+  border: 3px solid var(--color-accent-warm) !important;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   SECTION DIVIDER SLIDES
+   ============================================================ */
+.section-divider {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 70px;
+}
+.section-divider .big-numeral {
+  position: absolute;
+  right: 40px;
+  bottom: 20px;
+  font-size: 9em;
+  font-weight: 700;
+  color: rgba(255,255,255,0.08);
+  line-height: 1;
+  font-family: var(--font-heading);
+  pointer-events: none;
+}
+.section-divider .side-bar {
+  position: absolute;
+  left: 0; top: 0;
+  width: 8px; height: 100%;
+  background: var(--color-accent);
+  border-radius: 0 4px 4px 0;
+}
+
+/* ============================================================
+   CODE PANEL
+   ============================================================ */
+.code-panel {
+  background: #0d1117;
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: #c9d1d9;
+  line-height: 1.55;
+  overflow: auto;
+  white-space: pre;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.code-kw  { color: #ff7b72; }
+.code-str { color: #a5d6ff; }
+.code-cm  { color: #8b949e; font-style: italic; }
+.code-fn  { color: #d2a8ff; }
+.code-num { color: #79c0ff; }
+
+/* ============================================================
+   BULLET LIST
+   ============================================================ */
+ul.clean { list-style: none; padding: 0; margin: 0; }
+ul.clean li { padding: 6px 0 6px 20px; position: relative; }
+ul.clean li::before {
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+ul.clean-light li::before { background: var(--color-text-light); }
+
+/* ============================================================
+   BACKGROUND SLIDE CLASSES
+   ============================================================ */
+.bg-primary   { background: var(--color-primary) !important; }
+.bg-secondary { background: var(--color-secondary) !important; }
+.bg-surface   { background: var(--color-surface) !important; }
+.bg-white     { background: white !important; }
+
+/* ============================================================
+   DECISION TREE
+   ============================================================ */
+.decision-node {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: var(--color-text-light);
+  font-size: 0.82em;
+  margin-bottom: 8px;
+  position: relative;
+}
+.decision-branch {
+  display: flex; gap: 16px; margin-left: 24px; margin-bottom: 8px;
+}
+.decision-yes {
+  background: var(--color-green-bg);
+  color: var(--color-green-text);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.78em;
+  font-weight: 600;
+  flex: 1;
+}
+.decision-no {
+  border-left: 2px dashed var(--color-accent);
+  padding-left: 12px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.78em;
+}
+.decision-default {
+  background: var(--color-accent);
+  color: white;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-weight: 700;
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+.timeline { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.timeline-item { display: flex; gap: 16px; align-items: flex-start; }
+.timeline-dot {
+  width: 10px; height: 10px; min-width: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  margin-top: 6px;
+}
+.timeline-label { font-size: 0.75em; font-weight: 600; color: var(--color-accent); min-width: 60px; }
+.timeline-text  { font-size: 0.82em; line-height: 1.45; }
+
+/* ============================================================
+   PHILOSOPHY CARDS
+   ============================================================ */
+.phil-card {
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid var(--color-accent-warm);
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px;
+  color: var(--color-text-light);
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FOOTER / SLIDE NUMBER
+   ============================================================ */
+.slide-footer {
+  position: absolute;
+  bottom: 18px; right: 30px;
+  font-size: 0.55em;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+.slide-footer-light {
+  position: absolute;
+  bottom: 18px; right: 30px;
+  font-size: 0.55em;
+  color: rgba(255,255,255,0.4);
+}
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================
+     SLIDE 1 — TITLE
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner center" style="height:100%;">
+    <div style="width:100%;">
+      <p class="t-caption t-accent upper mb8">FM&I Upskilling Session</p>
+      <h1 class="t-title t-light mb12" style="font-size:2.6em;">Gen AI for FM&I</h1>
+      <div class="accent-rule"></div>
+      <p class="t-body t-accent mb16">Tools, Workflows, and What's Next</p>
+      <p class="t-caption t-muted">BP Trading Analytics &amp; Insights &nbsp;·&nbsp; March 2026</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">gen_ai_fmi · 1 / 60</div>
+  <aside class="notes">
+    Welcome everyone. Before I get into the content, let me tell you what this session is not. It is not an AI 101. It is not a conceptual introduction to how language models work. And it is not a vendor pitch.
+
+    This is a practical briefing, by and for this team. FM&I specifically. Everything in this session is chosen because it maps directly to workflows we run — pipelines, models, ad hoc analysis, reports.
+
+    Ninety minutes. At the end of it, every person in this room will have a complete map of every AI tool available, every access path, every compliance boundary, and a concrete idea ready for Innovation Day.
+
+    Let's start.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 2 — SECTION DIVIDER 1
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 1</p>
+    <h2 class="t-heading t-light mb12">The Productivity Case</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Why this matters more than most AI sessions you've sat through</p>
+    <div class="big-numeral">01</div>
+  </div>
+  <div class="slide-footer-light">2 / 60</div>
+  <aside class="notes">
+    Section one. The productivity case. I want to make this specific and quantified before we look at a single tool.
+
+    "Here's what the research actually shows."
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 3 — THE PRODUCTIVITY GAP
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%; text-align:center;">The Productivity Gap Is Real</h2>
+    <div class="two-col mb24" style="align-items:stretch;">
+      <div class="stat-box stat-box-green">
+        <div class="t-big t-accent mb8">15 hrs</div>
+        <div class="t-caption t-muted mb4">per week saved</div>
+        <div class="t-caption bold" style="color:var(--color-green-text);">Top 20% of AI tool adopters</div>
+      </div>
+      <div class="stat-box stat-box-amber">
+        <div class="t-big t-warm mb8">2 hrs</div>
+        <div class="t-caption t-muted mb4">per week saved</div>
+        <div class="t-caption bold" style="color:var(--color-accent-warm);">Bottom 20% of AI tool adopters</div>
+      </div>
+    </div>
+    <p class="t-body t-primary center mb12" style="width:100%;">Same tools. Same team. Different outcomes. <strong>The gap is entirely in how they use them.</strong></p>
+    <p class="t-caption t-muted italic center" style="width:100%;">Source: Accenture 2025 Analytics Team Study</p>
+  </div>
+  <div class="slide-footer">3 / 60</div>
+  <aside class="notes">
+    Fifteen hours per week versus two hours per week.
+
+    Both of those numbers come from the same 2025 Accenture study of analytics teams — data scientists and quantitative analysts with access to the same AI tools. The top 20% of adopters saved more than fifteen hours of routine work per week. The bottom 20% saved fewer than two.
+
+    Same tools. Same team composition. Same technical background. The difference was entirely in how they integrated AI into their daily workflow.
+
+    [PAUSE]
+
+    Think about what fifteen hours per week means in practice. That is nearly two full working days, every single week, freed from low-complexity mechanical work. Over a year, that is six weeks of analytical capacity per person returned to the team — applied to the work that actually requires FM&I judgment.
+
+    Now, this is not a study of ML engineers versus non-technical users. This is a study of people exactly like us — people who already understand data, models, and pipelines. The gap is not technical skill. The gap is workflow integration.
+
+    That is what today is about. Closing the gap. For FM&I.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 4 — WHAT THE RESEARCH ACTUALLY SAYS
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">Peer Evidence From Comparable Technical Teams</h2>
+    <div class="four-quad">
+      <div class="card">
+        <div class="t-stat t-accent mb8">55%</div>
+        <div class="t-caption t-light mb4">faster code task completion</div>
+        <div class="t-caption t-muted">GitHub Dev Productivity Study</div>
+      </div>
+      <div class="card">
+        <div class="t-stat t-accent mb8">8–12 hrs</div>
+        <div class="t-caption t-light mb4">per week — routine task time saved</div>
+        <div class="t-caption t-muted">Accenture 2025 (analytics teams)</div>
+      </div>
+      <div class="card">
+        <div class="t-stat t-accent mb8">50%</div>
+        <div class="t-caption t-light mb4">less time on documentation</div>
+        <div class="t-caption t-muted">McKinsey 2024</div>
+      </div>
+      <div class="card">
+        <div class="t-stat t-accent mb8">30%</div>
+        <div class="t-caption t-light mb4">faster code review cycle time</div>
+        <div class="t-caption t-muted">Goldman Sachs front-office tech pilot</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">4 / 60</div>
+  <aside class="notes">
+    Four data points. Different studies. Comparable technical teams.
+
+    Fifty-five percent faster on code task completion — that is GitHub's own developer productivity study, one thousand developers, coding tasks, measured. The acceptance rate of AI suggestions was thirty to thirty-five percent, meaning the time saving is not from blindly accepting everything — it is from eliminating the cognitive overhead of context-switching to documentation and boilerplate.
+
+    Eight to twelve hours per week — Accenture, analytics teams specifically. The gains were highest on documentation generation, test writing, and data profiling. All things FM&I does.
+
+    Fifty percent less time on documentation — McKinsey. For anyone who has deferred writing a model card because there wasn't time — that deferral is now optional.
+
+    Thirty percent faster code review cycles — Goldman Sachs front-office technology teams on GitHub Copilot. That is a directly comparable environment to ours.
+
+    [PAUSE]
+
+    These are not studies of startups with twenty-five-year-old engineers who spend all day on AI tools. These are comparable technical teams, in comparable organisations, doing comparable work.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 5 — THE TWO TYPES OF AI USER
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%;">Two Kinds of AI Users</h2>
+    <div class="two-col mb16" style="align-items:stretch; flex:1;">
+      <div class="card-surface" style="border-left-color: var(--color-text-muted); background: white;">
+        <p class="t-body t-muted bold mb16">Passive User</p>
+        <ul class="clean" style="color: var(--color-text-muted);">
+          <li>Uses AI for isolated queries</li>
+          <li>Starts fresh every time</li>
+          <li>Accepts first drafts</li>
+          <li>Single-file, single-turn</li>
+          <li>No project configuration</li>
+        </ul>
+      </div>
+      <div class="card-surface" style="border-left-color: var(--color-accent); background: #e8f5ff;">
+        <p class="t-body t-accent bold mb16">Active Integrator</p>
+        <ul class="clean">
+          <li>AI at every stage of workflow</li>
+          <li>Project-level AI configuration</li>
+          <li>Iterates and refines outputs</li>
+          <li>Agents for multi-step tasks</li>
+          <li>Persistent context per project</li>
+        </ul>
+      </div>
+    </div>
+    <p class="t-caption t-muted center" style="width:100%;">FM&I's goal today: move every team member to the right column</p>
+  </div>
+  <div class="slide-footer">5 / 60</div>
+  <aside class="notes">
+    It comes down to this distinction.
+
+    The passive user uses AI for isolated queries. They open a chat window when they are stuck. They paste an error message, get a suggestion, and close the window. They start fresh every time with no project context. They accept or reject the first output without iteration. They never configure AI behaviour at the project level.
+
+    The active integrator uses AI at every stage of their workflow. Before writing code — planning. During writing — completion and suggestion. After writing — review, documentation, test generation. They have project-level AI configuration that gives the AI persistent context about their codebase. They use agents for multi-step tasks. They iterate.
+
+    The difference in productivity is not the tools. It is the workflow.
+
+    FM&I's goal today is not to introduce the tools. It is to move everyone from the left column to the right column.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 6 — WHAT FM&I STANDS TO GAIN
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">What FM&I Stands to Gain</h2>
+    <table class="slide-table slide-table-dark" style="width:100%;">
+      <tr>
+        <th>Workflow</th>
+        <th>Before</th>
+        <th style="color:var(--color-accent);">After AI</th>
+        <th>Saving</th>
+      </tr>
+      <tr>
+        <td class="t-light">Pipeline debugging</td>
+        <td class="t-warm">40–80 min</td>
+        <td class="t-accent">5–10 min</td>
+        <td class="t-caption t-muted">~85% reduction</td>
+      </tr>
+      <tr>
+        <td class="t-light">Model documentation</td>
+        <td class="t-warm">4–6 hrs</td>
+        <td class="t-accent">1–2 hrs</td>
+        <td class="t-caption t-muted">~70% reduction</td>
+      </tr>
+      <tr>
+        <td class="t-light">Ad hoc analysis</td>
+        <td class="t-warm">2–3 hrs</td>
+        <td class="t-accent">45 min</td>
+        <td class="t-caption t-muted">~70% reduction</td>
+      </tr>
+      <tr>
+        <td class="t-light">Test writing</td>
+        <td class="t-warm">Skipped</td>
+        <td class="t-accent">15 min generated</td>
+        <td class="t-caption t-muted">New capability</td>
+      </tr>
+      <tr>
+        <td class="t-light">Report generation</td>
+        <td class="t-warm">3–4 hrs</td>
+        <td class="t-accent">30–45 min</td>
+        <td class="t-caption t-muted">~80% reduction</td>
+      </tr>
+    </table>
+    <p class="t-caption t-muted mt16">5 team members × 10 hrs/week = <strong class="t-accent">50 hrs/week</strong> returned — 12.5 full working days per week</p>
+  </div>
+  <div class="slide-footer-light">6 / 60</div>
+  <aside class="notes">
+    These are FM&I workflow numbers. Not generic developer numbers.
+
+    Pipeline debugging: forty to eighty minutes currently — we all know the overnight job failure that takes most of a morning to diagnose. With AI: five to ten minutes. You paste the stack trace and the recipe code. The model traces the error chain, identifies the join ambiguity or the type mismatch, and suggests a fix with an explanation.
+
+    Model documentation: four to six hours to write a proper model card. After AI: one to two hours — and that is mostly review and enrichment, not generation.
+
+    Ad hoc analysis: a trader needs a seasonal price analysis by end of day. Currently two to three hours. After: forty-five minutes, because you are writing the data loading code and then describing the analysis in plain English.
+
+    Test writing: this one is particularly valuable for FM&I because it is often skipped under time pressure. With AI, a full test suite for a complex recipe is fifteen minutes to generate and thirty to forty-five minutes to review. There is no longer an excuse to ship untested pipeline code.
+
+    [PAUSE]
+
+    At our workflow volume, these savings compound. Five team members each saving ten hours a week is fifty hours per week — twelve and a half full working days per week returned to the team.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 7 — SECTION DIVIDER 2
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 2</p>
+    <h2 class="t-heading t-light mb12">The Current Landscape</h2>
+    <p class="t-body t-light" style="opacity:0.8;">What's available to us, how to access it, and what's changed in 12 months</p>
+    <div class="big-numeral">02</div>
+  </div>
+  <div class="slide-footer-light">7 / 60</div>
+  <aside class="notes">
+    Section two. The landscape. What is available, how to access it, and what changed in the last twelve months.
+
+    There are four tools in the picture. Two of you can access right now. One requires a simple IT request. One is personal only.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 8 — WHAT'S AVAILABLE TO BP EMPLOYEES TODAY
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%;">What's Available to BP Employees Today</h2>
+    <table class="slide-table" style="width:100%;">
+      <tr>
+        <th>Tool</th>
+        <th>Status</th>
+        <th>Access</th>
+        <th>Data OK?</th>
+      </tr>
+      <tr>
+        <td class="bold">M365 Copilot</td>
+        <td style="color:var(--color-green-text); font-weight:600;">✓ Available now</td>
+        <td>Standard M365 licence — already enabled</td>
+        <td>Internal (non-sensitive)</td>
+      </tr>
+      <tr>
+        <td class="bold">GitHub Copilot</td>
+        <td style="color:var(--color-accent); font-weight:600;">IT request needed</td>
+        <td>IT service desk — BP GitHub Enterprise</td>
+        <td>BP code in GitHub org</td>
+      </tr>
+      <tr>
+        <td class="bold">Cursor</td>
+        <td style="color:var(--color-accent-warm); font-weight:600;">Personal only</td>
+        <td>Personal subscription £20/mo</td>
+        <td style="color:var(--color-red-text);">Public / personal ONLY</td>
+      </tr>
+      <tr>
+        <td class="bold">Copilot Studio</td>
+        <td style="color:var(--color-text-muted); font-weight:600;">Licence required</td>
+        <td>IT / cost centre manager request</td>
+        <td>Internal (non-sensitive)</td>
+      </tr>
+    </table>
+    <div class="card-green mt24">
+      <p class="t-caption bold" style="color:var(--color-green-text); margin:0;">Two tools, zero additional cost, zero approval needed, available right now. Most of you aren't using them fully. That changes today.</p>
+    </div>
+  </div>
+  <div class="slide-footer">8 / 60</div>
+  <aside class="notes">
+    Let me be specific about access — because the biggest obstacle to tool adoption in most organisations is not awareness or cost. It is ambiguity about whether you are allowed to use something and how to get it.
+
+    M365 Copilot is available to you now. If you have an M365 E3 or E5 licence — which you do — Copilot is already in Teams, Outlook, Word, Excel, and PowerPoint. You do not need to request anything. Open Teams. Look for the Copilot icon. It is there.
+
+    GitHub Copilot is available through BP's GitHub Enterprise licence. You need to raise an IT service desk request. The BP-covered licence means the data handling is under BP's enterprise agreement.
+
+    Cursor is personal only. This is important. Cursor does not have an enterprise agreement with BP. It should not be used with BP proprietary code or internal data on anything other than a personal subscription on personal devices.
+
+    Copilot Studio requires an additional licence beyond standard M365. Talk to your cost centre manager or the IT helpdesk.
+
+    [PAUSE]
+
+    The headline: two tools, zero additional cost, zero approval needed, available right now. Most of you are not using them fully. That changes today.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 9 — 12-MONTH MODEL EVOLUTION TIMELINE
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">12-Month Model Evolution</h2>
+    <div class="two-col" style="align-items:start; flex:1;">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q1 2025</div>
+            <div class="timeline-text t-light">Claude 3.5 Sonnet → new standard for coding assistance</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q2 2025</div>
+            <div class="timeline-text t-light">Gemini 2.0 → 1M token context windows usable</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q2 2025</div>
+            <div class="timeline-text t-light">Claude 3.7 → extended thinking / chain-of-thought</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q3 2025</div>
+            <div class="timeline-text t-light">OpenAI o3 → purpose-built reasoning model (public)</div>
+          </div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q3 2025</div>
+            <div class="timeline-text t-light">Llama 3.3 70B → open-source gap narrows significantly</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q4 2025</div>
+            <div class="timeline-text t-light">Gemini 2.5 → multimodal + deep tool use</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label">Q4 2025</div>
+            <div class="timeline-text t-light">Claude Sonnet 4.6 + Opus 4.6 → current production standards</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div>
+            <div class="timeline-label t-warm">Q1 2026</div>
+            <div class="timeline-text t-warm bold">Now — multi-agent in production, MCP standardised</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt16">The tools of Q1 2026 are categorically more capable than Q1 2025. What seemed impossible 12 months ago is now routine.</p>
+  </div>
+  <div class="slide-footer-light">9 / 60</div>
+  <aside class="notes">
+    This timeline matters because the tools we are discussing today are categorically more capable than what existed twelve months ago.
+
+    Q1 2025 — Claude 3.5 Sonnet became the de-facto standard for coding assistance. The first model where the AI code suggestion acceptance rate became commercially meaningful.
+
+    Q2 2025 — Gemini 2.0 made one million token context windows practically usable. For FM&I, this means loading an entire Dataiku project and asking architecture-level questions across it.
+
+    Q2 2025 — Claude 3.7 Sonnet introduced extended thinking — explicit chain-of-thought reasoning. Suddenly reliable on complex statistical methodology questions.
+
+    Q3 2025 — OpenAI released o3. A dedicated reasoning model. Purpose-built for mathematics, logic, and complex code architecture.
+
+    Q3 2025 — Llama 3.3 70B. Open-source model that runs locally. The capability gap with frontier models narrowed significantly. Relevant for data governance scenarios.
+
+    Q4 2025 — Claude Sonnet 4.6 and Opus 4.6. Current production standards. What you should be using today.
+
+    Q1 2026 — where we are now. Multi-agent orchestration in production. MCP standardised. The tools of today are not the tools of six months ago.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 10 — CAPABILITY STEP-CHANGES
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%;">Three Step-Changes That Matter</h2>
+    <div class="three-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">Context Windows</p>
+        <p class="t-caption t-primary mb8"><strong>What changed:</strong> 200K–1M token contexts — entire codebases fit in one window</p>
+        <p class="t-caption t-muted"><strong>FM&I use:</strong> Load your entire Dataiku project. Ask: "which downstream models are affected if this feed fails?"</p>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">Agentic Execution</p>
+        <p class="t-caption t-primary mb8"><strong>What changed:</strong> Multi-step autonomous task execution — plan, execute, fix, report</p>
+        <p class="t-caption t-muted"><strong>FM&I use:</strong> Overnight pipeline health monitor, weekly report agent, request triage agent</p>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">Tool Calling / MCP</p>
+        <p class="t-caption t-primary mb8"><strong>What changed:</strong> LLMs invoke external APIs, read databases, interact with real systems</p>
+        <p class="t-caption t-muted"><strong>FM&I use:</strong> Connect Claude Code to Dataiku, query scenario status, trigger pipeline runs</p>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt16">The constraint is no longer what the models can do. The constraint is whether we are using them at this level.</p>
+  </div>
+  <div class="slide-footer">10 / 60</div>
+  <aside class="notes">
+    Three changes. Not incremental improvements. Actual step-changes in what you can do with these tools.
+
+    Context windows. Claude now has 200,000 token context. Gemini has one million. What this means in practice: you can load your entire Dataiku project — all the recipes, all the schemas, the full pipeline structure — into a single AI context and ask architecture-level questions.
+
+    Agentic execution. Multi-step autonomous task execution moved from research demo to production tool in 2025. An agent can now receive a task, plan its approach, read files, write code, run tests, see the results, fix failures, and report back — without human involvement at each step.
+
+    Tool calling and MCP. LLMs can now invoke external APIs, read files, query databases, and interact with real systems as part of their reasoning. The Model Context Protocol standardises how any AI tool connects to any external system. One server for Dataiku works with Cursor, Claude Code, and any other MCP-aware tool.
+
+    [PAUSE]
+
+    The constraint is no longer what the models can do. The constraint is whether we are using them at this level.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 11 — SECTION DIVIDER 3
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 3</p>
+    <h2 class="t-heading t-light mb12">FM&I Use Cases</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Concrete workflows with before/after times — then a live demo</p>
+    <div class="big-numeral">03</div>
+  </div>
+  <div class="slide-footer-light">11 / 60</div>
+  <aside class="notes">
+    Section three. Use cases. Concrete, specific, with real time numbers. Then a live demo.
+
+    Six high-impact workflows. Every one of these is something FM&I does regularly.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 12 — FM&I USE CASES
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">FM&I Use Cases — The Practical Hit List</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Pipeline Debugging (Dataiku)</p>
+          <p class="t-caption t-light">80 min &rarr; <strong class="t-accent">10 min</strong> — paste stack trace + recipe code, get root cause</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">ELT Code Generation (Python/SQL)</p>
+          <p class="t-caption t-light">4 hrs &rarr; <strong class="t-accent">1 hr</strong> — describe schema &amp; transformation, get working code</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Ad Hoc Analysis</p>
+          <p class="t-caption t-light">3 hrs &rarr; <strong class="t-accent">45 min</strong> — describe groupby + stats in plain English, get Plotly charts</p>
+        </div>
+      </div>
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Model Documentation</p>
+          <p class="t-caption t-light">5 hrs &rarr; <strong class="t-accent">90 min</strong> — generation automatic, review &amp; enrich</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Report Automation</p>
+          <p class="t-caption t-light">4 hrs &rarr; <strong class="t-accent">30 min</strong> — weekly trading desk briefing</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Test Writing</p>
+          <p class="t-caption t-light">Previously skipped &rarr; <strong class="t-accent">15 min generated</strong> — no more excuse to skip tests</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">12 / 60</div>
+  <aside class="notes">
+    Pipeline debugging: the overnight Dataiku failure. You wake up to an error. Stack trace, cryptic message, join ambiguity you spend forty-five minutes diagnosing. With AI: you paste the trace and the recipe code. The model identifies the problem in thirty seconds.
+
+    Code generation: writing a new ELT recipe from scratch. Schema definition, type coercion, null handling, deduplication, basic tests — four hours of boilerplate. With AI: you describe the source and target schemas and the transformation requirements.
+
+    Ad hoc analysis: a trader needs price spread analysis by end of day. You write the data loading code, then describe the analysis in plain English. The AI generates the groupby logic, rolling statistics, and Plotly charts.
+
+    Model documentation: model cards that are deferred indefinitely become a ninety-minute review task.
+
+    Report automation: the weekly trading desk briefing compresses from four hours to thirty minutes.
+
+    Test writing: fifteen minutes to generate a full test suite. This one is the one that most changes what good looks like for FM&I's codebase quality.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 13 — LIVE DEMO: PIPELINE DEBUGGING
+     ============================================================ -->
+<section data-background-color="#0a1628" style="border: 3px solid #f5a623 !important;">
+  <div class="slide-inner" style="height:100%;">
+    <div class="demo-badge">Live Demo</div>
+    <h2 class="t-heading t-light mb20" style="width:100%;">Pipeline Debugging with GitHub Copilot</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What we're doing</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Paste a Dataiku recipe stack trace + recipe code</li>
+          <li>Ask Copilot to diagnose the root cause</li>
+          <li>Ask for a fix with explanation</li>
+          <li>Follow up: "Where else could this pattern break?"</li>
+        </ul>
+      </div>
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What to look for</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>How fast it traces the error chain</li>
+          <li>Whether it identifies the data-level cause</li>
+          <li>Quality of explanation vs restating the error</li>
+          <li>Proactive identification of similar risks</li>
+        </ul>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt16 italic">[PRESENTER: switch to GitHub Copilot in VS Code — pre-prepared Pandas merge recipe with ambiguous join key]</p>
+  </div>
+  <div class="slide-footer-light">13 / 60</div>
+  <aside class="notes">
+    [PRESENTER: switch to GitHub Copilot in VS Code]
+
+    What I am going to do: take a realistic Dataiku recipe stack trace — the kind we see after an overnight pipeline failure — paste it into GitHub Copilot with the recipe code, and ask for a diagnosis and fix.
+
+    Watch specifically: how fast it traces the error chain. Whether it identifies the data-level cause, not just the Python exception. And whether the explanation is actually useful or just restates the error message.
+
+    DEMO NOTE: Presenter should have pre-prepared: a Pandas merge recipe with an ambiguous join key that produces duplicate rows and causes a downstream assertion failure. Stack trace should include the KeyError or AssertionError from the downstream check. Paste both the stack trace and the approximately 30-line recipe code into Copilot Chat. Ask: "Diagnose the root cause of this error and suggest a fix with explanation."
+
+    The fix should involve adding validate='one_to_one' or a deduplication step. The key demonstration point is that the AI traces through why the upstream data refresh created the ambiguity — not just where Python threw the error.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 14 — DEMO DEBRIEF
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%;">Demo Debrief — What We Just Saw</h2>
+    <div class="two-col mb16" style="align-items:stretch; flex:1;">
+      <div class="card-green">
+        <p class="t-caption bold mb12" style="color:var(--color-green-text);">What worked</p>
+        <ul class="clean t-caption" style="color:var(--color-text-primary);">
+          <li>Root cause identification from stack trace: fast and accurate</li>
+          <li>Fix with explanation: immediately usable</li>
+          <li>Follow-up scan: proactively found 2 more risky merge operations</li>
+        </ul>
+      </div>
+      <div class="card-amber">
+        <p class="t-caption bold mb12" style="color:var(--color-accent-warm);">What to watch for</p>
+        <ul class="clean t-caption" style="color:var(--color-text-primary);">
+          <li>AI may not know your specific Dataiku version's behaviour</li>
+          <li>Always verify the fix against the actual data</li>
+          <li>Explanation quality drops if context is insufficient</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-surface">
+      <p class="t-caption t-primary" style="margin:0;"><strong>The value isn't magic.</strong> The value is eliminating the mechanical search time — 45 minutes of cross-referencing documentation and tracing the error chain. <strong>The judgment about whether the fix is right stays with you.</strong></p>
+    </div>
+  </div>
+  <div class="slide-footer">14 / 60</div>
+  <aside class="notes">
+    What worked: root cause identification from the stack trace was fast and accurate. The fix was immediately usable. And — this is the part I want you to notice — when I asked the follow-up question "are there other places in this recipe this pattern could break?", it proactively identified two more risky merge operations. That is the kind of scan that would take another twenty minutes to do manually.
+
+    What to watch: the AI did not know the exact version of Dataiku's Pandas wrapper. It reasoned about the standard Pandas behaviour, which was correct in this case but will not always be. Always verify the fix against the actual data.
+
+    [PAUSE]
+
+    The value is not magic. The value is eliminating the mechanical search time — the forty-five minutes of cross-referencing documentation and tracing the error chain line by line. The judgment about whether the fix is right for your specific pipeline stays with you.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 15 — SECTION DIVIDER 4
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 4</p>
+    <h2 class="t-heading t-light mb12">Tool Deep-Dives</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Microsoft Copilot &nbsp;·&nbsp; GitHub Copilot &nbsp;·&nbsp; Cursor &nbsp;·&nbsp; Prompting &nbsp;·&nbsp; Advanced Features</p>
+    <div class="big-numeral">04</div>
+  </div>
+  <div class="slide-footer-light">15 / 60</div>
+  <aside class="notes">
+    Section four. The tool deep-dives. This is the longest section because it is the most practically actionable. Microsoft Copilot, GitHub Copilot, Cursor, modes, prompting, and the advanced features you probably haven't seen yet.
+
+    We start with the tool most of you already have and are probably underusing.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 16 — MICROSOFT COPILOT
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Microsoft Copilot — What You Already Have</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb4">Teams</p>
+          <p class="t-caption t-primary">Meeting summaries, action item extraction, real-time transcription, thread summarisation</p>
+        </div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb4">Outlook</p>
+          <p class="t-caption t-primary">Thread summarisation, draft reply generation, "prepare for this meeting" briefing</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb4">Excel</p>
+          <p class="t-caption t-primary">Natural language formulas, Python in Excel with AI, data insights — ad hoc analysis in-sheet</p>
+        </div>
+      </div>
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb4">Word</p>
+          <p class="t-caption t-primary">Document drafting, rewriting in different tones, summarisation, model card generation</p>
+        </div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb4">PowerPoint</p>
+          <p class="t-caption t-primary">Deck generation from prompts, slide summarisation, content expansion</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb4">Business Chat (BizChat)</p>
+          <p class="t-caption t-primary">Cross-M365 query: "Find all emails and documents about the gas hub model from last month"</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-green mt16" style="width:100%;">
+      <p class="t-caption" style="color:var(--color-green-text); margin:0;"><strong>The barrier to starting is zero.</strong> Open Teams → look for the Copilot icon in the left sidebar → it is already there.</p>
+    </div>
+  </div>
+  <div class="slide-footer">16 / 60</div>
+  <aside class="notes">
+    Microsoft Copilot is already in every M365 application you use.
+
+    Teams: meeting summaries with action items extracted automatically. Real-time transcription. The ability to ask "what did [person] say about the pipeline timeline?" mid-meeting or after. This alone is worth ten minutes per meeting.
+
+    Outlook: email thread summarisation when you come back from time away. Draft reply generation from bullet points. The "prepare for this meeting" feature — Copilot reads the calendar invite, relevant emails, and attached documents and generates a briefing before the meeting starts.
+
+    Excel: natural language formula generation. Python in Excel — AI-assisted Python data analysis directly inside Excel cells. This is more powerful than it sounds for ad hoc analysis.
+
+    Word and PowerPoint: drafting from prompts, rewriting in different tones, summarisation, slide generation from documents.
+
+    [PAUSE]
+
+    The barrier to starting is zero. If you are in Teams right now, look for the Copilot icon in the left sidebar. Open it. That is the full M365 Copilot interface.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 17 — LIVE DEMO: M365 COPILOT
+     ============================================================ -->
+<section data-background-color="#0a1628" style="border: 3px solid #f5a623 !important;">
+  <div class="slide-inner" style="height:100%;">
+    <div class="demo-badge">Live Demo</div>
+    <h2 class="t-heading t-light mb20" style="width:100%;">M365 Copilot: Teams Meeting Summary</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What we're doing</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Open a recent meeting summary in Teams Copilot</li>
+          <li>Ask: "What action items were assigned to FM&I?"</li>
+          <li>Ask: "Draft a follow-up email to [person] about the pipeline timeline"</li>
+        </ul>
+      </div>
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What to look for</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Accuracy of action item extraction</li>
+          <li>Whether names are correctly attributed</li>
+          <li>Speed vs doing this manually (15 min → 90 sec)</li>
+          <li>Draft email quality — usable as-is?</li>
+        </ul>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt16 italic">[PRESENTER: switch to Teams / Copilot Business Chat — use a real or anonymised meeting recording with 3+ action items]</p>
+  </div>
+  <div class="slide-footer-light">17 / 60</div>
+  <aside class="notes">
+    [PRESENTER: switch to Teams / Copilot Business Chat]
+
+    I am going to open a recent meeting summary in Teams Copilot and show you the interaction. We will ask for action items, then ask it to draft a follow-up email.
+
+    Watch: how accurately it extracts action items and attributes them to names. Whether the draft email is usable as-is or needs significant editing. And notice the speed — the manual version of this is fifteen minutes; the AI version is about ninety seconds plus your review time.
+
+    DEMO NOTE: Use a real or anonymised meeting recording with at least three action items attributed to named people. Ask: "List all action items from this meeting. Who is responsible for each?" Then ask: "Draft a follow-up email to [name] summarising their actions and the timeline." Show the Teams Copilot interface, not just a generic chat.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 18 — COPILOT AGENTS
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Microsoft Copilot Agents — Build Your Own</h2>
+    <div class="three-col mb20" style="align-items:stretch;">
+      <div class="card-surface" style="text-align:center;">
+        <div style="font-size:2em; margin-bottom:8px;">1</div>
+        <p class="t-caption bold t-accent mb8">Define</p>
+        <p class="t-caption t-primary">Name, purpose, personality — in plain English. No code required.</p>
+      </div>
+      <div class="card-surface" style="text-align:center;">
+        <div style="font-size:2em; margin-bottom:8px;">2</div>
+        <p class="t-caption bold t-accent mb8">Connect</p>
+        <p class="t-caption t-primary">Attach knowledge: SharePoint libraries, documents, web URLs, APIs</p>
+      </div>
+      <div class="card-surface" style="text-align:center;">
+        <div style="font-size:2em; margin-bottom:8px;">3</div>
+        <p class="t-caption bold t-accent mb8">Publish</p>
+        <p class="t-caption t-primary">Teams bot, SharePoint chatbot, or web interface</p>
+      </div>
+    </div>
+    <div class="card-surface" style="border-left-color:var(--color-accent-warm);">
+      <p class="t-caption bold t-primary mb8">The instruction-refinement trick:</p>
+      <p class="t-caption t-primary">Give the agent instructions → ask it: <em>"Review your instructions and suggest improvements to make you more effective at FM&I model Q&A"</em> → iterate 2–3 times. You get expert prompt engineering quality through conversation.</p>
+    </div>
+    <p class="t-caption t-muted mt12">Example: FM&I pipeline Q&A agent with SharePoint model documentation → traders ask "how does the gas hub model handle missing data?" and get answers from your actual docs.</p>
+  </div>
+  <div class="slide-footer">18 / 60</div>
+  <aside class="notes">
+    Copilot Agents are custom AI assistants that you build inside the Copilot platform. No code required. They appear as bots in Teams or as selectable agents in Copilot chat.
+
+    Three steps. Define: you give the agent a name, purpose, and personality in plain English. Connect: you attach knowledge sources — SharePoint libraries, uploaded documents, web URLs. Publish: it becomes a Teams bot or web chatbot.
+
+    The part I want to highlight is the instruction refinement workflow. After you give the agent its initial instructions, you ask it: "Review your instructions and suggest improvements to make you more effective at FM&I model Q&A." The agent generates better instructions. You paste those back in. You iterate two or three times. The result is a well-specified agent.
+
+    Imagine an FM&I model Q&A agent that has access to your SharePoint documentation and model cards. A new team member — or a trader with a question — asks "how does the gas hub pricing model handle missing data?" The agent answers from your actual documentation. That is an onboarding and knowledge management tool as much as an AI tool.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 19 — LIVE DEMO: CREATING A COPILOT AGENT
+     ============================================================ -->
+<section data-background-color="#0a1628" style="border: 3px solid #f5a623 !important;">
+  <div class="slide-inner" style="height:100%;">
+    <div class="demo-badge">Live Demo</div>
+    <h2 class="t-heading t-light mb20" style="width:100%;">Creating a Copilot Agent</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What we're doing</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Create a new agent in Copilot Studio</li>
+          <li>Give it initial FM&I pipeline Q&A instructions</li>
+          <li>Ask it to improve its own instructions</li>
+          <li>Paste improved instructions back — show quality gap</li>
+        </ul>
+      </div>
+      <div class="card-surface" style="background:#1a2540;">
+        <p class="t-caption t-accent upper bold mb12">What to look for</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Response quality before instruction refinement</li>
+          <li>Response quality after refinement — the gap</li>
+          <li>What data sources are connectable</li>
+          <li>How quickly a useful agent is built</li>
+        </ul>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt16 italic">[PRESENTER: switch to Copilot Studio — create agent "FM&I Pipeline Assistant", demo instruction refinement loop]</p>
+  </div>
+  <div class="slide-footer-light">19 / 60</div>
+  <aside class="notes">
+    [PRESENTER: switch to Copilot Studio]
+
+    I am going to create a new agent, give it initial instructions for FM&I pipeline Q&A, then ask it to improve its own instructions.
+
+    Watch specifically: the quality gap between the initial generic response and the response after the instruction refinement step.
+
+    DEMO NOTE: Create a new agent in Copilot Studio named "FM&I Pipeline Assistant". Give initial instructions: "You help the FM&I team answer questions about our Dataiku pipelines and fundamental models." Test it with a specific question like "What should I check if a gas pricing recipe fails?" Then ask the agent: "Review your instructions and suggest specific improvements to make you more effective for FM&I's data pipeline workflows." Paste the improved instructions back. Show the response quality improvement.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 20 — COPILOT ROADMAP
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">Microsoft Copilot — Roadmap &amp; Recent Additions</h2>
+    <div class="two-col" style="flex:1; align-items:start;">
+      <div>
+        <p class="t-caption t-accent upper bold mb12">Already delivered (last 12 months)</p>
+        <div class="timeline">
+          <div class="timeline-item"><div><div class="timeline-label">Q1 2025</div><div class="timeline-text t-light">BizChat across all M365 data in one interface</div></div></div>
+          <div class="timeline-item"><div><div class="timeline-label">Q2 2025</div><div class="timeline-text t-light">Python in Excel with AI assistance</div></div></div>
+          <div class="timeline-item"><div><div class="timeline-label">Q3 2025</div><div class="timeline-text t-light">Third-party plugins in Copilot</div></div></div>
+          <div class="timeline-item"><div><div class="timeline-label">Q4 2025</div><div class="timeline-text t-light">Meeting preparation agent</div></div></div>
+          <div class="timeline-item"><div><div class="timeline-label t-warm">Q1 2026</div><div class="timeline-text t-warm">Reasoning mode (o-series) in Word/Outlook</div></div></div>
+        </div>
+      </div>
+      <div>
+        <p class="t-caption t-accent upper bold mb12">Coming (confirmed roadmap)</p>
+        <div class="card mb12">
+          <p class="t-caption t-light"><strong class="t-accent">Copilot Notebooks</strong> — persistent working memory across multiple sessions</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-light"><strong class="t-accent">Multi-agent workflows</strong> — multiple Copilot agents collaborating autonomously</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-light"><strong class="t-accent">Deeper Power BI integration</strong> — natural language data exploration</p>
+        </div>
+        <p class="t-caption t-muted mt12">Whatever gap Copilot has today: check again in 90 days.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">20 / 60</div>
+  <aside class="notes">
+    The important point about the Copilot roadmap is that it is moving fast and consistently. Every quarter, meaningful new capabilities have appeared.
+
+    What we have already seen in the last year: BizChat across all M365 data in one interface. Python in Excel with AI assistance. Third-party plugins. The meeting preparation agent. Reasoning mode using OpenAI's o-series models integrated into Word and Outlook.
+
+    What is confirmed coming: Copilot Notebooks — persistent working memory across multiple sessions. Multi-agent workflows — multiple Copilot agents collaborating autonomously. Deeper Power BI integration.
+
+    The practical implication: whatever gap Copilot has today for your workflow, check again in ninety days. The roadmap is the fastest-moving in the enterprise AI space.
+  </aside>
+</section>
+
+
+<!-- ============================================================
+     SLIDE 21 — GITHUB COPILOT VS CURSOR
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">GitHub Copilot vs Cursor — Feature Comparison</h2>
+    <table class="slide-table" style="width:100%; font-size:0.78em;">
+      <tr>
+        <th>Feature</th>
+        <th style="color:var(--color-accent);">GitHub Copilot</th>
+        <th>Cursor</th>
+      </tr>
+      <tr><td class="bold">Available at BP</td><td style="color:var(--color-green-text); font-weight:600;">Yes — enterprise</td><td style="color:var(--color-accent-warm);">Personal only</td></tr>
+      <tr><td class="bold">Context window</td><td>128K tokens</td><td>200K (Claude)</td></tr>
+      <tr><td class="bold">Agent mode</td><td>Limited (improving)</td><td>Full multi-step</td></tr>
+      <tr><td class="bold">Model choice</td><td>GPT-4o, limited Claude</td><td>Full selection — Claude, GPT, Gemini</td></tr>
+      <tr><td class="bold">Background agents</td><td>No (roadmap 2026)</td><td>Yes (Pro)</td></tr>
+      <tr><td class="bold">MCP tools</td><td>Limited</td><td>Full support</td></tr>
+      <tr><td class="bold">Rules file</td><td><code>.github/copilot-instructions.md</code></td><td><code>.cursorrules</code></td></tr>
+      <tr><td class="bold">Price</td><td style="color:var(--color-green-text); font-weight:600;">BP covered</td><td>£20/mo personal</td></tr>
+    </table>
+    <p class="t-caption t-muted mt12">Rule: GitHub Copilot for work (enterprise-compliant). Cursor for personal projects on personal machine. The gap is narrowing.</p>
+  </div>
+  <div class="slide-footer">21 / 60</div>
+  <aside class="notes">
+    Two coding AI tools. Different profiles. Different access rules.
+
+    GitHub Copilot is your enterprise daily driver. Available through BP's GitHub Enterprise. Data stays within the BP GitHub organisation. Not used for model training. You request a licence through the IT service desk.
+
+    Cursor is more powerful on a number of dimensions. 200,000 token context. Full model selection. Full MCP tool support. Background agents. Git worktrees. But it is personal subscription only, twenty dollars a month, and it should not be used with BP proprietary code.
+
+    The gap between them is real but narrowing. GitHub Copilot is improving quickly. For now: GitHub Copilot for work, Cursor for personal projects.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 22 — BEYOND CODE COMPLETION
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Beyond Code Completion — What These Tools Actually Do</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Documentation</p>
+          <p class="t-caption t-light">Select function → /doc → NumPy docstring. Select module → README with usage examples. "Document all undocumented functions in this file."</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Test Writing</p>
+          <p class="t-caption t-light">"Write comprehensive unit tests covering null inputs, empty arrays, and date boundary conditions." → full pytest file with fixtures, parametrize, edge cases.</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Refactoring</p>
+          <p class="t-caption t-light">"Refactor to replace nested loops with vectorised Pandas." In agent mode: change function signature, update all callers across codebase.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Architecture Reasoning</p>
+          <p class="t-caption t-light">"Given this codebase structure, what is the best way to add X without breaking Y?" Large context window reads the whole project.</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Debugging</p>
+          <p class="t-caption t-light">Paste error + context → root cause trace. This is the demo we just did. 5 min vs 45 min.</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">PR &amp; Commit Messages</p>
+          <p class="t-caption t-light">Automated, accurate, with context. 3 seconds vs 5 minutes.</p>
+        </div>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt12">Code completion is the least interesting thing these tools do.</p>
+  </div>
+  <div class="slide-footer-light">22 / 60</div>
+  <aside class="notes">
+    If your mental model of GitHub Copilot or Cursor is "fancy autocomplete", you are getting about ten percent of the value.
+
+    Documentation: select a function, type /doc, get a properly formatted NumPy or Google-style docstring. Ask "document all undocumented functions in this file" in agent mode — it processes every one.
+
+    Test writing: "Write comprehensive unit tests for this class, covering null inputs, empty arrays, and date boundary conditions." The AI generates the test file with pytest, fixtures, parametrize decorators, and edge case coverage.
+
+    Refactoring: "Refactor this function to replace nested loops with vectorised Pandas operations." In agent mode: change a function signature and update all callers across the codebase simultaneously.
+
+    Architecture reasoning: "Given this codebase structure, what is the best way to add X without breaking Y?" This is where the large context window matters.
+
+    PR and commit messages: automated, accurate, with context. Three seconds instead of five minutes.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 23 — TEMPLATE PROJECT SETUP
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Template Project Setup — Configuration as an Asset</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb8">Three tools, three files, one pattern:</p>
+          <p class="t-caption t-primary mb4"><code style="background:#e8f0fe; padding:2px 6px; border-radius:4px;">.github/copilot-instructions.md</code> — GitHub Copilot</p>
+          <p class="t-caption t-primary mb4"><code style="background:#e8f0fe; padding:2px 6px; border-radius:4px;">.cursorrules</code> — Cursor</p>
+          <p class="t-caption t-primary"><code style="background:#e8f0fe; padding:2px 6px; border-radius:4px;">CLAUDE.md</code> — Claude Code</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb8">What goes in the file:</p>
+          <ul class="clean t-caption t-primary">
+            <li>Project overview and tech stack</li>
+            <li>Code standards and conventions</li>
+            <li>Domain vocabulary — "hub means natural gas pricing hub"</li>
+            <li>Critical patterns that must not be broken</li>
+            <li>Known trade-offs and intentional decisions</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-panel" style="font-size:0.65em;">
+<span class="code-cm"># CLAUDE.md excerpt — FM&I project</span>
+
+<span class="code-kw">## Domain Vocabulary</span>
+- hub = natural gas pricing hub
+- contract_month = YYYY-MM string
+- forward_curve = time series of
+  forward prices by delivery month
+
+<span class="code-kw">## Critical Patterns</span>
+- All Dataiku recipes must handle
+  empty DataFrames gracefully
+- Merge operations require
+  validate='one_to_one' unless
+  explicitly documented otherwise
+- All model outputs require a
+  populated model_card.md
+
+<span class="code-kw">## Commands</span>
+dataiku-run-scenario --name X
+pytest tests/ -v
+      </div>
+    </div>
+    <p class="t-caption t-muted mt12"><strong>The template is the asset.</strong> Write it once. Every AI session in that project inherits full context. New team member onboarded with AI already knowing FM&I conventions.</p>
+  </div>
+  <div class="slide-footer">23 / 60</div>
+  <aside class="notes">
+    Here is the insight that separates the fifteen-hours-per-week users from the two-hours-per-week users. The highest-leverage investment you can make is writing a good project configuration file — once — and every subsequent AI interaction in that project inherits it.
+
+    Three tools. Three file names. One pattern.
+
+    For GitHub Copilot: .github/copilot-instructions.md. For Cursor: .cursorrules. For Claude Code: CLAUDE.md.
+
+    What goes in these files: project overview, code standards, domain vocabulary — critical for FM&I. "Hub means a natural gas pricing hub." "contract_month is a YYYY-MM string representing the forward delivery month."
+
+    [PAUSE]
+
+    Without this file, every AI session starts from scratch. The AI makes assumptions about what Pandas style you prefer, what your test framework is, what your naming conventions are. With the file, every session starts with full context.
+
+    The template is the asset. Write it once. Benefit every time.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 24 — ASK / AGENT / PLAN MODES
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">Ask / Agent / Plan Modes — When to Use Each</h2>
+    <div class="three-col mb20" style="align-items:stretch; flex:1;">
+      <div class="card">
+        <p class="t-body t-accent bold mb12">Ask</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">What it does:</strong> Conversational query — AI reads context but takes no actions. Single turn.</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">When to use:</strong> Understanding, exploration, quick questions</p>
+        <p class="t-caption t-muted italic">Example: "What does this function do?" "Is there a performance issue in this query?"</p>
+      </div>
+      <div class="card">
+        <p class="t-body t-accent bold mb12">Plan</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">What it does:</strong> Proposes changes, shows you the plan — doesn't execute until you approve</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">When to use:</strong> Complex/risky changes, schema changes, anything hard to reverse</p>
+        <p class="t-caption t-muted italic">Example: Large refactor, auth changes, multi-file deletions</p>
+      </div>
+      <div class="card">
+        <p class="t-body t-accent bold mb12">Agent</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">What it does:</strong> Plans AND executes autonomously — reads files, writes code, runs tests, fixes failures</p>
+        <p class="t-caption t-light mb8"><strong class="t-light">When to use:</strong> Feature implementation, refactoring, test generation</p>
+        <p class="t-caption t-muted italic">Example: "Implement the data quality check module"</p>
+      </div>
+    </div>
+    <div class="card" style="border-top-color:var(--color-accent-warm); width:100%;">
+      <p class="t-caption t-light" style="margin:0;"><strong class="t-warm">Rule of thumb:</strong> Ask for understanding. Plan for caution. Agent for execution. Most people default to Ask for everything — the shift to Agent mode is where the large time savings come from.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">24 / 60</div>
+  <aside class="notes">
+    Three modes. Three completely different workflows.
+
+    Ask mode is conversational. The AI reads your context but does not take actions. Single turn. Use it when you want understanding.
+
+    Plan mode proposes changes without executing them. You see exactly what the AI intends to do before it does anything. Use this for complex changes, schema changes, anything where a wrong execution would be painful to reverse.
+
+    Agent mode plans and executes autonomously. It reads files, writes files, runs terminal commands, installs packages. It iterates — if it writes code and the tests fail, it reads the failure and fixes it. This is delegation, not assistance.
+
+    The rule of thumb: ask for understanding, plan for caution, agent for execution.
+
+    Most people default to Ask for everything. The shift to using Agent mode for implementation tasks is where the large time savings come from.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 25 — PROMPTING
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Prompting — The Multiplier</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb12">Effective prompt structure (5 components)</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:10px; align-items:start;">
+            <span class="t-caption bold t-accent" style="min-width:20px;">1.</span>
+            <span class="t-caption t-primary"><strong>Role/context</strong> — "Working on the FM&I gas pricing model. Dataiku Python recipe."</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:start;">
+            <span class="t-caption bold t-accent" style="min-width:20px;">2.</span>
+            <span class="t-caption t-primary"><strong>Task</strong> — "Refactor calculate_forward_curve"</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:start;">
+            <span class="t-caption bold t-accent" style="min-width:20px;">3.</span>
+            <span class="t-caption t-primary"><strong>Constraints</strong> — "Without modifying the function signature or return type"</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:start;">
+            <span class="t-caption bold t-accent" style="min-width:20px;">4.</span>
+            <span class="t-caption t-primary"><strong>Output format</strong> — "Refactored code with inline comments explaining each change"</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:start;">
+            <span class="t-caption bold t-accent" style="min-width:20px;">5.</span>
+            <span class="t-caption t-primary"><strong>Edge cases</strong> — "Handle the case where the input DataFrame is empty"</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-surface mb12" style="border-left-color:var(--color-accent-warm);">
+          <p class="t-caption bold t-primary mb8">The meta-trick (genuinely powerful)</p>
+          <p class="t-caption t-primary">"Here is my vague task: [X]. Generate a precise, well-structured prompt I can use to accomplish this."</p>
+          <p class="t-caption t-muted mt8">The AI knows what information it needs to produce a good output. Ask it to specify that.</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption bold t-primary mb8">Prompt improvement loop</p>
+          <p class="t-caption t-primary">"Improve this prompt: [draft]"</p>
+          <p class="t-caption t-primary mt4">"What context would make this answer better?"</p>
+          <p class="t-caption t-muted mt8">Using the LLM to write its own prompt is not laziness — it is skill leverage.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">25 / 60</div>
+  <aside class="notes">
+    Effective prompts have five components. Most people use two.
+
+    Role and context: where are we? "Working on the FM&I gas pricing model. This is a Dataiku Python recipe."
+
+    Task: what specifically needs to happen?
+
+    Constraints: what must not change?
+
+    Output format: what do you want back?
+
+    Edge cases: what are the tricky scenarios?
+
+    The meta-trick — and this one is genuinely powerful — is to let the AI write its own prompt. "Here is my vague task: [X]. Generate a precise, well-structured prompt I can use to accomplish this." The AI knows what information it needs to produce a good output. Ask it to specify that.
+
+    This is not laziness. This is skill leverage — using the AI's own understanding of what makes a good prompt to produce a better prompt than you would write from scratch.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 26 — CURSOR ADVANCED: BACKGROUND AGENTS & GIT WORKTREES
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Cursor Advanced — Background Agents &amp; Git Worktrees</h2>
+    <div class="two-col mb16" style="align-items:stretch; flex:1;">
+      <div class="card">
+        <p class="t-body t-accent bold mb12">Background Agents</p>
+        <p class="t-caption t-light mb8">Long-running tasks that execute in the cloud while you continue working on something else.</p>
+        <div class="code-panel" style="font-size:0.65em; margin-top:8px;">
+<span class="code-cm"># Submit, continue working, get notified</span>
+<span class="code-kw">Task:</span> "Rewrite all test files in
+/tests to use pytest instead of
+unittest across the repository"
+
+<span class="code-cm"># → Background agent executes</span>
+<span class="code-cm"># → You continue your current work</span>
+<span class="code-cm"># → Notified when complete → review PR</span>
+        </div>
+      </div>
+      <div class="card">
+        <p class="t-body t-accent bold mb12">Git Worktrees</p>
+        <p class="t-caption t-light mb8">Multiple agents on parallel branches simultaneously — no interference.</p>
+        <div class="code-panel" style="font-size:0.65em; margin-top:8px;">
+<span class="code-cm"># Create two worktrees from same repo</span>
+git worktree add ../model-variant-a \
+  feature/model-a
+git worktree add ../model-variant-b \
+  feature/model-b
+
+<span class="code-cm"># Run Cursor agent in each simultaneously</span>
+<span class="code-cm"># → A/B implementation in parallel</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-top-color:var(--color-accent-warm);">
+      <p class="t-caption t-light" style="margin:0;"><strong class="t-warm">FM&I application:</strong> Run model variant A in one worktree with an agent implementing it, model variant B in another — simultaneously. Changes the economics of experimentation.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">26 / 60</div>
+  <aside class="notes">
+    Two Cursor features that fundamentally change how you can work.
+
+    Background agents: long-running tasks that execute in the cloud while you continue working on something else. Submit "rewrite all test files to use pytest instead of unittest across this repository" as a background task. Continue your current work. Get notified when it completes.
+
+    Git worktrees: run multiple agents on parallel branches simultaneously. You create two worktrees from the same repository — one for feature A, one for feature B — and run a Cursor agent on each. They work in parallel on different branches without interfering.
+
+    The FM&I application I find most interesting: run model variant A in one worktree with an agent implementing it, and model variant B in another worktree with a second agent, simultaneously. Compare the implementations. This changes the economics of experimentation.
+
+    [PAUSE]
+
+    Both of these are Cursor Pro features. At twenty dollars a month on a personal subscription, you are paying for a fundamentally different class of AI capability.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 27 — CURSOR: @ CONTEXT & MULTI-AGENT
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Cursor Advanced — @ Context &amp; Multi-Agent</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent upper bold mb12">@ Context References</p>
+          <div class="code-panel" style="font-size:0.65em;">
+@file recipes/gas_pricing.py
+@folder models/
+@codebase   <span class="code-cm"># semantic search</span>
+@web        <span class="code-cm"># current documentation</span>
+@docs       <span class="code-cm"># indexed doc sets</span>
+@git        <span class="code-cm"># history, diffs</span>
+          </div>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent upper bold mb8">.cursorignore</p>
+          <p class="t-caption t-primary">Excludes files from codebase index — like .gitignore. Use for: large data files, build outputs, dependency directories. Protects context quality from noise.</p>
+        </div>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb12">Multi-Agent Orchestration</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card" style="background:var(--color-secondary); padding:10px 14px;">
+            <p class="t-caption t-accent bold mb4">Orchestrator Agent</p>
+            <p class="t-caption t-light" style="font-size:0.9em;">Receives high-level task, plans approach, delegates to sub-agents, synthesises results</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div class="card" style="background:var(--color-secondary); padding:8px 12px; flex:1;">
+              <p class="t-caption t-accent bold mb4" style="font-size:0.85em;">Code Agent</p>
+              <p class="t-caption t-light" style="font-size:0.8em;">Writes implementation</p>
+            </div>
+            <div class="card" style="background:var(--color-secondary); padding:8px 12px; flex:1;">
+              <p class="t-caption t-accent bold mb4" style="font-size:0.85em;">Test Agent</p>
+              <p class="t-caption t-light" style="font-size:0.8em;">Writes tests</p>
+            </div>
+            <div class="card" style="background:var(--color-secondary); padding:8px 12px; flex:1;">
+              <p class="t-caption t-accent bold mb4" style="font-size:0.85em;">Docs Agent</p>
+              <p class="t-caption t-light" style="font-size:0.8em;">Updates docs</p>
+            </div>
+          </div>
+          <p class="t-caption t-muted" style="font-size:0.8em;">FM&I use: "Implement new model feature + write tests + update documentation — simultaneously"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">27 / 60</div>
+  <aside class="notes">
+    What you include in context is as important as how you prompt.
+
+    The @ operators in Cursor are how you explicitly control what the AI sees. @file includes a specific file. @folder includes an entire directory. @codebase does a semantic search across the entire indexed codebase — it retrieves the most relevant parts. @web searches current documentation. @git references history and diffs.
+
+    The cursorignore file excludes content from the codebase index — just like gitignore. Use it for large binary files, generated outputs, dependency directories, any files that would add noise to the AI's context without adding signal.
+
+    Multi-agent orchestration in Cursor: an orchestrator agent delegates to specialised sub-agents. One writes the implementation. One writes the tests. One writes the documentation. The orchestrator synthesises and resolves conflicts.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 28 — MID-SESSION CALLBACK
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner center" style="height:100%;">
+    <div style="max-width:780px; text-align:center;">
+      <p class="t-caption t-accent upper mb16">Midpoint check — 53 of 90 minutes</p>
+      <h2 class="t-heading t-light mb16" style="font-size:1.8em; line-height:1.3;">"You already have the tools — the only thing between you and 10× productivity is knowing which tool to reach for and when."</h2>
+      <div class="accent-rule"></div>
+      <p class="t-body t-light mt16 mb8">GitHub Copilot: available now &nbsp;·&nbsp; M365 Copilot: available now</p>
+      <p class="t-caption t-muted">The question is your workflow, not your licence.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">28 / 60</div>
+  <aside class="notes">
+    We are halfway through.
+
+    You already have the tools. The only thing between you and ten times the productivity is knowing which tool to reach for and when.
+
+    GitHub Copilot: available now. M365 Copilot: available now. The question is your workflow, not your licence.
+
+    The modes, the configuration files, the project templates, the prompt structure — these are the specifics that separate fifteen hours per week from two hours per week.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 29 — GITHUB COPILOT ADVANCED FEATURES
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">GitHub Copilot — Advanced Features</h2>
+    <div class="three-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">@workspace</p>
+        <p class="t-caption t-primary mb8">Architecture-level questions across your entire indexed codebase.</p>
+        <p class="t-caption t-muted italic">"Explain how data flows from raw ingestion recipes to the final model output"</p>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">Slash Commands</p>
+        <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+          <p class="t-caption t-primary"><code style="background:#f0f4f8; padding:1px 5px;">/explain</code> — explain selected code</p>
+          <p class="t-caption t-primary"><code style="background:#f0f4f8; padding:1px 5px;">/fix</code> — fix the current bug</p>
+          <p class="t-caption t-primary"><code style="background:#f0f4f8; padding:1px 5px;">/test</code> — generate unit tests</p>
+          <p class="t-caption t-primary"><code style="background:#f0f4f8; padding:1px 5px;">/doc</code> — generate documentation</p>
+          <p class="t-caption t-primary"><code style="background:#f0f4f8; padding:1px 5px;">/new</code> — scaffold a new file</p>
+        </div>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb8">CLI Integration</p>
+        <div class="code-panel" style="font-size:0.6em; margin-top:8px;">
+<span class="code-cm"># Generate the right command</span>
+gh copilot suggest \
+  'list files modified last 7 days'
+
+<span class="code-cm"># Explain before running</span>
+gh copilot explain \
+  'git reset --hard HEAD~1'
+        </div>
+        <p class="t-caption t-muted mt8">Particularly useful for complex git and shell operations</p>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt12">@workspace + multi-file edits makes GitHub Copilot a genuine codebase-level tool — not just autocomplete.</p>
+  </div>
+  <div class="slide-footer">29 / 60</div>
+  <aside class="notes">
+    Three GitHub Copilot features that most users never find.
+
+    The @workspace agent. This is not just file-level assistance. @workspace indexes your entire codebase and can answer architecture-level questions across it.
+
+    Slash commands. In the chat interface: /explain on selected code, /fix for a bug, /test to generate tests, /doc for documentation, /new to scaffold a file. These are the shortcuts that make common workflows one-keystroke operations.
+
+    CLI integration. gh copilot suggest 'list all files modified in the last 7 days' — generates the exact shell command. gh copilot explain — explains what a command does before you run it. Particularly useful for complex git operations.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 30 — GITHUB COPILOT ROADMAP
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">GitHub Copilot — Future Roadmap</h2>
+    <div class="timeline" style="flex:1; justify-content:center;">
+      <div class="timeline-item">
+        <div><div class="timeline-label">2026 H1</div><div class="timeline-text t-light">Expanded workspace agent capabilities — more autonomous multi-step execution</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label">2026 H1</div><div class="timeline-text t-light">Better model selection — more Claude options in enterprise tier</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label">2026 H2</div><div class="timeline-text t-light">Background agents — closing the capability gap with Cursor</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label">2026 H2</div><div class="timeline-text t-light">Improved MCP support — more external tool integrations within enterprise</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label t-muted">Speculated</div><div class="timeline-text t-muted">Native multi-agent coordination within GitHub Enterprise</div></div>
+      </div>
+    </div>
+    <div class="card mt20" style="border-top-color:var(--color-accent-warm);">
+      <p class="t-caption t-light" style="margin:0;"><strong class="t-warm">Practical implication:</strong> If Cursor's personal-only constraint is a blocker today, GitHub Copilot Enterprise is the path that gets to comparable capability without the compliance risk. The gap closes through 2026.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">30 / 60</div>
+  <aside class="notes">
+    GitHub Copilot's roadmap has two things I want to flag for FM&I specifically.
+
+    Expanded workspace agent: more autonomous multi-step execution. The gap between GitHub Copilot's agent mode and Cursor's is currently significant. The roadmap suggests it closes through 2026.
+
+    Background agents: confirmed for later in 2026. This is the feature that makes Cursor Pro compelling. When it arrives in GitHub Copilot, the enterprise compliance story becomes even more attractive.
+
+    The practical implication: if Cursor's personal-only constraint is a blocker for you today, GitHub Copilot Enterprise is the path that gets there without the compliance risk.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 31 — CURSOR ROADMAP
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb24" style="width:100%;">Cursor — Future Roadmap</h2>
+    <div class="timeline" style="flex:1; justify-content:center;">
+      <div class="timeline-item">
+        <div><div class="timeline-label" style="color:var(--color-text-muted);">2026 H1</div><div class="timeline-text t-primary">Improved background agent reliability and capacity</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label" style="color:var(--color-text-muted);">2026 H1</div><div class="timeline-text t-primary">More MCP server integrations in marketplace</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label" style="color:var(--color-text-muted);">2026 H2</div><div class="timeline-text t-primary">Enterprise features — multi-user, audit logging, data handling agreements</div></div>
+      </div>
+      <div class="timeline-item">
+        <div><div class="timeline-label" style="color:var(--color-text-muted);">Speculated</div><div class="timeline-text t-primary">Enterprise agreements that could unlock BP adoption</div></div>
+      </div>
+    </div>
+    <div class="card-surface mt20" style="border-left-color:var(--color-accent-warm);">
+      <p class="t-caption t-primary" style="margin:0;"><strong>The enterprise roadmap is the one to watch.</strong> If Cursor develops data handling agreements meeting BP's governance standards, it becomes possible to negotiate a BP enterprise agreement. Some analogous energy trading firms have already done this. Worth pursuing through BP's IT governance and procurement process.</p>
+    </div>
+  </div>
+  <div class="slide-footer">31 / 60</div>
+  <aside class="notes">
+    Cursor's roadmap has one item that is most significant for BP: enterprise features.
+
+    If Cursor develops data handling agreements that meet BP's enterprise data governance standards — audit logging, data residency controls, no model training on your code — it becomes possible to negotiate a BP enterprise agreement. Some analogous energy trading firms have already done this.
+
+    This is worth pursuing through BP's IT governance and procurement process. The capability case is strong. The data governance barrier is the only obstacle.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 32 — SECTION 4 SUMMARY: DAILY DRIVER SETUP
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">Your Daily Driver Setup</h2>
+    <table class="slide-table slide-table-dark" style="width:100%;">
+      <tr>
+        <th>Task</th>
+        <th>Tool</th>
+        <th>Mode</th>
+      </tr>
+      <tr><td class="t-light">Pipeline debugging</td><td class="t-accent">GitHub Copilot</td><td>Ask — paste error + context</td></tr>
+      <tr><td class="t-light">Feature implementation</td><td class="t-accent">GitHub Copilot</td><td>Agent — describe, let it execute</td></tr>
+      <tr><td class="t-light">Complex refactor</td><td class="t-warm">Cursor (personal)</td><td>Plan → review → Agent</td></tr>
+      <tr><td class="t-light">Teams / meeting follow-up</td><td class="t-accent">M365 Copilot</td><td>Chat interface</td></tr>
+      <tr><td class="t-light">Custom team agent</td><td class="t-accent">Copilot Studio</td><td>Build + instruction-refine</td></tr>
+      <tr><td class="t-light">Long agentic task</td><td class="t-warm">Cursor background</td><td>Submit + review results</td></tr>
+    </table>
+    <p class="t-caption t-muted mt16">One table. No more decision overhead on which tool to open.</p>
+  </div>
+  <div class="slide-footer-light">32 / 60</div>
+  <aside class="notes">
+    Pipeline debugging: GitHub Copilot, Ask mode. Paste error and context.
+
+    Feature implementation: GitHub Copilot, Agent mode. Describe the feature, let it execute.
+
+    Complex refactor: Cursor on personal machine, Plan mode first to review the approach, then Agent.
+
+    Teams and meeting follow-up: M365 Copilot, standard chat interface.
+
+    Custom team agent: Copilot Studio. The FM&I pipeline Q&A agent we just built is the template.
+
+    Long agentic task: Cursor background agent. Submit, continue, review results.
+
+    One table. No more decision overhead on which tool to open.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 33 — SECTION DIVIDER 5
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 5</p>
+    <h2 class="t-heading t-light mb12">The Model Landscape</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Which model for which task — and why the answer changes quarterly</p>
+    <div class="big-numeral">05</div>
+  </div>
+  <div class="slide-footer-light">33 / 60</div>
+  <aside class="notes">
+    Section five. The model landscape. Eight minutes — because knowing which model to reach for is as important as knowing which tool.
+
+    Five model families. Each with a distinct sweet spot.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 34 — CURRENT MODELS
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Current Models — Strengths at a Glance</h2>
+    <table class="slide-table slide-table-dark" style="width:100%;">
+      <tr>
+        <th>Model</th>
+        <th>Best for</th>
+        <th>Context</th>
+        <th>Speed</th>
+        <th>Cost</th>
+      </tr>
+      <tr><td class="bold t-light">Claude Opus 4.6</td><td>Complex reasoning, architecture, deep debugging</td><td>200K</td><td class="t-muted">Slow</td><td class="t-warm">$$$</td></tr>
+      <tr><td class="bold t-light">Claude Sonnet 4.6</td><td>Daily coding, analysis, structured output — the default</td><td>200K</td><td class="t-accent">Fast</td><td class="t-accent">$$</td></tr>
+      <tr><td class="bold t-light">Gemini 2.5</td><td>Huge codebase/context, multimodal (images, audio, video)</td><td class="t-accent">1M</td><td>Medium</td><td class="t-accent">$$</td></tr>
+      <tr><td class="bold t-light">GPT-4o / o3</td><td>General (4o), maths/logic/step-by-step reasoning (o3)</td><td>128K</td><td class="t-accent">Fast</td><td class="t-accent">$$</td></tr>
+      <tr><td class="bold t-light">Ollama local</td><td>Data-sensitive workflows — data stays on your machine</td><td>Variable</td><td class="t-muted">Slow</td><td class="t-accent">Free</td></tr>
+    </table>
+    <p class="t-caption t-muted mt16">No model wins on all dimensions. Knowing the trade-offs is the skill.</p>
+  </div>
+  <div class="slide-footer-light">34 / 60</div>
+  <aside class="notes">
+    Claude Opus 4.6: Anthropic's most capable model. Best for complex multi-step reasoning — architecture design, deep debugging of non-obvious issues, research synthesis. Extended thinking mode. Slower. Higher cost. Use it when quality is the only constraint.
+
+    Claude Sonnet 4.6: the daily driver. Fast. Cost-effective — three dollars per million input tokens versus fifteen for Opus. Excellent at coding, data analysis, structured output. Use this for everything interactive.
+
+    Gemini 2.5: the context window outlier. One million tokens. An entire Dataiku project, multiple PDFs, a full conversation history — all at once. Multimodal: images, audio, video, code together.
+
+    GPT-4o and o3: GPT-4o for general-purpose tasks — it can run Python in a sandbox. o3 for mathematical and logical reasoning — complex statistical methodology questions.
+
+    Ollama and local models: when data cannot leave your machine. Llama 3.3 70B runs locally and is viable for data-sensitive workflows.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 35 — MODEL DECISION FRAMEWORK
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">The Model Decision Framework</h2>
+    <div style="width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; gap:12px;">
+      <div class="decision-node">
+        <strong>Q1:</strong> Is the data sensitive? (live positions, proprietary model parameters, anything that can't leave BP infrastructure)
+      </div>
+      <div class="decision-branch">
+        <div class="decision-yes">YES → Ollama local (Llama 3.3 / Phi-4)</div>
+        <div class="decision-no">NO — continue ↓</div>
+      </div>
+      <div class="decision-node">
+        <strong>Q2:</strong> Is context &gt; 128K tokens? (full codebase, multiple large PDFs, long conversation history)
+      </div>
+      <div class="decision-branch">
+        <div class="decision-yes">YES → Gemini 2.5 (1M context)</div>
+        <div class="decision-no">NO — continue ↓</div>
+      </div>
+      <div class="decision-node">
+        <strong>Q3:</strong> Is the task complex? (architecture design, deep reasoning, multi-step planning)
+      </div>
+      <div class="decision-branch">
+        <div class="decision-yes">YES → Claude Opus 4.6 or o3</div>
+        <div class="decision-no">NO — continue ↓</div>
+      </div>
+      <div class="decision-default">Default: Claude Sonnet 4.6 — speed + quality + cost balance</div>
+    </div>
+  </div>
+  <div class="slide-footer">35 / 60</div>
+  <aside class="notes">
+    Four questions. One decision.
+
+    First: is the data sensitive? Does it include proprietary model parameters, live positions, or anything that cannot leave BP infrastructure? If yes, Ollama local model. End of decision.
+
+    Second: is your context larger than 128,000 tokens? Are you working with an entire codebase, a collection of large PDFs, or a very long conversation? If yes, Gemini 2.5.
+
+    Third: is the task complex — architectural reasoning, deep debugging, extended multi-step planning? If yes, Claude Opus 4.6 or o3.
+
+    Otherwise: Claude Sonnet 4.6. Default answer. Speed, quality, cost balance — the best ratio for the vast majority of FM&I daily tasks.
+
+    [PAUSE]
+
+    Memorise this decision tree. It eliminates the "which model should I use?" overhead on every session.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 36 — TOKEN COST AWARENESS
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Token Cost Awareness</h2>
+    <div class="two-col mb20" style="align-items:start; flex:1;">
+      <div>
+        <table class="slide-table slide-table-dark" style="width:100%;">
+          <tr>
+            <th>Model</th>
+            <th>Input / 1M tokens</th>
+            <th>10 analysts × 50 req/day</th>
+          </tr>
+          <tr><td class="t-light bold">Claude Sonnet 4.6</td><td class="t-accent">$3</td><td class="t-accent">~$9/day</td></tr>
+          <tr><td class="t-light bold">Claude Opus 4.6</td><td class="t-warm">$15</td><td class="t-warm">~$45/day</td></tr>
+          <tr><td class="t-light bold">GPT-4o</td><td>$5</td><td>~$15/day</td></tr>
+          <tr><td class="t-light bold">Ollama (local)</td><td class="t-accent">Free</td><td class="t-muted">Infrastructure cost only</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb8">Context hygiene = cost + quality</p>
+          <ul class="clean clean-light t-caption t-light">
+            <li>Include only files relevant to the current task</li>
+            <li>Start fresh conversations for new tasks</li>
+            <li>Use .cursorignore to exclude noise</li>
+            <li>Bloated context = 2× cost for same quality</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="t-caption t-light" style="margin:0;">Sonnet vs Opus: 5× price difference. Use Opus for hard problems. Sonnet for everything else. That discipline alone reduces daily cost by 80%.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">36 / 60</div>
+  <aside class="notes">
+    A team of ten analysts, each making fifty AI requests per day, with roughly four thousand tokens per exchange at Claude Sonnet rates: approximately nine dollars per day. That is under two thousand pounds per year for the team.
+
+    Switch to Opus for the same usage: forty-five dollars per day. Ten times more expensive.
+
+    The context hygiene point: if you load your entire codebase into context for every request — including the node_modules directory, pycache, build outputs, lock files, large data files — you can easily double the effective token count without adding useful signal.
+
+    Good context hygiene means: include only the files relevant to this specific task. Start fresh conversations for new tasks.
+
+    The payoff: better quality, lower cost, faster responses. Context management is directly measurable.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 37 — OPEN SOURCE GAP CLOSING
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">The Open Source Gap Is Closing</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent upper bold mb8">Llama evolution</p>
+          <div class="timeline">
+            <div class="timeline-item"><div><div class="timeline-label" style="color:var(--color-text-muted);">2023</div><div class="timeline-text t-primary">Llama 1 — research grade, not viable</div></div></div>
+            <div class="timeline-item"><div><div class="timeline-label" style="color:var(--color-text-muted);">2023</div><div class="timeline-text t-primary">Llama 2 — basic tasks viable</div></div></div>
+            <div class="timeline-item"><div><div class="timeline-label" style="color:var(--color-text-muted);">2024</div><div class="timeline-text t-primary">Llama 3 — competitive on many benchmarks</div></div></div>
+            <div class="timeline-item"><div><div class="timeline-label" style="color:var(--color-accent);">2025</div><div class="timeline-text" style="color:var(--color-accent);">Llama 3.3 70B — comparable to GPT-4 on coding</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-amber mb12">
+          <p class="t-caption bold mb8" style="color:var(--color-accent-warm);">Key stat</p>
+          <p class="t-caption t-primary">Llama 3.3 70B runs on a MacBook Pro M3 Max at 10–15 tokens per second — workable for non-interactive tasks. Performs comparably to GPT-4 in many coding benchmarks.</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb8">FM&I implication</p>
+          <p class="t-caption t-primary">For data-sensitive workflows where code or analysis must not leave BP infrastructure, local models are now a credible option. Not ideal — Claude Sonnet is still meaningfully better on complex tasks. But no longer unusable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">37 / 60</div>
+  <aside class="notes">
+    Llama 3.3 70B runs on a MacBook Pro M3 Max at ten to fifteen tokens per second. That is workable for non-interactive tasks. And it performs comparably to GPT-4 on many coding benchmarks.
+
+    The evolution from Llama 1 in 2023 to Llama 3.3 in 2025 is dramatic. The quality gap between open-source and frontier models has narrowed significantly at each step. It has not closed — Claude Sonnet is still meaningfully better on complex tasks. But for the data-sensitive scenario where code or analysis must not leave BP infrastructure, local models are now a credible option.
+
+    This matters for FM&I because the compliance situation for some tasks may require it.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 38 — SECTION DIVIDER 6
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 6</p>
+    <h2 class="t-heading t-light mb12">Ethics &amp; Compliance</h2>
+    <p class="t-body t-light" style="opacity:0.8;">The non-negotiables for front-office AI use</p>
+    <div class="big-numeral">06</div>
+  </div>
+  <div class="slide-footer-light">38 / 60</div>
+  <aside class="notes">
+    Section six. Ethics and compliance. Seven minutes. This is not the boring compliance section you sit through to tick a box. This section tells you exactly where the line is — so you can operate right up to it, confidently, without worrying you are crossing it.
+
+    The line is clear. Let me draw it.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 39 — WHAT CAN AND CANNOT GO IN
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">What Can and Cannot Go Into These Tools</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-green">
+        <p class="t-caption bold mb12" style="color:var(--color-green-text);">ALLOWED</p>
+        <ul class="clean t-caption" style="color:var(--color-text-primary);">
+          <li>Internal documents, emails, Teams messages via M365 Copilot</li>
+          <li>BP code in the GitHub Enterprise organisation via GitHub Copilot</li>
+          <li>Publicly available analysis and data</li>
+          <li>Anonymised or synthetic data</li>
+          <li>Code patterns and methodology — without real data embedded</li>
+        </ul>
+      </div>
+      <div class="card-red">
+        <p class="t-caption bold mb12" style="color:var(--color-red-text);">PROHIBITED</p>
+        <ul class="clean t-caption" style="color:var(--color-text-primary);">
+          <li>Live trading positions — absolute rule, no exceptions</li>
+          <li>Proprietary model parameters representing commercial advantage</li>
+          <li>Client / counterparty identity and negotiated terms</li>
+          <li>Market-sensitive data before public release</li>
+          <li>Any BP data via consumer AI (ChatGPT.com, Claude.ai personal, Cursor without enterprise agreement)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-surface mt16">
+      <p class="t-caption t-primary" style="margin:0;">The line maps directly to BP's data classification framework and the enterprise agreements that determine data handling obligations.</p>
+    </div>
+  </div>
+  <div class="slide-footer">39 / 60</div>
+  <aside class="notes">
+    Allowed. Internal documents, emails, Teams messages through M365 Copilot — this is Copilot's standard operating scope, all within BP's Microsoft tenant. BP code in the GitHub Enterprise organisation through GitHub Copilot. Publicly available analysis and data. Anonymised or synthetic data.
+
+    Prohibited. Live trading positions — absolute rule, no exceptions, full stop. Proprietary model parameters that represent commercial advantage. Client and counterparty identity and negotiated terms. Market-sensitive data before public release. Any actual price or position data embedded in code comments or docstrings that go into AI tools.
+
+    And the critical one that catches people: any BP data through consumer AI tools. ChatGPT.com, Claude.ai on a personal account, Cursor without an enterprise agreement — these are not covered under BP's data handling agreements.
+
+    [PAUSE]
+
+    The line is not arbitrary. It maps directly to BP's data classification framework.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 40 — DATA HANDLING MATRIX
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">The Data Handling Matrix</h2>
+    <table class="slide-table slide-table-dark" style="width:100%; font-size:0.78em;">
+      <tr>
+        <th>Dimension</th>
+        <th>M365 Copilot</th>
+        <th>GitHub Copilot Enterprise</th>
+        <th>Cursor / External</th>
+      </tr>
+      <tr>
+        <td class="t-light">Used for training</td>
+        <td class="t-accent">No</td>
+        <td class="t-accent">No</td>
+        <td class="t-muted">No (Pro+) / Unclear (Free)</td>
+      </tr>
+      <tr>
+        <td class="t-light">Data stored where</td>
+        <td class="t-accent">BP M365 tenant</td>
+        <td class="t-accent">BP GitHub org</td>
+        <td class="t-warm">Cursor cloud (external)</td>
+      </tr>
+      <tr>
+        <td class="t-light">BP enterprise agreement</td>
+        <td class="t-accent">Yes</td>
+        <td class="t-accent">Yes</td>
+        <td style="color:var(--color-red-text);">No</td>
+      </tr>
+      <tr>
+        <td class="t-light">Internal data OK</td>
+        <td class="t-accent">Yes (M365 scope)</td>
+        <td class="t-accent">Code only</td>
+        <td style="color:var(--color-red-text);">No</td>
+      </tr>
+      <tr>
+        <td class="t-light bold">Sensitive data OK</td>
+        <td style="color:var(--color-red-text); font-weight:600;">No</td>
+        <td style="color:var(--color-red-text); font-weight:600;">No</td>
+        <td style="color:var(--color-red-text); font-weight:600;">No</td>
+      </tr>
+    </table>
+    <div class="card mt20" style="border-top-color:var(--color-accent-warm);">
+      <p class="t-caption t-light" style="margin:0;"><strong class="t-warm">Rule:</strong> Enterprise tool coverage is the dividing line. When in doubt, default to M365 Copilot or GitHub Copilot over external tools.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">40 / 60</div>
+  <aside class="notes">
+    The determining factor is whether the tool is covered under a BP enterprise agreement.
+
+    M365 Copilot: BP enterprise agreement in place. Data stored in BP's Microsoft tenant. Not used for training. Internal M365 data is within scope.
+
+    GitHub Copilot Enterprise: BP enterprise agreement in place via the GitHub Enterprise Cloud subscription. Data stays in BP's GitHub org. Not used for training. Scope is code — not data embedded in comments.
+
+    Cursor and other external tools: no enterprise agreement. Data goes to Cursor's cloud. Not compliant for BP data.
+
+    The bottom row — sensitive data — is a no for every column, even M365 Copilot. Live positions, proprietary model IP, and market-sensitive information do not go into any AI tool regardless of enterprise agreement coverage.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 41 — PRACTICAL RULES FOR FM&I
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Practical Rules for FM&I</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption bold mb4" style="color:var(--color-accent);">1. The press release test</p>
+          <p class="t-caption t-primary">If the information would be problematic in a press release, it does not go into an AI tool. If unsure — apply the test.</p>
+        </div>
+        <div class="card-surface mb12">
+          <p class="t-caption bold mb4" style="color:var(--color-accent);">2. Anonymise inputs</p>
+          <p class="t-caption t-primary">Replace real hub names, volumes, counterparty names with placeholders. Same quality code assistance, zero compliance risk.</p>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption bold mb4" style="color:var(--color-accent);">3. Code patterns, not data</p>
+          <p class="t-caption t-primary">Use AI for code structure and methodology. Not to run on actual live trading data.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card-red mb12">
+          <p class="t-caption bold mb4" style="color:var(--color-red-text);">4. Never paste live positions</p>
+          <p class="t-caption t-primary">Absolute rule. No exceptions. No justification. No tool. Ever.</p>
+        </div>
+        <div class="card-surface mb12">
+          <p class="t-caption bold mb4" style="color:var(--color-accent);">5. Check the tool before using it</p>
+          <p class="t-caption t-primary">Not sure if a tool is covered under BP agreements? Assume it is not. Check with IT or your line manager first.</p>
+        </div>
+        <div class="card-surface" style="border-left-color:var(--color-accent-warm);">
+          <p class="t-caption bold mb4" style="color:var(--color-accent-warm);">Where to find current guidance</p>
+          <p class="t-caption t-primary">BP intranet → search "AI governance"<br>Digital Centre of Excellence — responsible for AI policy<br><em>Always check current guidance, not a snapshot</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">41 / 60</div>
+  <aside class="notes">
+    Five rules. Memorise them and you are operating safely in almost every scenario.
+
+    The press release test: if the information would be problematic in a press release, it does not go into an AI tool.
+
+    Anonymise inputs: when asking AI for code patterns or analysis approaches, replace real hub names, specific volumes, counterparty names with generic placeholders.
+
+    Code patterns, not data: use AI for code structure and methodology. Not to run analytical code on actual live trading data.
+
+    Never paste live positions: this is the absolute rule. No exceptions. Ever. It does not matter which tool, which context, which justification.
+
+    Check the tool before using it: if you are not sure whether a specific tool is covered under BP's agreements — assume it is not and check with IT or your line manager before using BP data with it.
+
+    Where to find current guidance: BP intranet, search "AI governance". The Digital Centre of Excellence is responsible for AI policy. This is an actively evolving area — always check current guidance.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 42 — SECTION DIVIDER 7
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 7</p>
+    <h2 class="t-heading t-light mb12">Extended Topics</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Claude Code · MCP · Agentic AI · Agent Skills · Context · Hooks</p>
+    <div class="big-numeral">07</div>
+  </div>
+  <div class="slide-footer-light">42 / 60</div>
+  <aside class="notes">
+    Section seven. Fifteen minutes on the leading edge. Claude Code, MCP, agentic AI, agent skills, context management, hooks, and ChatGPT Codex.
+
+    Claude Code is not an IDE plugin. It is a fundamentally different class of tool.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 43 — CLAUDE CODE: THE CLI DIFFERENCE
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Claude Code — The CLI Difference</h2>
+    <div class="two-col mb20" style="align-items:stretch; flex:1;">
+      <div class="card">
+        <p class="t-caption t-muted upper bold mb8">IDE Plugins (Copilot / Cursor)</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Operate at file or selection level</li>
+          <li>You are always in the loop, approving changes</li>
+          <li>Context = what you have open in your editor</li>
+          <li>Single session, manual triggers</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top-color:var(--color-accent-warm);">
+        <p class="t-caption t-warm upper bold mb8">Claude Code (CLI)</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Operates at entire repository level — runs in terminal</li>
+          <li>Runs bash commands, git operations, test suites autonomously</li>
+          <li>Long-running: describe an outcome, come back when done</li>
+          <li>CLAUDE.md gives persistent project context on every session</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="border-top-color:var(--color-accent-warm);">
+      <p class="t-caption t-light mb4"><strong class="t-warm">FM&I applications:</strong> Large-scale refactors. Comprehensive test suite generation across an entire pipeline project. Documentation generation for a codebase with 50 undocumented functions. These take hours of human time and minutes of Claude Code time.</p>
+    </div>
+  </div>
+  <div class="slide-footer-light">43 / 60</div>
+  <aside class="notes">
+    IDE plugins — GitHub Copilot, Cursor — operate at the file or selection level. You are in your editor, working on code, and the AI assists you in that context. You are always in the loop, approving each change.
+
+    Claude Code operates at the repository level. It runs in the terminal. It has access to the entire project — not just what you have open in your editor. It can run bash commands, execute git operations, run your test suite, read any file, write any file.
+
+    The workflow is different: you describe an outcome and come back when it is done. "Implement the data quality check module for the gas pricing pipeline, write comprehensive tests, and update the documentation." Claude Code plans the approach, executes across multiple files, runs the tests, fixes failures, and reports the result.
+
+    CLAUDE.md is the configuration file that makes Claude Code context-aware at the project level. Written once, applied every session.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 44 — CLAUDE CODE AGENT TEAMS
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Claude Code Agent Teams</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb12">The orchestrator pattern</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:var(--color-secondary); border-radius:6px; padding:10px 14px; text-align:center;">
+            <p class="t-caption t-accent bold mb4">Orchestrator</p>
+            <p class="t-caption t-light" style="font-size:0.9em;">Receives task → plans → delegates → synthesises</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div style="background:var(--color-surface); border:1px solid var(--color-accent); border-radius:6px; padding:8px 10px; flex:1; text-align:center;">
+              <p class="t-caption t-accent bold mb2" style="font-size:0.85em;">Research</p>
+              <p class="t-caption t-muted" style="font-size:0.8em;">Gathers data</p>
+            </div>
+            <div style="background:var(--color-surface); border:1px solid var(--color-accent); border-radius:6px; padding:8px 10px; flex:1; text-align:center;">
+              <p class="t-caption t-accent bold mb2" style="font-size:0.85em;">Code</p>
+              <p class="t-caption t-muted" style="font-size:0.8em;">Implements</p>
+            </div>
+            <div style="background:var(--color-surface); border:1px solid var(--color-accent); border-radius:6px; padding:8px 10px; flex:1; text-align:center;">
+              <p class="t-caption t-accent bold mb2" style="font-size:0.85em;">Docs</p>
+              <p class="t-caption t-muted" style="font-size:0.8em;">Writes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb12">This presentation was built with a 5-agent team</p>
+        <ul class="clean t-caption t-primary">
+          <li><strong>Agent 1:</strong> Research — gathered all data and context</li>
+          <li><strong>Agent 2:</strong> Content Architect — structured 60 slides and narrative</li>
+          <li><strong>Agent 3:</strong> Slide Designer — design system and per-slide spec</li>
+          <li><strong>Agent 4:</strong> Transcript Writer — wrote this speaking script</li>
+          <li><strong>Agent 5:</strong> Production Engineer — built this HTML file</li>
+        </ul>
+        <p class="t-caption t-muted mt12">Sequential, each reading all prior outputs, each responsible for a specific deliverable.</p>
+      </div>
+    </div>
+    <p class="t-caption t-muted mt12">FM&I use: monthly model performance reports, multi-component analysis packages, documentation updates across an entire pipeline project.</p>
+  </div>
+  <div class="slide-footer">44 / 60</div>
+  <aside class="notes">
+    Complex tasks have clearly separable components. Agent teams exploit this.
+
+    The orchestrator receives the high-level task. It plans the approach and delegates to specialised sub-agents. Each sub-agent handles a specific aspect. The orchestrator synthesises the results and resolves conflicts.
+
+    This presentation was built using a five-agent team following this exact pattern. Agent 1 did the research. Agent 2 structured the content. Agent 3 designed the slides. Agent 4 — the one writing this script — wrote the transcript. Agent 5 produced this HTML presentation and PowerPoint file. Sequential, each reading all prior outputs, each responsible for a specific deliverable.
+
+    [PAUSE]
+
+    The same pattern applies to FM&I's complex deliverables. Monthly model performance reports. Multi-component analysis packages. Documentation updates across a pipeline project. These are tasks where the orchestrator-subagent model compresses days of work into hours.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 45 — TOOL CALLING AND MCP
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Tool Calling and MCP — The Connectivity Layer</h2>
+    <div class="two-col mb16" style="align-items:stretch; flex:1;">
+      <div class="card">
+        <p class="t-caption t-accent upper bold mb8">Tool Calling</p>
+        <p class="t-caption t-light mb8">LLM can invoke external functions, read files, query databases, call APIs — as part of its reasoning.</p>
+        <div class="card" style="background:rgba(0,0,0,0.3); border-top: none; border-left: 2px solid var(--color-accent); padding:10px 14px; margin-top:8px;">
+          <p class="t-caption t-muted mb4">Without tool calling:</p>
+          <p class="t-caption t-light mb8">"I don't have real-time data." ✗</p>
+          <p class="t-caption t-muted mb4">With tool calling:</p>
+          <p class="t-caption t-light">"TTF is currently 32.45 €/MWh as of 09:30 UTC." ✓</p>
+        </div>
+      </div>
+      <div class="card">
+        <p class="t-caption t-accent upper bold mb8">MCP — Model Context Protocol</p>
+        <p class="t-caption t-light mb8">The standardised interface for AI-to-system connections. Think of it as <strong class="t-accent">USB for AI integrations</strong>.</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Before MCP: every AI tool had bespoke integration format</li>
+          <li>After MCP: any client connects to any server</li>
+          <li>One Dataiku MCP server works with Cursor, Claude Code, and any MCP-aware tool</li>
+        </ul>
+        <p class="t-caption t-muted mt12">Released by Anthropic late 2024. Now widely adopted across AI tooling ecosystem.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">45 / 60</div>
+  <aside class="notes">
+    Without tool calling, an LLM can only generate text based on its training data. With tool calling, an LLM can invoke external functions, read files, query databases, call APIs, and take actions in the world.
+
+    The Model Context Protocol — MCP — standardises how this works. Think of it as USB for AI integrations. Before MCP, every AI tool had its own bespoke integration format. MCP defines a common interface: any MCP-compliant client connects to any MCP-compliant server. One server for Dataiku works with Cursor, Claude Code, and any other MCP-aware tool.
+
+    This is the foundational capability that transforms LLMs from text generators into agents that interact with systems.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 46 — MCP FOR FM&I
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">MCP for FM&I — What You Could Build Today</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb8">A basic read-only Dataiku MCP server</p>
+          <p class="t-caption t-primary mb4">~200 lines of Python. One day of build. Three core functions:</p>
+          <div class="code-panel" style="font-size:0.62em;">
+<span class="code-fn">get_scenario_status</span>(<span class="code-str">project_key</span>)
+<span class="code-cm"># Returns run history, errors, last run time</span>
+
+<span class="code-fn">trigger_scenario</span>(<span class="code-str">project_key</span>, <span class="code-str">scenario_id</span>)
+<span class="code-cm"># Triggers a pipeline run via Dataiku API</span>
+
+<span class="code-fn">get_job_logs</span>(<span class="code-str">project_key</span>, <span class="code-str">job_id</span>)
+<span class="code-cm"># Returns full job logs for diagnosis</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb8">What this enables (in Cursor or Claude Code)</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="card-green" style="padding:10px 14px;">
+              <p class="t-caption" style="color:var(--color-green-text); margin:0;">"What FM&I scenarios ran today? Were there failures?"</p>
+            </div>
+            <div class="card-green" style="padding:10px 14px;">
+              <p class="t-caption" style="color:var(--color-green-text); margin:0;">"The gas_curve_build job failed. Get the logs and diagnose it."</p>
+            </div>
+            <div class="card-green" style="padding:10px 14px;">
+              <p class="t-caption" style="color:var(--color-green-text); margin:0;">"Re-trigger the gas_hub_prices scenario."</p>
+            </div>
+          </div>
+        </div>
+        <p class="t-caption t-primary">Natural language interface to your entire Dataiku environment. No logging into the UI for status checks.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">46 / 60</div>
+  <aside class="notes">
+    A basic read-only Dataiku MCP server is approximately two hundred lines of Python. One day of build. Here is what it enables.
+
+    You are in Cursor or Claude Code. You ask: "What FM&I pipeline scenarios ran today? Were there any failures?" The AI calls the Dataiku MCP server, retrieves the scenario run history, and responds with a structured summary.
+
+    You ask: "The gas_curve_build job failed yesterday. Get the logs and tell me what went wrong." The AI retrieves the job logs via MCP, reads the recipe code it has in context, and generates a diagnosis with a proposed fix.
+
+    You ask: "Re-trigger the gas_hub_prices scenario." The AI makes the API call.
+
+    You get a natural language interface to your entire Dataiku environment. No logging in to the UI for status checks. No manual log retrieval. The AI becomes the interface to the platform.
+
+    The three core functions: get_scenario_status, trigger_scenario, get_job_logs. That is the starting point. Build from there.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 47 — AGENTIC AI
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Agentic AI — What Changed and Why It Matters</h2>
+    <div class="two-col mb16" style="align-items:stretch; flex:1;">
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-muted upper bold mb8">Before 2024</p>
+          <p class="t-caption t-light">AI was ask-and-get. One turn. No memory. No actions. Text generation and stop.</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-warm upper bold mb8">2025: The Inflection</p>
+          <ul class="clean clean-light t-caption t-light">
+            <li>Tool use became reliable enough for production</li>
+            <li>Context windows large enough to hold complex task state</li>
+            <li>Models better at following multi-step plans</li>
+            <li>Infrastructure matured for orchestration</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card-green mb12">
+          <p class="t-caption bold mb8" style="color:var(--color-green-text);">Works reliably now</p>
+          <ul class="clean t-caption" style="color:var(--color-text-primary);">
+            <li>Well-defined tasks with clear success criteria</li>
+            <li>Tasks where errors are detectable (test suite)</li>
+            <li>Bounded scope — single repo, defined toolset</li>
+            <li><strong>FM&I examples:</strong> nightly pipeline health monitor, weekly model drift alert, on-demand request triage</li>
+          </ul>
+        </div>
+        <div class="card-amber">
+          <p class="t-caption bold mb8" style="color:var(--color-accent-warm);">Still unreliable</p>
+          <ul class="clean t-caption" style="color:var(--color-text-primary);">
+            <li>Long chains where errors accumulate over many steps</li>
+            <li>Tasks with ambiguous success criteria</li>
+            <li>Complex tool use with unfamiliar APIs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="t-caption t-muted">Design agentic tasks with clear success criteria and detectable errors. That is the constraint that makes them reliable.</p>
+  </div>
+  <div class="slide-footer-light">47 / 60</div>
+  <aside class="notes">
+    Before 2024: AI was ask and get. One turn. No memory. No actions.
+
+    2025: the inflection. Tool use became reliable enough for production. Context windows became large enough to hold complex task state. Models became better at following multi-step plans without losing track. Infrastructure matured.
+
+    What works reliably now: well-defined tasks with clear success criteria. Tasks where errors are detectable — like a test suite catching a failure. Tasks with bounded scope.
+
+    FM&I applications that are in the "works reliably" zone today: a nightly pipeline health monitor that checks all Dataiku outputs against expected ranges and generates an exception report. A weekly model drift alert. An on-demand request triage agent.
+
+    [PAUSE]
+
+    Design your agentic tasks with clear success criteria and detectable errors. That is the constraint that makes them reliable.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 48 — AGENT SKILLS
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Agent Skills — Packaged Reusable Capabilities</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card-surface mb12">
+          <p class="t-caption t-accent bold mb8">What is a skill?</p>
+          <p class="t-caption t-primary mb8">A packaged, reusable AI workflow that you invoke by name. In Claude Code:</p>
+          <div class="code-panel" style="font-size:0.65em;">
+<span class="code-cm"># Invoke by name — consistent every time</span>
+/data-quality-report
+
+<span class="code-cm"># FM&I skills to build:</span>
+/pipeline-incident-diagnostic
+/model-card-generator
+/model-validation-checklist
+/curve-comparison-commentary
+          </div>
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb8">Creating a skill</p>
+          <div class="code-panel" style="font-size:0.62em;">
+<span class="code-cm"># File: .claude/skills/data-quality-report.md</span>
+
+<span class="code-kw">name:</span> data-quality-report
+<span class="code-kw">description:</span> Run standard FM&I data quality
+  checks on a Dataiku dataset
+
+<span class="code-kw">instructions:</span>
+  Check null rates per column,
+  validate schema against spec,
+  flag outliers >3σ,
+  output structured JSON report
+          </div>
+        </div>
+      </div>
+      <div class="card-surface">
+        <p class="t-caption t-accent bold mb12">Why this matters for FM&I</p>
+        <p class="t-caption t-primary mb12">Every time someone runs a data quality check today, they do it differently. Different columns. Different null thresholds. Different output format.</p>
+        <p class="t-caption t-primary mb12"><strong>A skill standardises this.</strong> Define once. Anyone on the team invokes it. Same checks, same structure, same report every time.</p>
+        <div class="card-green" style="padding:12px 16px;">
+          <p class="t-caption bold mb4" style="color:var(--color-green-text);">The compound effect</p>
+          <p class="t-caption" style="color:var(--color-text-primary);">5 skills × 30 min saved per invocation × 10 team members × daily use = <strong>hundreds of hours per year</strong></p>
+        </div>
+        <p class="t-caption t-muted mt12">Institutional knowledge encoded as a skill becomes team infrastructure.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">48 / 60</div>
+  <aside class="notes">
+    A skill is a packaged, reusable AI workflow that you invoke by name. In Claude Code, you call /data-quality-report and it executes a defined, repeatable process — every time, consistently, for any dataset.
+
+    Why this matters: every time someone on the team runs a data quality check, they currently do it differently. A skill standardises this. You define it once. Anyone on the team invokes it. The output is always in the same format, covers the same checks, produces the same structured report.
+
+    Institutional knowledge encoded as a skill becomes team infrastructure. The data quality report. The model validation checklist. The pipeline incident diagnostic. Write the skill once, benefit on every invocation, for every team member.
+
+    Creating a skill in Claude Code: create a file in .claude/skills/ with a name and description, write the instructions in plain English, specify the output format. Invoke with /skill-name.
+
+    The compound effect: five well-designed skills that each save thirty minutes per invocation, used collectively by a team of ten, become hundreds of hours of time savings per year.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 49 — CONTEXT, TOKENS, AND HOOKS
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Context, Tokens, and Hooks</h2>
+    <div class="three-col" style="flex:1; align-items:stretch;">
+      <div class="card">
+        <p class="t-caption t-accent upper bold mb8">Context Hygiene</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Include only files relevant to the current task</li>
+          <li>Start fresh conversations for new tasks</li>
+          <li>Use .cursorignore to exclude noise from index</li>
+          <li>Compress long conversation histories when they grow unwieldy</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="t-caption t-accent upper bold mb8">Token Cost</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>10 analysts × 50 req/day at Sonnet rates ≈ £9/day</li>
+          <li>Context inflation can double this with no quality gain</li>
+          <li>Good hygiene is a cost AND quality issue simultaneously</li>
+          <li>Bloated context → slower, costlier, noisier responses</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="t-caption t-accent upper bold mb8">Hooks (Claude Code)</p>
+        <ul class="clean clean-light t-caption t-light">
+          <li>Pre/post tool-call automation</li>
+          <li>Every file write → auto-run linter + formatter</li>
+          <li>Every code change → run test suite automatically</li>
+          <li>Background agent completes → Slack notification</li>
+          <li>Makes autonomous workflows self-correcting</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">49 / 60</div>
+  <aside class="notes">
+    Context hygiene: include only what is relevant to the current task. Start fresh conversations for new tasks rather than carrying context pollution from earlier. Use .cursorignore to exclude noise from the codebase index.
+
+    Token cost awareness: at Sonnet rates, a team of ten making fifty requests per day costs roughly nine dollars per day. Context inflation — loading unnecessary files — can double this with no quality improvement. Good hygiene is a cost and quality issue simultaneously.
+
+    Hooks in Claude Code: pre and post tool-call automation. Every time Claude Code writes a file, a post-hook can automatically run your linter and formatter. Every time it makes a code change, a post-hook can run your test suite. Every time a background agent completes, a post-hook sends a Slack notification. These are the automations that make autonomous agent workflows reliable and self-correcting.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 50 — CHATGPT CODEX VS CLAUDE CODE VS CURSOR
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">ChatGPT Codex vs Claude Code vs Cursor — Agentic Agents</h2>
+    <table class="slide-table" style="width:100%;">
+      <tr>
+        <th>Dimension</th>
+        <th>ChatGPT Codex</th>
+        <th>Claude Code</th>
+        <th>Cursor Background</th>
+      </tr>
+      <tr>
+        <td class="bold">Where it runs</td>
+        <td>OpenAI cloud sandbox</td>
+        <td class="t-accent bold">Local / SSH — your machine</td>
+        <td>Cursor cloud</td>
+      </tr>
+      <tr>
+        <td class="bold">Data location</td>
+        <td>OpenAI cloud</td>
+        <td class="t-accent bold">Stays on your machine</td>
+        <td>Cursor cloud</td>
+      </tr>
+      <tr>
+        <td class="bold">BP compliance</td>
+        <td class="t-muted">Azure pathway (watch)</td>
+        <td class="t-accent bold">Local = most defensible</td>
+        <td style="color:var(--color-red-text);">Not compliant for BP data</td>
+      </tr>
+      <tr>
+        <td class="bold">Output</td>
+        <td>Returns a PR</td>
+        <td>Edits files, runs tests</td>
+        <td>Edits files in branch</td>
+      </tr>
+    </table>
+    <div class="card-surface mt20" style="border-left-color:var(--color-accent);">
+      <p class="t-caption t-primary" style="margin:0;"><strong>FM&I recommendation:</strong> For data-sensitive pipeline work, Claude Code running locally or via SSH is the most defensible option. The data stays on the machine you control. Watch the Azure/Codex integration — if that matures under BP's Microsoft agreement, it may become a compliant cloud option.</p>
+    </div>
+  </div>
+  <div class="slide-footer">50 / 60</div>
+  <aside class="notes">
+    ChatGPT Codex is OpenAI's cloud-based autonomous coding agent. You submit a task, it spins up a sandboxed environment, executes changes, and returns a PR. Similar in concept to Cursor's background agents.
+
+    The key differentiator for FM&I: data handling. Codex runs in OpenAI's cloud. Cursor background agents run in Cursor's cloud. Claude Code runs locally, or via SSH on a machine you control.
+
+    For data-sensitive FM&I work — analysis code that operates near proprietary pipeline logic — Claude Code running locally or via SSH is the most defensible option. The data stays on the machine you control.
+
+    The Azure pathway for Codex via BP's Microsoft enterprise agreement is worth watching. If that integration matures, it may become a compliant cloud option.
+  </aside>
+</section>
+
+
+<!-- ============================================================
+     SLIDE 51 — SECTION DIVIDER 8
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 8</p>
+    <h2 class="t-heading t-light mb12">From the Field</h2>
+    <p class="t-body t-light" style="opacity:0.8;">Real workflows, real rough edges — six transferable patterns</p>
+    <div class="big-numeral">08</div>
+  </div>
+  <div class="slide-footer-light">51 / 60</div>
+  <aside class="notes">
+    Section eight. Personal use cases. Eight minutes. These are real working examples, not polished demos — with the rough edges included.
+
+    Six patterns, all transferable to FM&I.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 52 — PERSONAL USE CASES
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">Personal Use Cases — The Toolkit</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Claude Code + Remotion</p>
+          <p class="t-caption t-light">Remotion = React-based video framework. Claude Code generates React components defining each frame → renders to MP4. FM&I use: forward curve evolution animations, scenario walkthrough videos.</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Weather Alerts Project</p>
+          <p class="t-caption t-light">Event-driven Python: data trigger → Claude API → structured JSON output → delivery. Pattern identical to pipeline failure alert, model drift alert, or market anomaly alert.</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Claude Remote via SSH</p>
+          <p class="t-caption t-light">Claude Code on a remote machine over SSH. AI assistance on the machine where sensitive data lives. Data never leaves the server. Relevant for FM&I data-sensitive scenarios.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">Chrome Extension</p>
+          <p class="t-caption t-light">Claude access from any browser tab — research synthesis, form filling, web content extraction. Useful for rapid desk research and summarisation.</p>
+        </div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb4">OpenClaw</p>
+          <p class="t-caption t-light">[PRESENTER: describe your personal project here directly to the team]</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Template Project (_p-presentation-creator)</p>
+          <p class="t-caption t-light">This repository is a live example of a fully configured AI-assisted project. Every file is intentional. CLAUDE.md + .claude/CLAUDE.md pattern. Use this as the template to replicate for FM&I projects.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">52 / 60</div>
+  <aside class="notes">
+    Claude Code and Remotion: Remotion is a React-based framework for creating videos programmatically. You describe a video in code — React components that define each frame — and Remotion renders them to MP4. Claude Code generates the components. For FM&I: forward curve evolution animations, scenario walkthrough videos, automated briefing videos generated from structured data inputs.
+
+    Weather alerts project: an event-driven Python application that uses the Claude API to generate structured weather alerts for commercial contexts. The pattern — data trigger, Claude API call, structured JSON output, delivery — is identical to a pipeline failure alert, model drift alert, or market anomaly alert.
+
+    Claude Remote via SSH: running Claude Code on a remote machine over SSH. This means AI assistance on the machine where sensitive data lives. The data never leaves the server.
+
+    Template project: this repository is a live example of a fully configured AI-assisted project. This is the pattern to replicate for FM&I projects.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 53 — THE WEATHER ALERTS PATTERN
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">The Weather Alerts Pattern — Transferable to FM&I</h2>
+    <div class="two-col" style="flex:1; align-items:stretch;">
+      <div class="card-surface">
+        <p class="t-caption t-accent upper bold mb12">The architecture</p>
+        <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
+          <div style="background:var(--color-secondary); border-radius:6px; padding:8px 16px; color:white; font-size:0.75em; text-align:center; width:80%;">Data event trigger</div>
+          <div style="font-size:1.2em; color:var(--color-accent);">↓</div>
+          <div style="background:var(--color-secondary); border-radius:6px; padding:8px 16px; color:white; font-size:0.75em; text-align:center; width:80%;">Python script + Claude API call</div>
+          <div style="font-size:1.2em; color:var(--color-accent);">↓</div>
+          <div style="background:var(--color-secondary); border-radius:6px; padding:8px 16px; color:white; font-size:0.75em; text-align:center; width:80%;">Structured JSON output (severity, diagnosis, actions)</div>
+          <div style="font-size:1.2em; color:var(--color-accent);">↓</div>
+          <div style="background:var(--color-secondary); border-radius:6px; padding:8px 16px; color:white; font-size:0.75em; text-align:center; width:80%;">Deliver via Slack or email</div>
+        </div>
+      </div>
+      <div>
+        <div class="code-panel mb12" style="font-size:0.58em;">
+<span class="code-kw">import</span> anthropic, json
+
+client = anthropic.<span class="code-fn">Anthropic</span>()
+
+<span class="code-kw">def</span> <span class="code-fn">analyse_pipeline_failure</span>(trace, recipe):
+    msg = client.messages.<span class="code-fn">create</span>(
+        model=<span class="code-str">"claude-sonnet-4-6"</span>,
+        max_tokens=<span class="code-num">1024</span>,
+        messages=[{<span class="code-str">"role"</span>: <span class="code-str">"user"</span>, <span class="code-str">"content"</span>:
+            <span class="code-str">f"Stack trace: {trace}\n"</span>
+            <span class="code-str">f"Recipe code: {recipe}\n"</span>
+            <span class="code-str">"Return JSON: severity, diagnosis,"</span>
+            <span class="code-str">" recommended_fix"</span>
+        }]
+    )
+    <span class="code-kw">return</span> json.<span class="code-fn">loads</span>(msg.content[<span class="code-num">0</span>].text)
+        </div>
+        <div class="card-surface">
+          <p class="t-caption t-accent bold mb8">FM&I variants</p>
+          <ul class="clean t-caption t-primary">
+            <li>Pipeline failure alert — diagnosis + recommended fix JSON</li>
+            <li>Model drift alert — severity + likely causes + recommended action</li>
+            <li>Market anomaly alert — significance + exposed FM&I models</li>
+          </ul>
+          <p class="t-caption t-muted mt8">Complexity is in the prompt design. The code is trivial. One-day build for any FM&I variant.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">53 / 60</div>
+  <aside class="notes">
+    The architecture: a data event trigger — weather data refreshed, or in the FM&I version, a pipeline status check — feeds into a Python script. The script constructs a prompt and calls the Claude API. The model returns structured JSON with severity, affected systems, and recommended actions. The script delivers the result via Slack or email.
+
+    The code in the panel is the complete API integration: twenty lines. The anthropic Python SDK. A messages.create call with the model name, and the prompt that includes the data and asks for structured JSON output. Then json.loads on the response.
+
+    The FM&I variants: pipeline failure alert, model drift alert, market anomaly alert.
+
+    The complexity is entirely in the prompt design. The code is trivial. This is a one-day build for any of these FM&I variants.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 54 — THE TEMPLATE PROJECT
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb20" style="width:100%;">The Template Project — Configuration Is the Asset</h2>
+    <div class="two-col" style="flex:1; align-items:start;">
+      <div>
+        <div class="card mb12">
+          <p class="t-caption t-accent bold mb8">CLAUDE.md (root)</p>
+          <ul class="clean clean-light t-caption t-light">
+            <li>Project overview and tech stack</li>
+            <li>All development commands</li>
+            <li>Architecture and key directories</li>
+            <li>Critical patterns — "all queries must be user-scoped"</li>
+            <li>Known trade-offs — intentional decisions AI should not "fix"</li>
+            <li>Troubleshooting</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb8">.claude/CLAUDE.md (behavioural)</p>
+          <ul class="clean clean-light t-caption t-light">
+            <li>Implementation philosophy — no TODOs, no stubs</li>
+            <li>Analysis framework for complex requirements</li>
+            <li>Prohibited patterns — what the AI must never do</li>
+            <li>Quality gates — lint, build, tests must all pass</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="height:100%;">
+        <p class="t-caption t-accent bold mb12">The result</p>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="card" style="background:rgba(0,0,0,0.3); border-top-color:var(--color-text-muted);">
+            <p class="t-caption t-muted bold mb4">Without these files</p>
+            <p class="t-caption t-light">Every AI session starts from zero. AI makes assumptions. Quality is inconsistent. New team member has no AI context.</p>
+          </div>
+          <div class="card" style="border-top-color:var(--color-accent-warm);">
+            <p class="t-caption t-warm bold mb4">With these files</p>
+            <p class="t-caption t-light">Every session starts with full context and consistent constraints — regardless of who runs it, regardless of which model version.</p>
+          </div>
+        </div>
+        <div class="divider" style="margin:16px 0;"></div>
+        <p class="t-caption t-muted">Replicate this pattern for FM&I's Dataiku pipeline projects, model repositories, and shared analysis tooling. The template is the most valuable thing in this repository. Not the code. The template.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">54 / 60</div>
+  <aside class="notes">
+    Let me walk through what is in the _p-presentation-creator repository and why each file is there.
+
+    CLAUDE.md at the root: the project context that Claude Code gets on every session. What the project does, the full tech stack, all the development commands, the architecture, critical patterns that must be followed, known trade-offs — sections documenting intentional decisions the AI should not try to "fix", troubleshooting.
+
+    .claude/CLAUDE.md: behavioural directives. The implementation philosophy — direct implementation only, no TODOs, no stubs. The analysis framework. A list of prohibited patterns. Quality gates — lint must pass, build must succeed, all tests must pass.
+
+    The result: without these files, every AI session in this project starts from zero. With them, every session — regardless of which team member runs it — starts with full context and consistent constraints.
+
+    [PAUSE]
+
+    The template is the most valuable thing in this repository. Not the code. The template. Write it once. Benefit on every session. This is the pattern to replicate for FM&I's Dataiku pipeline projects, FM&I's model repositories, FM&I's shared analysis tooling.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 55 — SECTION DIVIDER 9
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="section-divider">
+    <div class="side-bar"></div>
+    <p class="t-caption t-accent upper mb8">Section 9</p>
+    <h2 class="t-heading t-light mb12">Business Use Cases &amp; Innovation Day</h2>
+    <p class="t-body t-light" style="opacity:0.8;">25 commercial ideas pre-seeded for the mural board</p>
+    <div class="big-numeral">09</div>
+  </div>
+  <div class="slide-footer-light">55 / 60</div>
+  <aside class="notes">
+    Section nine. Commercial use cases for FM&I. These are the ideas that go on the mural board.
+
+    Twenty-five starting points. The board starts populated.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 56 — BUSINESS USE CASES HIT LIST
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb16" style="width:100%;">Business Use Cases — 25 Ideas for Innovation Day</h2>
+    <div class="two-col" style="flex:1; align-items:start;">
+      <div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb6">Data &amp; Modelling</p>
+          <ul class="clean clean-light" style="font-size:0.7em; color:rgba(255,255,255,0.85);">
+            <li>AI model validator — auto test new version vs holdout, compare vs incumbent</li>
+            <li>Automatic model card generation on every commit</li>
+            <li>Statistical assumption checker — test model vs its assumptions</li>
+          </ul>
+        </div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb6">Trading Desk Support</p>
+          <ul class="clean clean-light" style="font-size:0.7em; color:rgba(255,255,255,0.85);">
+            <li>Market structure briefing agent — 3–5 daily notable changes</li>
+            <li>Request triage agent — identifies data needed, generates initial code structure</li>
+            <li>Curve comparison narrator — explains forward curve changes in plain language</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb6">Dataiku &amp; Platform</p>
+          <ul class="clean clean-light" style="font-size:0.7em; color:rgba(255,255,255,0.85);">
+            <li>Pipeline health dashboard — automated weekly scenario run report</li>
+            <li>Data lineage query interface — "which models are affected if X feed fails?"</li>
+            <li>Schema drift detector — flags when upstream schemas change</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb6">Reporting &amp; Visualisation</p>
+          <ul class="clean clean-light" style="font-size:0.7em; color:rgba(255,255,255,0.85);">
+            <li>Natural language chart generator — describe chart, get Plotly code</li>
+            <li>Automated PowerPoint generation from structured data</li>
+            <li>Report commentary assistant — narrates the numbers automatically</li>
+          </ul>
+        </div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb6">Process &amp; Workflow</p>
+          <ul class="clean clean-light" style="font-size:0.7em; color:rgba(255,255,255,0.85);">
+            <li>Meeting actions extracted → pushed to Jira automatically</li>
+            <li>FM&I onboarding knowledge base agent</li>
+            <li>Incident response assistant — structured triage for pipeline failures</li>
+          </ul>
+        </div>
+        <div class="card" style="border-top-color:var(--color-accent-warm);">
+          <p class="t-caption t-warm bold mb4">None of these require new infrastructure.</p>
+          <p style="font-size:0.7em; color:rgba(255,255,255,0.85);">All use tools or patterns covered in this session. Innovation Day is where we decide which ones to build first.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">56 / 60</div>
+  <aside class="notes">
+    Five categories. Twenty-five ideas pre-seeded for Innovation Day.
+
+    Data and modelling: the AI model validator — an agent that automatically tests a new model version against holdout data, compares against the incumbent, and generates a structured model comparison report. Automatic model documentation — on every commit, an agent generates or updates the model card. Statistical assumption checker.
+
+    Trading desk support: the market structure briefing agent — daily agent that identifies three to five notable market structure changes and drafts a briefing. The request triage agent. The curve comparison narrator.
+
+    Dataiku and platform: pipeline health dashboard — weekly automated report of all scenario run times, error rates, data freshness. Data lineage query interface. Schema drift detector.
+
+    Reporting and visualisation: natural language chart generator, automated PowerPoint generation from structured data, report commentary assistant.
+
+    Process and workflow: meeting action items extracted and pushed to Jira automatically, onboarding knowledge base agent, incident response assistant.
+
+    [PAUSE]
+
+    None of these require new infrastructure. All of them use tools or patterns we have covered in this session. Innovation Day is where we decide which ones to build.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 57 — CORE MESSAGE CLOSING CALLBACK
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner center" style="height:100%;">
+    <div style="max-width:780px; text-align:center;">
+      <div class="t-big t-accent mb8">10×</div>
+      <p class="t-caption t-muted mb24">Not because AI is magic. Because eight hours of routine analytical work compresses to forty-five minutes — every week, for every analyst on the team.</p>
+      <h2 class="t-heading t-light mb16" style="line-height:1.3;">"You already have the tools — the only thing between you and 10× productivity is knowing which tool to reach for and when."</h2>
+      <div class="accent-rule"></div>
+    </div>
+  </div>
+  <div class="slide-footer-light">57 / 60</div>
+  <aside class="notes">
+    Ten times.
+
+    Not because AI is magic. Because eight hours of routine analytical work compresses to forty-five minutes. Every week. For every analyst on the team.
+
+    You already have the tools. The only thing between you and ten times the productivity is knowing which tool to reach for and when.
+
+    Let me close with the bigger picture.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 58 — PHILOSOPHICAL ANECDOTES
+     ============================================================ -->
+<section data-background-color="#1e3a5f">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb24" style="width:100%;">The Bigger Picture</h2>
+    <div style="display:flex; flex-direction:column; gap:14px; flex:1; justify-content:center; width:100%;">
+      <div class="phil-card">
+        <strong class="t-accent">AI doesn't make data scientists redundant.</strong> It makes the excuse of not having enough time redundant. The question is: what are you doing with the time AI just gave you?
+      </div>
+      <div class="phil-card">
+        <strong class="t-accent">FM&I is on the right side of this.</strong> Domain experts who command the technical layer. AI makes that combination rarer and more valuable — not less. The threat is to the IT middle layer that never understood the subject domain.
+      </div>
+      <div class="phil-card">
+        <strong class="t-accent">Who owns the risk when AI is wrong? You do.</strong> That is an argument for more rigorous AI-assisted testing, not less AI use. The answer to "AI can be wrong" is "so can humans — and AI-assisted test suites catch both."
+      </div>
+      <div class="phil-card">
+        <strong class="t-accent">The performance art around coding is ending.</strong> Requirements ceremonies that produce no code. Architecture decks. Digital transformation slogans. When execution is fast and cheap, ceremony becomes conspicuous. The organisations that ship win.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">58 / 60</div>
+  <aside class="notes">
+    Four things I believe, stated directly, not hedged.
+
+    AI does not make data scientists redundant. It makes the excuse of not having enough time redundant. The question now is: what are you doing with the time AI just gave you?
+
+    The threat is not to FM&I. FM&I sits at the intersection of domain expertise and technical capability — a combination that AI augments rather than replaces. The threat is to the IT middle layer that added value by translating between domain experts and technical implementation, without deep understanding of either.
+
+    Who owns the risk when the AI is wrong? You do. That is an argument for more rigorous AI-assisted testing, not less AI use. The answer to "AI can be wrong" is "so can humans, and AI-assisted test suites catch both."
+
+    The performance art around coding is ending. Requirements ceremonies that produce no code. Architecture decision records nobody reads. Digital transformation strategy decks. When execution is fast and cheap, ceremony becomes conspicuous. The organisations that ship win.
+
+    [PAUSE]
+
+    FM&I is on the right side of this. You are domain experts who command the technical layer. AI makes that combination rarer and more valuable, not less.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 59 — INNOVATION DAY MURAL BOARD
+     ============================================================ -->
+<section data-background-color="#f0f4f8">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-primary mb20" style="width:100%;">Innovation Day — The Mural Board</h2>
+    <div class="three-col mb20" style="align-items:stretch; flex:1;">
+      <div class="card-surface" style="border-left-color:var(--color-accent);">
+        <p class="t-caption t-accent upper bold mb12">What are you already using?</p>
+        <p class="t-caption t-primary mb8">Be honest. Even small uses count — the Teams meeting summary you tried once, the Stack Overflow question you asked Copilot instead.</p>
+        <p class="t-caption t-muted italic">Seed the "current use" column of the board</p>
+      </div>
+      <div class="card-surface" style="border-left-color:var(--color-accent-warm);">
+        <p class="t-caption t-warm upper bold mb12">What would save you the most time?</p>
+        <p class="t-caption t-primary mb8">Name the specific FM&I workflow. Not "AI for data analysis" — something specific like "AI for diagnosing failed Dataiku recipes."</p>
+        <p class="t-caption t-muted italic">Specific. Measurable. FM&I-relevant.</p>
+      </div>
+      <div class="card-surface" style="border-left-color:var(--color-green-text);">
+        <p class="t-caption bold mb12" style="color:var(--color-green-text); text-transform:uppercase; letter-spacing:0.08em;">What commercial idea would you build?</p>
+        <p class="t-caption t-primary mb8">The 25 on the previous slide are starting points. Your ideas, from your specific experience of FM&I's workflows, are the ones we want on the board.</p>
+        <p class="t-caption t-muted italic">One idea minimum per person</p>
+      </div>
+    </div>
+    <div class="card-surface" style="border-left-color:var(--color-accent); width:100%;">
+      <p class="t-caption t-accent upper bold mb8">Three asks from today</p>
+      <div style="display:flex; gap:24px;">
+        <p class="t-caption t-primary"><strong>1.</strong> Request your GitHub Copilot licence this week — raise the IT service desk request</p>
+        <p class="t-caption t-primary"><strong>2.</strong> Set up a copilot-instructions.md or .cursorrules in one FM&I project this month</p>
+        <p class="t-caption t-primary"><strong>3.</strong> Come to Innovation Day with one commercial idea written down</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">59 / 60</div>
+  <aside class="notes">
+    Three columns on the Innovation Day mural board.
+
+    What are you already using? Be honest. Even the small things count — the Teams meeting summary you tried once, the Stack Overflow question you asked Copilot instead, the email draft you started with AI. These are the seeds for the "current use" column.
+
+    What would save you the most time? Name the specific FM&I workflow. Not "AI for data analysis" — something specific. "AI for diagnosing failed Dataiku recipes." "AI for generating the first draft of model cards." Specific. Measurable. FM&I-relevant.
+
+    What commercial idea would you build? The twenty-five on the previous slide are starting points. Your ideas, from your specific experience of FM&I's workflows, are the ones we want on the board.
+
+    The mural board is live. Before we close, add at least one idea.
+
+    Three asks from today:
+    Request your GitHub Copilot licence this week if you do not already have one.
+    Set up a copilot-instructions.md or .cursorrules file in one FM&I project this month.
+    Come to Innovation Day with one commercial idea written down.
+  </aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 60 — CLOSING + RESOURCES
+     ============================================================ -->
+<section data-background-color="#0a1628">
+  <div class="slide-inner" style="height:100%;">
+    <h2 class="t-heading t-light mb8" style="width:100%;">You already have the tools.</h2>
+    <p class="t-body t-accent mb32">Now you know which one to reach for.</p>
+    <div class="two-col" style="align-items:start; flex:1;">
+      <div>
+        <p class="t-caption t-accent upper bold mb12">Resources &amp; Access</p>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb4">GitHub Copilot</p>
+          <p class="t-caption t-light">IT service desk request this week — reference BP's GitHub Enterprise licence</p>
+        </div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb4">M365 Copilot</p>
+          <p class="t-caption t-light">Open Teams → Copilot icon in left sidebar → it is already there right now</p>
+        </div>
+        <div class="card mb10">
+          <p class="t-caption t-accent bold mb4">BP AI Governance</p>
+          <p class="t-caption t-light">BP intranet → search "AI governance" — always check current guidance, not this session's snapshot</p>
+        </div>
+        <div class="card">
+          <p class="t-caption t-accent bold mb4">Template Project</p>
+          <p class="t-caption t-light">_p-presentation-creator — link in session notes — use as the FM&I project configuration template</p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; height:100%;">
+        <div class="accent-rule"></div>
+        <p class="t-body t-light mb16 mt16">Slides, transcript, and all session materials shared after the session.</p>
+        <p class="t-caption t-muted mb24">Innovation Day materials pre-populated in the shared Mural board link.</p>
+        <p class="t-body t-accent bold">Any questions?</p>
+        <div class="accent-rule mt16"></div>
+        <p class="t-caption t-muted mt16">FM&I Upskilling Session · BP Trading Analytics &amp; Insights · March 2026</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer-light">60 / 60</div>
+  <aside class="notes">
+    You already have the tools. Now you know which one to reach for.
+
+    Resources. GitHub Copilot: raise an IT service desk request this week — reference BP's GitHub Enterprise licence. M365 Copilot: open Teams right now, look for the Copilot icon in the left sidebar — it is already there. BP AI governance: intranet, search "AI governance" — always check the current guidance, not this session's snapshot. Template project: _p-presentation-creator in the shared link in the session notes — use it as the template for your own project configuration.
+
+    Slides, transcript, and all session materials will be shared after the session.
+
+    Any questions?
+  </aside>
+</section>
+
+</div><!-- end .slides -->
+</div><!-- end .reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    hash: true,
+    slideNumber: false,
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+    pdfMaxPagesPerSlide: 1,
+    pdfSeparateFragments: false,
+    plugins: [ RevealNotes ]
+  });
+</script>
+</body>
+</html>
