@@ -1,0 +1,86 @@
+# Cursor Rules — FM&I Dataiku Project
+# BP Trading Analytics & Insights
+# Copy this file to the root of your Dataiku project folder
+
+## Project type
+Dataiku DSS Python project. FM&I team, BP Trading.
+Primary language: Python. Recipes run as Dataiku Python recipe scripts.
+
+## Always do
+- Use polars for all dataframe operations — never pandas
+- Use dataiku.Dataset('name').get_dataframe() for dataset reads
+- Use dataiku.Dataset('name').write_with_schema(df) for dataset writes
+- Add NumPy-style docstrings to every function you write or modify
+- Write pytest tests for every new function
+- Use pathlib.Path for all file paths — never os.path or string concatenation
+- Use parameterised SQL queries — never f-string or string concatenation
+- Include a # type: ignore comment if polars type inference causes mypy errors (this is expected)
+
+## Never do
+- Use pandas — if you see a pandas import, flag it and rewrite with polars equivalent
+- Use iterrows(), apply(), or Python for loops over dataframe rows
+- Log or print calibration parameters, live position data, or P&L
+- Hardcode dataset names in function signatures — read from config
+- Use os.path — pathlib.Path only
+- Use f-strings to construct SQL queries
+
+## Dataiku-specific patterns
+
+### Reading a dataset
+```python
+import dataiku
+df = dataiku.Dataset("crack_spreads").get_dataframe()  # returns polars DataFrame
+```
+
+### Writing a dataset
+```python
+dataiku.Dataset("output_dataset").write_with_schema(df)
+```
+
+### Recipe boilerplate
+```python
+import dataiku
+import polars as pl
+from pathlib import Path
+
+# Get input and output dataset handles
+input_ds = dataiku.Dataset("input_name")
+output_ds = dataiku.Dataset("output_name")
+
+# Read input
+df = input_ds.get_dataframe()
+
+# Transform (your logic here)
+result = transform(df)
+
+# Write output
+output_ds.write_with_schema(result)
+```
+
+## FM&I domain terms (use these in comments and variable names)
+- crack_spread: refinery margin = product price - crude input cost
+- forward_curve: time-series of futures prices at different delivery dates
+- var: value at risk (statistical measure)
+- half_life: mean reversion speed in OU process models
+- contango: forward price > spot price (storage incentive)
+- backwardation: forward price < spot price (scarcity/convenience yield)
+- hub: geographic delivery point for gas (e.g. TTF, NBP, Henry Hub)
+
+## Code review checklist
+When suggesting any code change, verify:
+1. Does this work with the Dataiku managed dataset API?
+2. Is this vectorised — no row-by-row loops?
+3. Does the function have a NumPy docstring?
+4. Does this have at least one pytest test?
+5. If this touches model logic — does MODEL.md need updating?
+
+## Performance guidance
+- For datasets > 100k rows: always use polars lazy evaluation (pl.scan_csv or df.lazy())
+- For aggregations: use polars groupby + agg — never apply a Python function per group
+- For rolling windows: polars rolling_mean, rolling_std — never a manual loop
+- For joins: polars join — specify how="left"/"inner"/"outer" explicitly
+
+## Recommended first session
+Open Cursor, open your Dataiku project folder as the workspace root.
+In chat, type: @Codebase — what recipes exist in this project and what does each one do?
+This confirms @Codebase has indexed your project correctly.
