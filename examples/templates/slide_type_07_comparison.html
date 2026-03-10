@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Comparison/Two-Column — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate Palette */
+      --corp-navy: #0f172a;
+      --corp-steel: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical Palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-near-black: #0f172a;
+    }
+
+    .reveal .slides section {
+      padding: var(--slide-padding);
+      text-align: left;
+      font-family: var(--font-body);
+    }
+
+    /* ── Variant A: Side-by-side ML approaches ── */
+    /* CUSTOMIZATION: Change panel headings, metrics, and accent colors to compare any two approaches */
+    .comparison-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 32px;
+      line-height: 1.3;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      gap: 0;
+      align-items: stretch;
+      height: 380px;
+    }
+
+    .comparison-panel {
+      background: var(--corp-white);
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comparison-panel.left {
+      border-top: 4px solid var(--corp-steel);
+    }
+
+    .comparison-panel.right {
+      border-top: 4px solid var(--corp-emerald);
+    }
+
+    .comparison-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 800;
+      color: var(--tech-slate);
+    }
+
+    .panel-heading {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .panel-heading.blue { color: var(--corp-steel); }
+    .panel-heading.green { color: var(--corp-emerald); }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--corp-light);
+      font-size: var(--text-caption);
+      color: var(--corp-navy);
+    }
+
+    .metric-row:last-child { border-bottom: none; }
+
+    .metric-label { font-weight: 500; }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .metric-value.highlight-blue { color: var(--corp-steel); }
+    .metric-value.highlight-green { color: var(--corp-emerald); }
+
+    .metric-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--corp-light);
+      margin-top: 4px;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .metric-bar-fill.blue { background: var(--corp-steel); }
+    .metric-bar-fill.green { background: var(--corp-emerald); }
+
+    /* ── Variant B: Before/After pipeline ── */
+    /* CUSTOMIZATION: Change pipeline steps, timing values, and status indicators for any before/after comparison */
+    .before-after-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--tech-near-black);
+      margin-bottom: 28px;
+      line-height: 1.3;
+    }
+
+    .before-after-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--element-gap);
+    }
+
+    .ba-column {
+      background: var(--tech-near-black);
+      border-radius: 12px;
+      padding: 24px;
+      color: var(--corp-white);
+    }
+
+    .ba-column.before { border-left: 4px solid var(--corp-rose); }
+    .ba-column.after { border-left: 4px solid var(--tech-cyan); }
+
+    .ba-label {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .ba-label.before-label { color: var(--corp-rose); }
+    .ba-label.after-label { color: var(--tech-cyan); }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: var(--text-caption);
+    }
+
+    .pipeline-step:last-child { border-bottom: none; }
+
+    .step-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .step-icon.manual { background: rgba(244,63,94,0.2); color: var(--corp-rose); }
+    .step-icon.auto { background: rgba(6,182,212,0.2); color: var(--tech-cyan); }
+
+    .step-text { flex: 1; }
+    .step-time {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-slate);
+    }
+
+    .ba-total {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 2px solid rgba(255,255,255,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-heading);
+      font-weight: 700;
+    }
+
+    .ba-total-label { font-size: var(--text-caption); }
+    .ba-total-value { font-size: var(--text-body); font-family: var(--font-mono); }
+    .ba-total-value.rose { color: var(--corp-rose); }
+    .ba-total-value.cyan { color: var(--tech-cyan); }
+
+    /* ── Variant C: Pros/Cons layout ── */
+    /* CUSTOMIZATION: Replace items, change icon colors, and update the topic to fit any pros/cons comparison */
+    .proscons-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 28px;
+      line-height: 1.3;
+    }
+
+    .proscons-subtitle {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin-bottom: 32px;
+      font-weight: 500;
+    }
+
+    .proscons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .proscons-column-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .proscons-column-header.pros { color: var(--corp-emerald); }
+    .proscons-column-header.cons { color: var(--corp-rose); }
+
+    .proscons-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      font-size: var(--text-caption);
+      color: var(--corp-navy);
+      line-height: 1.4;
+    }
+
+    .proscons-item.pro { background: rgba(16,185,129,0.08); }
+    .proscons-item.con { background: rgba(244,63,94,0.08); }
+
+    .proscons-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .proscons-icon.check { color: var(--corp-emerald); }
+    .proscons-icon.cross { color: var(--corp-rose); }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Side-by-side ML Approach Comparison (Corporate Palette) -->
+      <!-- CUSTOMIZATION: Replace approach names, metrics, and bar widths to compare any two technologies -->
+      <section data-background-color="#f1f5f9">
+        <div class="comparison-title">Gradient boosting outperforms deep learning on tabular datasets under 10K rows</div>
+        <div class="comparison-grid">
+          <div class="comparison-panel left">
+            <div class="panel-heading blue">XGBoost</div>
+            <div class="metric-row">
+              <span class="metric-label">Test AUC-ROC</span>
+              <span class="metric-value highlight-blue">0.94</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill blue" style="width: 94%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Training Time</span>
+              <span class="metric-value highlight-blue">12 sec</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill blue" style="width: 15%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Interpretability</span>
+              <span class="metric-value highlight-blue">High</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill blue" style="width: 90%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Tuning Effort</span>
+              <span class="metric-value highlight-blue">Low</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill blue" style="width: 25%;"></div></div>
+          </div>
+
+          <div class="comparison-vs">VS</div>
+
+          <div class="comparison-panel right">
+            <div class="panel-heading green">Neural Network</div>
+            <div class="metric-row">
+              <span class="metric-label">Test AUC-ROC</span>
+              <span class="metric-value highlight-green">0.87</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill green" style="width: 87%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Training Time</span>
+              <span class="metric-value highlight-green">8 min</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill green" style="width: 85%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Interpretability</span>
+              <span class="metric-value highlight-green">Low</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill green" style="width: 25%;"></div></div>
+            <div class="metric-row">
+              <span class="metric-label">Tuning Effort</span>
+              <span class="metric-value highlight-green">High</span>
+            </div>
+            <div class="metric-bar"><div class="metric-bar-fill green" style="width: 85%;"></div></div>
+          </div>
+        </div>
+        <aside class="notes">The key insight here is that for structured, tabular data with limited rows, gradient boosting methods like XGBoost consistently match or exceed deep learning performance while training orders of magnitude faster. We benchmarked both on our customer churn dataset — 8,400 rows, 23 features. XGBoost reached 0.94 AUC in 12 seconds. The neural net took 8 minutes and plateaued at 0.87 AUC. This pattern holds across most tabular tasks under 10K rows, as confirmed by multiple Kaggle competition analyses.</aside>
+      </section>
+
+      <!-- Variant B: Before/After Data Pipeline (Technical Palette) -->
+      <!-- CUSTOMIZATION: Change pipeline step names, timing values, and icons to show any before/after transformation -->
+      <section data-background-color="#1e293b">
+        <div class="before-after-title" style="color: #ffffff;">Automated pipelines reduced data preparation from 14 hours to 45 minutes</div>
+        <div class="before-after-grid">
+          <div class="ba-column before">
+            <div class="ba-label before-label">Before: Manual Pipeline</div>
+            <div class="pipeline-step">
+              <div class="step-icon manual">&#9997;</div>
+              <div class="step-text">CSV export from 3 source systems</div>
+              <div class="step-time">2h</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon manual">&#9997;</div>
+              <div class="step-text">Manual schema validation in Excel</div>
+              <div class="step-time">3h</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon manual">&#9997;</div>
+              <div class="step-text">Python cleaning scripts (ad hoc)</div>
+              <div class="step-time">4h</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon manual">&#9997;</div>
+              <div class="step-text">Feature engineering in notebooks</div>
+              <div class="step-time">3h</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon manual">&#9997;</div>
+              <div class="step-text">Email results to stakeholders</div>
+              <div class="step-time">2h</div>
+            </div>
+            <div class="ba-total">
+              <span class="ba-total-label">Total</span>
+              <span class="ba-total-value rose">14 hours</span>
+            </div>
+          </div>
+
+          <div class="ba-column after">
+            <div class="ba-label after-label">After: Automated Pipeline</div>
+            <div class="pipeline-step">
+              <div class="step-icon auto">&#9889;</div>
+              <div class="step-text">API ingestion via Airflow DAG</div>
+              <div class="step-time">5m</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon auto">&#9889;</div>
+              <div class="step-text">Great Expectations validation</div>
+              <div class="step-time">3m</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon auto">&#9889;</div>
+              <div class="step-text">dbt transformations + tests</div>
+              <div class="step-time">12m</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon auto">&#9889;</div>
+              <div class="step-text">Feature store hydration</div>
+              <div class="step-time">15m</div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon auto">&#9889;</div>
+              <div class="step-text">Dashboard auto-refresh + Slack alert</div>
+              <div class="step-time">10m</div>
+            </div>
+            <div class="ba-total">
+              <span class="ba-total-label">Total</span>
+              <span class="ba-total-value cyan">45 min</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">This is the transformation our data engineering team achieved over six months. The manual pipeline on the left was our reality in Q1 — analysts spending the first two days of every week just getting data ready. On the right, the automated pipeline we built using Airflow for orchestration, Great Expectations for validation, and dbt for transformations. The 14-hour-to-45-minute improvement freed up roughly 28 analyst-hours per week, which we redirected to building predictive models that directly impacted revenue.</aside>
+      </section>
+
+      <!-- Variant C: Pros/Cons Layout -->
+      <!-- CUSTOMIZATION: Replace items, adjust icon styles, and change the topic for any pros/cons evaluation -->
+      <section data-background-color="#ffffff">
+        <div class="proscons-title">Real-time ML inference adds value but demands operational maturity</div>
+        <div class="proscons-subtitle">Evaluating real-time vs. batch scoring for production recommendation engine</div>
+        <div class="proscons-grid">
+          <div>
+            <div class="proscons-column-header pros">
+              <span style="font-size: 26px;">&#10003;</span> Advantages
+            </div>
+            <div class="proscons-item pro">
+              <span class="proscons-icon check">&#10004;</span>
+              <span>Sub-100ms latency enables personalized results during active sessions</span>
+            </div>
+            <div class="proscons-item pro">
+              <span class="proscons-icon check">&#10004;</span>
+              <span>Adapts to real-time behavioral signals (clicks, cart adds, dwell time)</span>
+            </div>
+            <div class="proscons-item pro">
+              <span class="proscons-icon check">&#10004;</span>
+              <span>A/B tests show 23% higher CTR vs. batch-scored recommendations</span>
+            </div>
+            <div class="proscons-item pro">
+              <span class="proscons-icon check">&#10004;</span>
+              <span>Enables contextual features like time-of-day and device type</span>
+            </div>
+          </div>
+          <div>
+            <div class="proscons-column-header cons">
+              <span style="font-size: 26px;">&#10007;</span> Trade-offs
+            </div>
+            <div class="proscons-item con">
+              <span class="proscons-icon cross">&#10008;</span>
+              <span>Requires dedicated serving infrastructure (adds $4K/month)</span>
+            </div>
+            <div class="proscons-item con">
+              <span class="proscons-icon cross">&#10008;</span>
+              <span>Needs 99.9% uptime SLA with fallback to cached predictions</span>
+            </div>
+            <div class="proscons-item con">
+              <span class="proscons-icon cross">&#10008;</span>
+              <span>Model monitoring is more complex with streaming data drift</span>
+            </div>
+            <div class="proscons-item con">
+              <span class="proscons-icon cross">&#10008;</span>
+              <span>Team needs MLOps skills beyond current batch-only expertise</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">This is a balanced view for our engineering leadership. The advantages are clear — real-time inference gave us a 23% improvement in click-through rate in our A/B test last quarter. But the trade-offs are real. We estimate $4K per month in additional infrastructure costs for a model serving layer, and our team will need to develop MLOps capabilities we don't currently have. My recommendation: start with a hybrid approach. Batch-score 80% of users and reserve real-time inference for high-value sessions where the CTR lift justifies the cost.</aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

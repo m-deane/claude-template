@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS-Only Data Visualization Patterns — Presentation Design System</title>
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+
+      /* Palette tokens */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-gray: #f1f5f9;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+
+      /* Page chrome */
+      --page-bg: #f8fafc;
+      --page-border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--page-bg);
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    .page-header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 64px;
+      border-bottom: 4px solid #06b6d4;
+    }
+    .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+    .page-header p { font-size: 17px; color: #94a3b8; max-width: 640px; }
+    .page-header .meta { margin-top: 20px; display: flex; gap: 16px; font-size: 14px; color: #64748b; }
+    .page-header .meta span { background: rgba(255,255,255,0.08); padding: 4px 12px; border-radius: 4px; }
+
+    .section-header {
+      padding: 48px 64px 24px;
+      border-bottom: 1px solid var(--page-border);
+      margin-bottom: 40px;
+    }
+    .section-header h2 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+    .section-header p { font-size: 15px; color: #64748b; }
+
+    .viz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      gap: 32px;
+      padding: 0 64px 64px;
+    }
+
+    .viz-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .viz-card:hover { box-shadow: var(--shadow-elevated); }
+
+    .viz-preview {
+      padding: 32px;
+      background: #fff;
+      border-bottom: 1px solid var(--page-border);
+    }
+
+    .viz-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .viz-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 24px;
+      line-height: 1.3;
+    }
+
+    .card-meta {
+      padding: 16px 24px 0;
+    }
+    .card-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .card-desc { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+    .use-tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.7;
+      padding: 16px 20px;
+      border-radius: 0 0 12px 12px;
+      overflow-x: auto;
+      margin-top: 12px;
+      white-space: pre;
+    }
+
+    /* =========================================================
+       1. HORIZONTAL BAR CHART
+       ========================================================= */
+    .hbar-chart { display: flex; flex-direction: column; gap: 14px; }
+    .hbar-row { display: flex; align-items: center; gap: 12px; }
+    .hbar-label { font-size: 13px; color: #475569; width: 120px; flex-shrink: 0; text-align: right; }
+    .hbar-track {
+      flex: 1;
+      background: #f1f5f9;
+      border-radius: 4px;
+      height: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hbar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--corp-blue);
+      display: flex;
+      align-items: center;
+      padding-right: 10px;
+      justify-content: flex-end;
+      transition: width 0.4s ease;
+    }
+    .hbar-fill.highlight { background: var(--corp-emerald); }
+    .hbar-fill.muted { background: #94a3b8; }
+    .hbar-value { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; }
+
+    /* =========================================================
+       2. VERTICAL BAR CHART
+       ========================================================= */
+    .vbar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      height: 160px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .vbar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .vbar-fill {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: var(--corp-blue);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 6px;
+    }
+    .vbar-fill.highlight { background: var(--corp-emerald); }
+    .vbar-fill.muted { background: #cbd5e1; }
+    .vbar-fill .vbar-val {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .vbar-xlabel {
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+      line-height: 1.3;
+      margin-top: 6px;
+    }
+
+    /* =========================================================
+       3. DONUT / PIE CHART — conic-gradient
+       ========================================================= */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .donut {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .donut::after {
+      content: '';
+      position: absolute;
+      inset: 24px;
+      background: #fff;
+      border-radius: 50%;
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    .donut-center-val { font-size: 22px; font-weight: 800; color: #0f172a; }
+    .donut-center-label { font-size: 10px; color: #64748b; font-weight: 500; }
+    .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+    .donut-legend-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .donut-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+    .donut-legend-pct { font-weight: 700; margin-left: auto; padding-left: 16px; }
+
+    /* =========================================================
+       4. PROGRESS BARS
+       ========================================================= */
+    .progress-list { display: flex; flex-direction: column; gap: 16px; }
+    .progress-item { display: flex; flex-direction: column; gap: 6px; }
+    .progress-header { display: flex; justify-content: space-between; font-size: 13px; }
+    .progress-label { color: #374151; font-weight: 500; }
+    .progress-pct { color: #0f172a; font-weight: 700; }
+    .progress-track {
+      height: 10px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--corp-blue);
+    }
+    .progress-fill.success { background: var(--corp-emerald); }
+    .progress-fill.warning { background: #f59e0b; }
+    .progress-fill.danger { background: var(--corp-rose); }
+
+    /* =========================================================
+       5. SPARKLINE — CSS only
+       ========================================================= */
+    .sparkline-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 48px;
+    }
+    .spark-bar {
+      flex: 1;
+      background: #dbeafe;
+      border-radius: 2px 2px 0 0;
+      transition: background 0.2s;
+    }
+    .spark-bar.peak { background: var(--corp-blue); }
+    .spark-bar.current { background: var(--corp-emerald); }
+    .spark-bar.low { background: #e2e8f0; }
+    .sparkline-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .trend-badge.up { background: #dcfce7; color: #15803d; }
+    .trend-badge.down { background: #fee2e2; color: #b91c1c; }
+
+    /* =========================================================
+       6. COMPARISON BARS (side-by-side)
+       ========================================================= */
+    .compare-chart { display: flex; flex-direction: column; gap: 14px; }
+    .compare-row { display: flex; flex-direction: column; gap: 4px; }
+    .compare-row-label { font-size: 12px; font-weight: 600; color: #64748b; }
+    .compare-bars { display: flex; gap: 6px; align-items: center; }
+    .compare-bar-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .compare-bar {
+      height: 22px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+    .compare-bar .cbar-val { font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; }
+    .cbar-a { background: #94a3b8; }
+    .cbar-b { background: var(--corp-blue); }
+    .cbar-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .cbar-legend span { display: flex; align-items: center; gap: 6px; }
+    .cbar-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* =========================================================
+       7. HEAT MAP GRID
+       ========================================================= */
+    .heatmap {
+      display: grid;
+      gap: 4px;
+    }
+    .heatmap-row { display: flex; gap: 4px; align-items: center; }
+    .heatmap-row-label {
+      font-size: 11px;
+      color: #64748b;
+      width: 80px;
+      flex-shrink: 0;
+      text-align: right;
+      padding-right: 8px;
+    }
+    .heatmap-cell {
+      width: 36px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .heatmap-col-labels { display: flex; gap: 4px; margin-left: 88px; margin-bottom: 4px; }
+    .heatmap-col-label { width: 36px; font-size: 10px; color: #94a3b8; text-align: center; }
+
+    /* =========================================================
+       8. FUNNEL
+       ========================================================= */
+    .funnel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .funnel-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+    .funnel-bar-wrap {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+    .funnel-bar {
+      background: var(--corp-blue);
+      height: 36px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      transition: width 0.3s;
+    }
+    .funnel-step-label {
+      font-size: 12px;
+      color: #475569;
+      width: 100px;
+      flex-shrink: 0;
+    }
+    .funnel-step-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      width: 60px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .funnel-arrow {
+      text-align: center;
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1;
+    }
+    .funnel-drop {
+      font-size: 11px;
+      color: var(--corp-rose);
+      font-weight: 600;
+      text-align: center;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>CSS-Only Data Visualization Patterns</h1>
+  <p>No JavaScript libraries required. Pure CSS charts and indicators for reveal.js slides, using realistic data science and ML pipeline metrics.</p>
+  <div class="meta">
+    <span>8 chart types</span>
+    <span>CSS Grid + Flexbox + conic-gradient</span>
+    <span>Copy-paste ready</span>
+  </div>
+</header>
+
+<!-- ================================================================
+     1. HORIZONTAL BAR CHART
+     ================================================================ -->
+<div class="section-header">
+  <h2>Horizontal Bar Chart</h2>
+  <p>CSS Grid + percentage widths. Best for comparing values across labeled categories.</p>
+</div>
+
+<div class="viz-grid">
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">Model Comparison</div>
+      <div class="viz-title">XGBoost outperforms baseline by 11 percentage points on F1 score</div>
+      <div class="hbar-chart">
+        <div class="hbar-row">
+          <div class="hbar-label">XGBoost</div>
+          <div class="hbar-track">
+            <div class="hbar-fill highlight" style="width:94%"><span class="hbar-value">94.2%</span></div>
+          </div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Random Forest</div>
+          <div class="hbar-track">
+            <div class="hbar-fill" style="width:88%"><span class="hbar-value">88.1%</span></div>
+          </div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Logistic Reg.</div>
+          <div class="hbar-track">
+            <div class="hbar-fill muted" style="width:83%"><span class="hbar-value">83.4%</span></div>
+          </div>
+        </div>
+        <div class="hbar-row">
+          <div class="hbar-label">Baseline</div>
+          <div class="hbar-track">
+            <div class="hbar-fill muted" style="width:71%"><span class="hbar-value">71.0%</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:12px;">F1 Score on test set (n=12,400) — 5-fold cross-validation</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Horizontal Bar Chart</div>
+      <div class="card-desc">CSS Flexbox + inline width percentages. Highlight the winning bar with a distinct color.</div>
+      <span class="use-tag">Model Comparison</span>
+      <span class="use-tag">Benchmark Slide</span>
+    </div>
+    <div class="code-block">.hbar-chart { display: flex; flex-direction: column; gap: 14px; }
+
+.hbar-row { display: flex; align-items: center; gap: 12px; }
+
+.hbar-label {
+  font-size: 13px; color: #475569;
+  width: 120px; text-align: right;
+}
+
+.hbar-track {
+  flex: 1; background: #f1f5f9;
+  border-radius: 4px; height: 28px; overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%; border-radius: 4px;
+  background: #3b82f6; /* highlight: #10b981; muted: #94a3b8 */
+  display: flex; align-items: center;
+  justify-content: flex-end; padding-right: 10px;
+}
+
+/* In HTML, set width inline: style="width: 94%" */</div>
+  </div>
+
+  <!-- ================================================================
+       2. VERTICAL BAR CHART
+       ================================================================ -->
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">Pipeline Performance</div>
+      <div class="viz-title">Training throughput peaked in Q3 after infrastructure upgrade</div>
+      <div style="display:flex; gap:0; align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-right:8px;align-self:stretch;justify-content:space-between;padding-bottom:4px;">
+          <span style="font-size:10px;color:#94a3b8;">3M</span>
+          <span style="font-size:10px;color:#94a3b8;">2M</span>
+          <span style="font-size:10px;color:#94a3b8;">1M</span>
+          <span style="font-size:10px;color:#94a3b8;">0</span>
+        </div>
+        <div class="vbar-chart" style="flex:1;">
+          <div class="vbar-col">
+            <div class="vbar-fill muted" style="height:52%"><span class="vbar-val">1.6M</span></div>
+            <div class="vbar-xlabel">Q4 24</div>
+          </div>
+          <div class="vbar-col">
+            <div class="vbar-fill muted" style="height:64%"><span class="vbar-val">1.9M</span></div>
+            <div class="vbar-xlabel">Q1 25</div>
+          </div>
+          <div class="vbar-col">
+            <div class="vbar-fill" style="height:75%"><span class="vbar-val">2.3M</span></div>
+            <div class="vbar-xlabel">Q2 25</div>
+          </div>
+          <div class="vbar-col">
+            <div class="vbar-fill highlight" style="height:100%"><span class="vbar-val">3.1M</span></div>
+            <div class="vbar-xlabel">Q3 25</div>
+          </div>
+          <div class="vbar-col">
+            <div class="vbar-fill" style="height:88%"><span class="vbar-val">2.7M</span></div>
+            <div class="vbar-xlabel">Q4 25</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Rows/sec — feature engineering stage</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Vertical Bar Chart</div>
+      <div class="card-desc">Flexbox column, percentage heights against a fixed-height container.</div>
+      <span class="use-tag">Trend Over Time</span>
+      <span class="use-tag">Quarterly Review</span>
+    </div>
+    <div class="code-block">.vbar-chart {
+  display: flex; align-items: flex-end;
+  gap: 16px; height: 160px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.vbar-col {
+  display: flex; flex-direction: column;
+  align-items: center; flex: 1;
+  height: 100%; justify-content: flex-end;
+}
+
+.vbar-fill {
+  width: 100%; border-radius: 4px 4px 0 0;
+  background: #3b82f6;
+  /* height set inline as % of container */
+}
+
+/* highlight: background: #10b981; muted: #cbd5e1 */</div>
+  </div>
+</div><!-- /viz-grid -->
+
+
+<!-- ================================================================
+     3. DONUT / PIE CHART
+     ================================================================ -->
+<div class="section-header">
+  <h2>Donut / Pie Chart</h2>
+  <p>CSS conic-gradient — no SVG, no JavaScript. Ideal for 2-4 segment proportions.</p>
+</div>
+
+<div class="viz-grid">
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">Error Analysis</div>
+      <div class="viz-title">False negatives account for 58% of all prediction errors</div>
+      <div class="donut-wrap">
+        <div class="donut" style="background: conic-gradient(
+          #f43f5e 0% 58%,
+          #3b82f6 58% 78%,
+          #10b981 78% 91%,
+          #e2e8f0 91% 100%
+        );">
+          <div class="donut-center">
+            <div class="donut-center-val">4,821</div>
+            <div class="donut-center-label">total errors</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-legend-item">
+            <div class="donut-swatch" style="background:#f43f5e;"></div>
+            <span>False Negatives</span>
+            <span class="donut-legend-pct" style="color:#f43f5e;">58%</span>
+          </div>
+          <div class="donut-legend-item">
+            <div class="donut-swatch" style="background:#3b82f6;"></div>
+            <span>False Positives</span>
+            <span class="donut-legend-pct" style="color:#3b82f6;">20%</span>
+          </div>
+          <div class="donut-legend-item">
+            <div class="donut-swatch" style="background:#10b981;"></div>
+            <span>Near-miss</span>
+            <span class="donut-legend-pct" style="color:#10b981;">13%</span>
+          </div>
+          <div class="donut-legend-item">
+            <div class="donut-swatch" style="background:#e2e8f0;"></div>
+            <span>Other</span>
+            <span class="donut-legend-pct" style="color:#94a3b8;">9%</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:20px;">Classification model errors — production (Nov 2025)</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Donut Chart — conic-gradient</div>
+      <div class="card-desc">Single div + conic-gradient + ::after for center hole. No SVG required.</div>
+      <span class="use-tag">Proportions</span>
+      <span class="use-tag">Error Breakdown</span>
+    </div>
+    <div class="code-block">.donut {
+  width: 130px; height: 130px;
+  border-radius: 50%; position: relative;
+  background: conic-gradient(
+    #f43f5e 0% 58%,    /* segment 1: 58% */
+    #3b82f6 58% 78%,   /* segment 2: 20% */
+    #10b981 78% 91%,   /* segment 3: 13% */
+    #e2e8f0 91% 100%   /* segment 4:  9% */
+  );
+}
+
+/* Hollow center (donut hole) */
+.donut::after {
+  content: '';
+  position: absolute; inset: 24px;
+  background: #fff; border-radius: 50%;
+}
+
+/* Center label sits above ::after */
+.donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 1;
+}</div>
+  </div>
+
+  <!-- ================================================================
+       4. PROGRESS BARS
+       ================================================================ -->
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">Sprint Goal Tracking</div>
+      <div class="viz-title">Data quality initiative is 18% behind target — needs attention</div>
+      <div class="progress-list">
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">Model retraining pipeline</span>
+            <span class="progress-pct" style="color:#10b981;">97%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill success" style="width:97%;"></div>
+          </div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">Feature store migration</span>
+            <span class="progress-pct">84%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:84%;"></div>
+          </div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">A/B test framework</span>
+            <span class="progress-pct" style="color:#d97706;">61%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill warning" style="width:61%;"></div>
+          </div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-label">Data quality initiative</span>
+            <span class="progress-pct" style="color:#dc2626;">42%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill danger" style="width:42%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Progress Bars with Status Colors</div>
+      <div class="card-desc">Semantic color coding: green (on track), blue (normal), amber (at risk), red (behind).</div>
+      <span class="use-tag">Project Status</span>
+      <span class="use-tag">Completion Rate</span>
+    </div>
+    <div class="code-block">.progress-track {
+  height: 10px; background: #f1f5f9;
+  border-radius: 99px; overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%; border-radius: 99px;
+  /* width set inline as % */
+}
+
+/* Status variants */
+.progress-fill          { background: #3b82f6; } /* normal  */
+.progress-fill.success  { background: #10b981; } /* on track*/
+.progress-fill.warning  { background: #f59e0b; } /* at risk */
+.progress-fill.danger   { background: #f43f5e; } /* behind  */</div>
+  </div>
+</div><!-- /viz-grid -->
+
+
+<!-- ================================================================
+     5. SPARKLINES + TREND INDICATORS
+     ================================================================ -->
+<div class="section-header">
+  <h2>Sparklines and Trend Indicators</h2>
+  <p>Inline mini-charts and delta badges — CSS-only, no SVG</p>
+</div>
+
+<div class="viz-grid">
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">30-Day Inference Latency</div>
+      <div class="viz-title">Median latency down 23ms since infrastructure upgrade on Day 18</div>
+      <div style="display:flex;gap:24px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:32px;font-weight:800;color:#0f172a;line-height:1;">47ms</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">current median</div>
+        </div>
+        <div style="display:flex;align-items:center;">
+          <span class="trend-badge down">&#9660; 23ms vs. 30d ago</span>
+        </div>
+      </div>
+      <div class="sparkline-row">
+        <div class="spark-bar low" style="height:80%;"></div>
+        <div class="spark-bar low" style="height:75%;"></div>
+        <div class="spark-bar" style="height:70%;"></div>
+        <div class="spark-bar" style="height:85%;"></div>
+        <div class="spark-bar peak" style="height:100%;"></div>
+        <div class="spark-bar" style="height:90%;"></div>
+        <div class="spark-bar" style="height:88%;"></div>
+        <div class="spark-bar" style="height:82%;"></div>
+        <div class="spark-bar" style="height:76%;"></div>
+        <div class="spark-bar" style="height:72%;"></div>
+        <div class="spark-bar" style="height:68%;"></div>
+        <div class="spark-bar" style="height:65%;"></div>
+        <div class="spark-bar" style="height:60%;"></div>
+        <div class="spark-bar" style="height:55%;"></div>
+        <div class="spark-bar" style="height:50%;"></div>
+        <div class="spark-bar" style="height:46%;"></div>
+        <div class="spark-bar" style="height:44%;"></div>
+        <div class="spark-bar current" style="height:38%;"></div>
+        <div class="spark-bar current" style="height:36%;"></div>
+        <div class="spark-bar current" style="height:35%;"></div>
+      </div>
+      <div class="sparkline-meta">
+        <span>Day 1</span>
+        <span style="color:#f43f5e;">&#9650; Peak 70ms (day 5)</span>
+        <span style="color:#10b981;">&#9660; 47ms now</span>
+        <span>Day 30</span>
+      </div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Sparkline + Trend Badge</div>
+      <div class="card-desc">Flexbox bar columns with % heights. No canvas, no SVG. Combine with metric and delta badge.</div>
+      <span class="use-tag">KPI Trend</span>
+      <span class="use-tag">Latency / Drift</span>
+    </div>
+    <div class="code-block">.sparkline-row {
+  display: flex; align-items: flex-end;
+  gap: 3px; height: 48px;
+}
+
+.spark-bar {
+  flex: 1; border-radius: 2px 2px 0 0;
+  background: #dbeafe; /* height set inline */
+}
+.spark-bar.peak    { background: #3b82f6; }
+.spark-bar.current { background: #10b981; }
+.spark-bar.low     { background: #e2e8f0; }
+
+/* Trend badge */
+.trend-badge { display: inline-flex; align-items: center;
+  gap: 4px; font-size: 13px; font-weight: 700;
+  padding: 4px 10px; border-radius: 6px;
+}
+.trend-badge.up   { background: #dcfce7; color: #15803d; }
+.trend-badge.down { background: #fee2e2; color: #b91c1c; }</div>
+  </div>
+
+  <!-- ================================================================
+       6. COMPARISON BARS (SIDE-BY-SIDE)
+       ================================================================ -->
+  <div class="viz-card">
+    <div class="viz-preview">
+      <div class="viz-label">Before vs After</div>
+      <div class="viz-title">MLOps platform cut model deployment time by over 60% across all teams</div>
+      <div class="cbar-legend">
+        <span><div class="cbar-dot" style="background:#94a3b8;"></div>Before (Q1 2025)</span>
+        <span><div class="cbar-dot" style="background:#3b82f6;"></div>After (Q4 2025)</span>
+      </div>
+      <div class="compare-chart">
+        <div class="compare-row">
+          <div class="compare-row-label">Model deployment time</div>
+          <div class="compare-bars">
+            <div class="compare-bar cbar-a" style="width:100%;max-width:160px;"><span class="cbar-val">14 days</span></div>
+            <div class="compare-bar cbar-b" style="width:35%;max-width:56px;"><span class="cbar-val">5d</span></div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-row-label">Retraining cycle</div>
+          <div class="compare-bars">
+            <div class="compare-bar cbar-a" style="width:80%;max-width:128px;"><span class="cbar-val">Weekly</span></div>
+            <div class="compare-bar cbar-b" style="width:25%;max-width:40px;"><span class="cbar-val">Daily</span></div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-row-label">Incident MTTR</div>
+          <div class="compare-bars">
+            <div class="compare-bar cbar-a" style="width:90%;max-width:144px;"><span class="cbar-val">4.2 hrs</span></div>
+            <div class="compare-bar cbar-b" style="width:38%;max-width:61px;"><span class="cbar-val">1.6h</span></div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-row-label">Experiments/week</div>
+          <div class="compare-bars">
+            <div class="compare-bar cbar-a" style="width:30%;max-width:48px;"><span class="cbar-val">12</span></div>
+            <div class="compare-bar cbar-b" style="width:100%;max-width:160px;"><span class="cbar-val">47 experiments</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Side-by-Side Comparison Bars</div>
+      <div class="card-desc">Two-color inline bars side by side. Widths proportional to max value in each metric.</div>
+      <span class="use-tag">Before/After</span>
+      <span class="use-tag">ROI Slide</span>
+    </div>
+    <div class="code-block">.compare-row { display: flex; flex-direction: column; gap: 4px; }
+
+.compare-bars { display: flex; gap: 6px; align-items: center; }
+
+.compare-bar {
+  height: 22px; border-radius: 3px;
+  display: flex; align-items: center; padding: 0 8px;
+  /* Width set inline proportional to max value */
+}
+
+.cbar-a { background: #94a3b8; } /* Before */
+.cbar-b { background: #3b82f6; } /* After  */
+
+.cbar-val { font-size: 11px; font-weight: 700; color: #fff; }</div>
+  </div>
+</div><!-- /viz-grid -->
+
+
+<!-- ================================================================
+     7. HEAT MAP GRID
+     ================================================================ -->
+<div class="section-header">
+  <h2>Heat Map Grid</h2>
+  <p>CSS background-color intensity to show 2D density — no JavaScript required</p>
+</div>
+
+<div class="viz-grid">
+  <div class="viz-card" style="grid-column: 1 / -1; max-width: 680px;">
+    <div class="viz-preview">
+      <div class="viz-label">Confusion Matrix — Production Model</div>
+      <div class="viz-title">High true-positive rate; false-negative rate needs improvement in Class C</div>
+      <div class="heatmap-col-labels">
+        <div class="heatmap-col-label">Class A</div>
+        <div class="heatmap-col-label">Class B</div>
+        <div class="heatmap-col-label">Class C</div>
+        <div class="heatmap-col-label">Class D</div>
+      </div>
+      <div class="heatmap">
+        <div class="heatmap-row">
+          <div class="heatmap-row-label">Class A</div>
+          <div class="heatmap-cell" style="background:#1e40af;">98%</div>
+          <div class="heatmap-cell" style="background:#dbeafe;color:#1e40af;">1%</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">0%</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">1%</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-row-label">Class B</div>
+          <div class="heatmap-cell" style="background:#dbeafe;color:#1e40af;">2%</div>
+          <div class="heatmap-cell" style="background:#2563eb;">94%</div>
+          <div class="heatmap-cell" style="background:#bfdbfe;color:#1e40af;">3%</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">1%</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-row-label">Class C</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">1%</div>
+          <div class="heatmap-cell" style="background:#fef3c7;color:#92400e;">8%</div>
+          <div class="heatmap-cell" style="background:#3b82f6;">79%</div>
+          <div class="heatmap-cell" style="background:#fef3c7;color:#92400e;">12%</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-row-label">Class D</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">0%</div>
+          <div class="heatmap-cell" style="background:#f8fafc;color:#94a3b8;">2%</div>
+          <div class="heatmap-cell" style="background:#dbeafe;color:#1e40af;">4%</div>
+          <div class="heatmap-cell" style="background:#1e40af;">94%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:12px;">Rows = Actual class. Columns = Predicted class. Diagonal = correct predictions.</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Heat Map / Confusion Matrix</div>
+      <div class="card-desc">Fixed-width grid cells with inline background-color. Intensity encoded by color darkness.</div>
+      <span class="use-tag">Confusion Matrix</span>
+      <span class="use-tag">Correlation Grid</span>
+    </div>
+    <div class="code-block">.heatmap-cell {
+  width: 36px; height: 28px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff;
+  /* background-color set inline per intensity: */
+}
+
+/* Dark (high value)  : background: #1e40af; color: #fff   */
+/* Mid  (medium value): background: #dbeafe; color: #1e40af */
+/* Low  (low value)   : background: #f8fafc; color: #94a3b8 */
+/* Warn (off-diagonal): background: #fef3c7; color: #92400e */</div>
+  </div>
+</div><!-- /viz-grid -->
+
+
+<!-- ================================================================
+     8. FUNNEL VISUALIZATION
+     ================================================================ -->
+<div class="section-header">
+  <h2>Funnel Visualization</h2>
+  <p>CSS trapezoid shapes using decreasing widths — for ML pipeline or conversion funnels</p>
+</div>
+
+<div class="viz-grid">
+  <div class="viz-card" style="grid-column: 1 / -1; max-width: 600px;">
+    <div class="viz-preview">
+      <div class="viz-label">ML Pipeline Funnel</div>
+      <div class="viz-title">Feature selection drops 31% of raw signals — the biggest reduction stage</div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-step-label" style="font-size:12px;font-weight:600;color:#374151;">Raw Data Ingested</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:100%;background:#1e40af;">847,200</div>
+          </div>
+          <div class="funnel-step-count">847,200</div>
+        </div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-drop">-12% quality filter</div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-step">
+          <div class="funnel-step-label" style="font-size:12px;font-weight:600;color:#374151;">After Data Quality</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:88%;background:#2563eb;">745,136</div>
+          </div>
+          <div class="funnel-step-count">745,136</div>
+        </div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-drop" style="color:#b45309;">-31% feature selection</div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-step">
+          <div class="funnel-step-label" style="font-size:12px;font-weight:600;color:#374151;">After Feature Selection</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:57%;background:#3b82f6;">481,124</div>
+          </div>
+          <div class="funnel-step-count">481,124</div>
+        </div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-drop">-8% label validation</div>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-step">
+          <div class="funnel-step-label" style="font-size:12px;font-weight:600;color:#374151;">Final Training Set</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:49%;background:#10b981;">442,634</div>
+          </div>
+          <div class="funnel-step-count" style="color:#10b981;">442,634</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:16px;">Pipeline run: Nov 2025 production dataset</div>
+    </div>
+    <div class="card-meta">
+      <div class="card-name">Funnel Visualization</div>
+      <div class="card-desc">Decreasing-width CSS bars creating a funnel illusion. Drop-off labels between stages.</div>
+      <span class="use-tag">Pipeline Flow</span>
+      <span class="use-tag">Conversion Funnel</span>
+    </div>
+    <div class="code-block">.funnel { display: flex; flex-direction: column;
+  align-items: center; gap: 4px; }
+
+.funnel-bar {
+  background: #3b82f6; height: 36px; border-radius: 4px;
+  display: flex; align-items: center;
+  justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 700;
+  /* width decreases per stage — set inline */
+}
+
+/* Stage widths (proportional to count): */
+/* Stage 1: width: 100%  */
+/* Stage 2: width:  88%  */
+/* Stage 3: width:  57%  */
+/* Stage 4: width:  49%  (use #10b981 for success) */
+
+.funnel-drop {
+  font-size: 11px; font-weight: 600;
+  color: #f43f5e; text-align: center;
+}</div>
+  </div>
+</div><!-- /viz-grid -->
+
+</body>
+</html>

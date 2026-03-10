@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Quote — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Creative palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Large quotation marks, centered, minimal background ===== */
+    .slide-quote-centered {
+      background: var(--corp-light) !important;
+      padding: var(--slide-padding) 80px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      text-align: center;
+      height: 100%;
+      position: relative;
+    }
+
+    .slide-quote-centered .quote-marks-bg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -65%);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 400px;
+      color: var(--corp-navy);
+      opacity: 0.04;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .slide-quote-centered blockquote {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 400;
+      color: var(--corp-navy);
+      line-height: 1.45;
+      margin: 0;
+      max-width: 800px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-quote-centered blockquote strong {
+      font-weight: 700;
+      color: var(--corp-blue);
+    }
+
+    .slide-quote-centered .attribution {
+      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .slide-quote-centered .attribution::before {
+      content: '';
+      display: block;
+      width: 48px;
+      height: 3px;
+      background: var(--corp-blue);
+      margin-bottom: 16px;
+      border-radius: 2px;
+    }
+
+    .slide-quote-centered .attr-name {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 600;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-quote-centered .attr-title {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0;
+    }
+
+    /* ===== Variant B: Side-accent bar with quote, dark background ===== */
+    .slide-quote-accent {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) 80px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+      position: relative;
+    }
+
+    .slide-quote-accent .quote-container {
+      display: flex;
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .slide-quote-accent .accent-bar {
+      width: 5px;
+      background: linear-gradient(180deg, var(--tech-cyan) 0%, var(--creative-violet) 100%);
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .slide-quote-accent .quote-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-quote-accent .context-label {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 0 20px 0;
+    }
+
+    .slide-quote-accent blockquote {
+      font-family: var(--font-heading);
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--corp-white);
+      line-height: 1.5;
+      margin: 0;
+      max-width: 85%;
+    }
+
+    .slide-quote-accent blockquote em {
+      font-style: normal;
+      color: var(--tech-cyan);
+      font-weight: 500;
+    }
+
+    .slide-quote-accent .attribution {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .slide-quote-accent .attr-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--tech-cyan), var(--creative-violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--corp-white);
+      font-weight: 600;
+      font-size: var(--text-caption);
+      flex-shrink: 0;
+    }
+
+    .slide-quote-accent .attr-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .slide-quote-accent .attr-name {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--corp-white);
+      margin: 0;
+    }
+
+    .slide-quote-accent .attr-title {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+      margin: 0;
+    }
+
+    /* ===== Variant C: Split with quote on color, attribution on white ===== */
+    .slide-quote-split {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      height: 100%;
+    }
+
+    .slide-quote-split .quote-panel {
+      width: 60%;
+      background: linear-gradient(160deg, var(--creative-purple) 0%, var(--creative-violet) 100%);
+      padding: var(--slide-padding);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-quote-split .quote-panel::before {
+      content: '\201C';
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 200px;
+      color: rgba(255, 255, 255, 0.08);
+      line-height: 1;
+    }
+
+    .slide-quote-split .quote-panel blockquote {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 400;
+      color: var(--corp-white);
+      line-height: 1.5;
+      margin: 0;
+      max-width: 90%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-quote-split .quote-panel blockquote strong {
+      font-weight: 700;
+      color: var(--creative-gold);
+    }
+
+    .slide-quote-split .attr-panel {
+      width: 40%;
+      background: var(--corp-white);
+      padding: var(--slide-padding);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-quote-split .attr-panel .attr-avatar-large {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--creative-purple), var(--creative-violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--corp-white);
+      font-weight: 700;
+      font-size: var(--text-heading);
+      margin-bottom: 20px;
+    }
+
+    .slide-quote-split .attr-panel .attr-name {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 700;
+      color: var(--creative-purple);
+      margin: 0 0 4px 0;
+    }
+
+    .slide-quote-split .attr-panel .attr-title {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 20px 0;
+      line-height: 1.5;
+    }
+
+    .slide-quote-split .attr-panel .context-note {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+      line-height: 1.6;
+      margin: 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--corp-light);
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Large quotation marks, centered quote, minimal background -->
+      <!-- CUSTOMIZATION: Change blockquote text (use <strong> for emphasis), attr-name, attr-title -->
+      <section class="slide-quote-centered">
+        <div class="quote-marks-bg">&ldquo;</div>
+        <blockquote>Without <strong>rigorous feature engineering</strong>, even the most sophisticated algorithm is just memorizing noise in your training data.</blockquote>
+        <div class="attribution">
+          <p class="attr-name">Dr. Sarah Lin</p>
+          <p class="attr-title">Chief Data Scientist, Netflix — NeurIPS 2025 Keynote</p>
+        </div>
+        <aside class="notes">
+          This quote from Dr. Lin's NeurIPS keynote captures a truth that many teams learn the hard way. We've all seen projects where the team spent months tuning hyperparameters on a model trained on poorly engineered features. The lesson: invest in understanding your data before reaching for complex architectures. In our churn project, 70% of the final model's predictive power came from just five carefully engineered features.
+        </aside>
+      </section>
+
+      <!-- Variant B: Side-accent bar with quote, dark background -->
+      <!-- CUSTOMIZATION: Change context-label, blockquote text (use <em> for emphasis), attr-avatar initials, attr-name, attr-title -->
+      <section class="slide-quote-accent">
+        <div class="quote-container">
+          <div class="accent-bar"></div>
+          <div class="quote-content">
+            <p class="context-label">On Production ML Systems</p>
+            <blockquote>The gap between a proof-of-concept model and a <em>production-grade system</em> is not technical — it is organizational. You need monitoring, rollback plans, and a team that treats model failures like <em>software incidents</em>.</blockquote>
+            <div class="attribution">
+              <div class="attr-avatar">MR</div>
+              <div class="attr-details">
+                <p class="attr-name">Martin Rinard</p>
+                <p class="attr-title">VP of ML Engineering, Stripe</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Martin's perspective is shaped by years of running ML systems that process billions of dollars in transactions. His point about treating model failures like software incidents changed how our team operates. We now have on-call rotations for model performance, automated alerts when prediction distributions shift, and runbooks for every production model. The technical part of ML is the easy part — the operational discipline is what separates research from production.
+        </aside>
+      </section>
+
+      <!-- Variant C: Split layout with quote on color background, attribution on white -->
+      <!-- CUSTOMIZATION: Change blockquote text (use <strong> for emphasis), attr-avatar-large initials, attr-name, attr-title, context-note -->
+      <section class="slide-quote-split">
+        <div class="quote-panel">
+          <blockquote>We stopped asking <strong>'what is the most accurate model?'</strong> and started asking <strong>'what is the simplest model our team can maintain and improve every week?'</strong> That shift tripled our deployment velocity.</blockquote>
+        </div>
+        <div class="attr-panel">
+          <div class="attr-avatar-large">KW</div>
+          <p class="attr-name">Kira Watanabe</p>
+          <p class="attr-title">Director of Data Science, Shopify<br>MLOps Summit 2026</p>
+          <p class="context-note">Kira's team manages 40+ production models serving real-time predictions across Shopify's e-commerce platform, processing over 100 million inference requests daily.</p>
+        </div>
+        <aside class="notes">
+          Kira's team at Shopify went through the same evolution we did. They had a sophisticated ensemble model that scored two points higher on their primary metric — but it took three engineers two weeks to update. When they replaced it with a simpler gradient boosting model, they could iterate weekly. The cumulative improvement from rapid iteration far outpaced the initial accuracy advantage of the complex model. This is the mindset shift we're advocating for: optimize for iteration speed, not peak benchmark performance.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

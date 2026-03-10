@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Statistics/Big Number — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate Palette */
+      --corp-navy: #0f172a;
+      --corp-steel: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical Palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-near-black: #0f172a;
+
+      /* Sales Palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+    }
+
+    .reveal .slides section {
+      padding: var(--slide-padding);
+      font-family: var(--font-body);
+    }
+
+    /* ── Variant A: Single Massive Number ── */
+    /* CUSTOMIZATION: Change the number, descriptor, trend direction, and accent color for any single-stat highlight -->
+    .single-stat-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      padding-top: 40px;
+    }
+
+    .single-stat-label {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--tech-slate);
+      margin-bottom: 16px;
+    }
+
+    .single-stat-number {
+      font-family: var(--font-mono);
+      font-size: 120px;
+      font-weight: 800;
+      color: var(--corp-steel);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .single-stat-unit {
+      font-size: 48px;
+      font-weight: 400;
+      color: var(--corp-navy);
+    }
+
+    .single-stat-desc {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      color: var(--corp-navy);
+      max-width: 600px;
+      line-height: 1.4;
+      margin-bottom: 24px;
+    }
+
+    .single-stat-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: 24px;
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      font-weight: 600;
+    }
+
+    .single-stat-trend.up {
+      background: rgba(16,185,129,0.1);
+      color: var(--corp-emerald);
+    }
+
+    .single-stat-trend.down {
+      background: rgba(244,63,94,0.1);
+      color: var(--corp-rose);
+    }
+
+    .trend-arrow { font-size: 20px; }
+
+    /* ── Variant B: Three Numbers in a Row ── */
+    /* CUSTOMIZATION: Change the three metrics, values, units, and contextual labels for any KPI dashboard -->
+    .triple-stat-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-white);
+      margin-bottom: 48px;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .triple-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .triple-stat-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 36px 24px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .triple-stat-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .triple-stat-value {
+      font-family: var(--font-mono);
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .triple-stat-suffix {
+      font-size: 28px;
+      font-weight: 400;
+      opacity: 0.7;
+    }
+
+    .triple-stat-label {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 500;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+
+    .triple-stat-context {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      margin-top: 12px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .context-positive {
+      background: rgba(16,185,129,0.2);
+      color: var(--corp-emerald);
+    }
+
+    .context-neutral {
+      background: rgba(6,182,212,0.2);
+      color: var(--tech-cyan);
+    }
+
+    /* ── Variant C: Number with Comparison Context ── */
+    /* CUSTOMIZATION: Change the primary number, comparison values, bar chart percentages, and labels for any benchmarking stat -->
+    .context-stat-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 40px;
+      text-align: left;
+      line-height: 1.3;
+    }
+
+    .context-stat-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .context-stat-primary {
+      text-align: center;
+    }
+
+    .context-primary-number {
+      font-family: var(--font-mono);
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--sales-blue);
+      line-height: 1;
+    }
+
+    .context-primary-unit {
+      font-size: 40px;
+      color: var(--sales-dark);
+    }
+
+    .context-primary-label {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      color: var(--sales-dark);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .context-primary-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--corp-emerald);
+      font-weight: 600;
+    }
+
+    .context-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .context-bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .context-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .context-bar-label {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--sales-dark);
+    }
+
+    .context-bar-value {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .context-bar-track {
+      height: 12px;
+      background: var(--corp-light);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .context-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-ours { background: var(--sales-blue); }
+    .bar-industry { background: var(--tech-slate); }
+    .bar-top { background: var(--sales-orange); }
+
+    .value-ours { color: var(--sales-blue); }
+    .value-industry { color: var(--tech-slate); }
+    .value-top { color: var(--sales-orange); }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Single Massive Number with Trend Arrow -->
+      <!-- CUSTOMIZATION: Replace the number, unit, description, and trend percentage for any single hero metric -->
+      <section data-background-color="#ffffff">
+        <div class="single-stat-container">
+          <div class="single-stat-label">Model Prediction Accuracy</div>
+          <div class="single-stat-number">97.3<span class="single-stat-unit">%</span></div>
+          <div class="single-stat-desc">Production fraud detection model accuracy on Q4 2025 holdout dataset</div>
+          <div class="single-stat-trend up">
+            <span class="trend-arrow">&#8599;</span>
+            +4.2% vs. previous quarter
+          </div>
+        </div>
+        <aside class="notes">This is the headline number for our fraud detection model. 97.3% accuracy on the Q4 holdout set — that is up 4.2 percentage points from Q3. To put this in business terms, every percentage point of improvement in fraud detection accuracy translates to approximately $180K in prevented losses per quarter. So that 4.2-point improvement represents roughly $750K in additional savings. The improvement came from two changes: adding real-time velocity features and switching from a random forest to a gradient-boosted ensemble.</aside>
+      </section>
+
+      <!-- Variant B: Three Numbers in a Row (Dark Background) -->
+      <!-- CUSTOMIZATION: Change the three metrics, their values, icons, and context badges for any KPI trio -->
+      <section data-background="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <div class="triple-stat-title">Our ML platform delivers measurable impact across three dimensions</div>
+        <div class="triple-stat-grid">
+          <div class="triple-stat-card">
+            <span class="triple-stat-icon">&#127919;</span>
+            <div class="triple-stat-value" style="color: var(--tech-cyan);">
+              94.1<span class="triple-stat-suffix">%</span>
+            </div>
+            <div class="triple-stat-label" style="color: var(--corp-light);">Model Accuracy</div>
+            <div class="triple-stat-context context-positive">+6.3% YoY</div>
+          </div>
+
+          <div class="triple-stat-card">
+            <span class="triple-stat-icon">&#9889;</span>
+            <div class="triple-stat-value" style="color: var(--creative-gold);">
+              47<span class="triple-stat-suffix">ms</span>
+            </div>
+            <div class="triple-stat-label" style="color: var(--corp-light);">P95 Latency</div>
+            <div class="triple-stat-context context-neutral">&#8722;62% vs. v1</div>
+          </div>
+
+          <div class="triple-stat-card">
+            <span class="triple-stat-icon">&#128176;</span>
+            <div class="triple-stat-value" style="color: var(--corp-emerald);">
+              $2.4<span class="triple-stat-suffix">M</span>
+            </div>
+            <div class="triple-stat-label" style="color: var(--corp-light);">Annual Savings</div>
+            <div class="triple-stat-context context-positive">3.2x ROI</div>
+          </div>
+        </div>
+        <aside class="notes">Three numbers that tell the complete story. First, accuracy: 94.1% across our production model suite, up 6.3 points year-over-year. Second, speed: our P95 inference latency is now 47 milliseconds, down 62% from version 1 — that improvement came from model distillation and ONNX runtime optimization. Third, the bottom line: $2.4 million in annual savings, which gives us a 3.2x return on our total ML platform investment including headcount, infrastructure, and tooling. These three metrics are what we report to the board every quarter.</aside>
+      </section>
+
+      <!-- Variant C: Number with Comparison Context -->
+      <!-- CUSTOMIZATION: Change the primary metric, comparison benchmarks, and bar widths for any competitive or temporal comparison -->
+      <section data-background-color="#ffffff">
+        <div class="context-stat-title">Our NLP model outperforms industry benchmarks on customer intent classification</div>
+        <div class="context-stat-layout">
+          <div class="context-stat-primary">
+            <div class="context-primary-number">91.8<span class="context-primary-unit">%</span></div>
+            <div class="context-primary-label">F1 Score</div>
+            <div class="context-primary-change">
+              <span>&#8599;</span> Up from 78.2% in Jan 2025
+            </div>
+          </div>
+
+          <div class="context-comparison">
+            <div class="context-bar-item">
+              <div class="context-bar-header">
+                <span class="context-bar-label">Our Model</span>
+                <span class="context-bar-value value-ours">91.8%</span>
+              </div>
+              <div class="context-bar-track">
+                <div class="context-bar-fill bar-ours" style="width: 91.8%;"></div>
+              </div>
+            </div>
+
+            <div class="context-bar-item">
+              <div class="context-bar-header">
+                <span class="context-bar-label">Industry Top Quartile</span>
+                <span class="context-bar-value value-top">86.5%</span>
+              </div>
+              <div class="context-bar-track">
+                <div class="context-bar-fill bar-top" style="width: 86.5%;"></div>
+              </div>
+            </div>
+
+            <div class="context-bar-item">
+              <div class="context-bar-header">
+                <span class="context-bar-label">Industry Average</span>
+                <span class="context-bar-value value-industry">72.3%</span>
+              </div>
+              <div class="context-bar-track">
+                <div class="context-bar-fill bar-industry" style="width: 72.3%;"></div>
+              </div>
+            </div>
+
+            <div class="context-bar-item">
+              <div class="context-bar-header">
+                <span class="context-bar-label">Our Model (Jan 2025)</span>
+                <span class="context-bar-value" style="color: var(--tech-slate);">78.2%</span>
+              </div>
+              <div class="context-bar-track">
+                <div class="context-bar-fill" style="width: 78.2%; background: #cbd5e1;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">This slide puts our 91.8% F1 score in context. On the left, the headline number with the historical trend — we started at 78.2% in January 2025 and improved to 91.8% through iterative fine-tuning and better training data curation. On the right, the benchmarks: the industry average for customer intent classification sits at 72.3%, the top quartile is at 86.5%, and we are comfortably above both. The 13.6-point improvement over just 14 months came from three things: domain-specific pre-training, active learning to target the hardest classification cases, and expanding our intent taxonomy from 12 to 28 categories to reduce ambiguity.</aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

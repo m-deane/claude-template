@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Title — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Creative palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Corporate gradient ===== */
+    .slide-title-corporate {
+      background: linear-gradient(135deg, var(--corp-navy) 0%, #1e3a5f 50%, var(--corp-blue) 100%) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-title-corporate .title-accent {
+      width: 80px;
+      height: 4px;
+      background: var(--corp-emerald);
+      margin-bottom: var(--element-gap);
+      border-radius: 2px;
+    }
+
+    .slide-title-corporate h1 {
+      font-family: var(--font-heading);
+      font-size: var(--text-hero);
+      font-weight: 700;
+      color: var(--corp-white);
+      line-height: 1.1;
+      margin: 0 0 var(--element-gap) 0;
+      max-width: 85%;
+    }
+
+    .slide-title-corporate .subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-heading);
+      font-weight: 300;
+      color: var(--corp-light);
+      margin: 0 0 48px 0;
+      max-width: 70%;
+      line-height: 1.4;
+    }
+
+    .slide-title-corporate .presenter-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .slide-title-corporate .presenter-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--corp-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--corp-white);
+      font-weight: 600;
+      font-size: var(--text-body);
+    }
+
+    .slide-title-corporate .presenter-name {
+      font-size: var(--text-body);
+      font-weight: 600;
+      color: var(--corp-white);
+      margin: 0;
+    }
+
+    .slide-title-corporate .presenter-role {
+      font-size: var(--text-caption);
+      color: var(--corp-light);
+      opacity: 0.8;
+      margin: 2px 0 0 0;
+    }
+
+    /* ===== Variant B: Technical dark ===== */
+    .slide-title-technical {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-title-technical::before {
+      content: '$ python train_model.py --epochs 100\n> Loading dataset... ✓\n> Preprocessing... ✓\n> Training started...';
+      position: absolute;
+      top: 40px;
+      right: 40px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-cyan);
+      opacity: 0.15;
+      white-space: pre;
+      line-height: 1.8;
+    }
+
+    .slide-title-technical .code-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--tech-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 6px 16px;
+      border-radius: 4px;
+      margin-bottom: var(--element-gap);
+    }
+
+    .slide-title-technical h1 {
+      font-family: var(--font-heading);
+      font-size: var(--text-hero);
+      font-weight: 800;
+      color: var(--corp-white);
+      line-height: 1.05;
+      margin: 0 0 var(--element-gap) 0;
+      max-width: 80%;
+    }
+
+    .slide-title-technical h1 .highlight {
+      color: var(--tech-cyan);
+    }
+
+    .slide-title-technical .meta-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 40px;
+    }
+
+    .slide-title-technical .meta-item {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+    }
+
+    .slide-title-technical .meta-item span {
+      color: var(--tech-cyan);
+    }
+
+    /* ===== Variant C: Split design ===== */
+    .slide-title-split {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      height: 100%;
+    }
+
+    .slide-title-split .left-panel {
+      width: 42%;
+      background: linear-gradient(160deg, var(--creative-purple) 0%, var(--creative-violet) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: var(--slide-padding);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-title-split .left-panel::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .slide-title-split .left-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .slide-title-split .event-badge {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--creative-warm);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-title-split .event-date {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      color: rgba(255, 255, 255, 0.7);
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-title-split .right-panel {
+      width: 58%;
+      background: var(--corp-white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--slide-padding) var(--slide-padding) var(--slide-padding) 48px;
+    }
+
+    .slide-title-split .right-panel h1 {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 700;
+      color: var(--creative-purple);
+      line-height: 1.2;
+      margin: 0 0 16px 0;
+    }
+
+    .slide-title-split .right-panel .subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--tech-slate);
+      line-height: 1.5;
+      margin: 0 0 40px 0;
+    }
+
+    .slide-title-split .presenter-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--creative-warm);
+      border-radius: 12px;
+      max-width: 380px;
+    }
+
+    .slide-title-split .presenter-card .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--creative-purple), var(--creative-violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--corp-white);
+      font-weight: 600;
+      font-size: var(--text-body);
+      flex-shrink: 0;
+    }
+
+    .slide-title-split .presenter-card .name {
+      font-size: var(--text-body);
+      font-weight: 600;
+      color: var(--creative-purple);
+      margin: 0;
+    }
+
+    .slide-title-split .presenter-card .role {
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 2px 0 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Corporate palette — clean text on gradient background -->
+      <!-- CUSTOMIZATION: Change h1 text for presentation title, subtitle for description, presenter info for speaker -->
+      <section class="slide-title-corporate">
+        <div class="title-accent"></div>
+        <h1>Machine Learning Models Reduce Customer Churn by 34%</h1>
+        <p class="subtitle">A data-driven approach to retention using gradient boosting and survival analysis</p>
+        <div class="presenter-info">
+          <div class="presenter-avatar">JC</div>
+          <div>
+            <p class="presenter-name">Dr. Julia Chen</p>
+            <p class="presenter-role">Lead Data Scientist · Acme Analytics</p>
+          </div>
+        </div>
+        <aside class="notes">
+          Welcome everyone. Today I'll walk you through how our data science team built a machine learning pipeline that reduced customer churn by 34% over six months. We'll cover the modeling approach, key features, and the business impact of deploying survival analysis at scale.
+        </aside>
+      </section>
+
+      <!-- Variant B: Technical palette — dark background with code-style accent -->
+      <!-- CUSTOMIZATION: Change code-badge for topic tag, h1 for title (use .highlight span for emphasis), meta-row for date/version -->
+      <section class="slide-title-technical">
+        <div class="code-badge">deep-learning // computer-vision</div>
+        <h1>Transformer Architectures <span class="highlight">Outperform CNNs</span> on Medical Imaging Tasks</h1>
+        <div class="meta-row">
+          <div class="meta-item"><span>author:</span> Dr. Marcus Webb</div>
+          <div class="meta-item"><span>date:</span> 2026-03-08</div>
+          <div class="meta-item"><span>version:</span> 2.1.0</div>
+        </div>
+        <aside class="notes">
+          Good morning. This talk presents our findings from a twelve-month study comparing Vision Transformers against traditional convolutional neural networks for radiology image classification. The results were striking — and have direct implications for how we architect clinical AI systems going forward.
+        </aside>
+      </section>
+
+      <!-- Variant C: Split design with colored left panel and white right panel -->
+      <!-- CUSTOMIZATION: Change event-badge and event-date on left panel, h1/subtitle/presenter on right panel, gradient colors on left-panel -->
+      <section class="slide-title-split">
+        <div class="left-panel">
+          <div class="event-badge">Data Science Summit 2026</div>
+          <div class="event-date">March 8, 2026 · San Francisco</div>
+        </div>
+        <div class="right-panel">
+          <h1>Building Real-Time Feature Stores for Production ML Systems</h1>
+          <p class="subtitle">How streaming pipelines and feature versioning eliminate training-serving skew</p>
+          <div class="presenter-card">
+            <div class="avatar">AP</div>
+            <div>
+              <p class="name">Aisha Patel</p>
+              <p class="role">Staff ML Engineer · DataFlow Inc.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Thank you for joining this session. I'm Aisha Patel, and I lead the ML platform team at DataFlow. Over the next ten minutes, I'll share how we built a real-time feature store that serves over 200 million predictions per day — and the hard lessons we learned about training-serving skew along the way.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

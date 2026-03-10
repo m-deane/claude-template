@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Before/After Metrics — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-darkgray: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Two-Column Split Before/After — Corporate Palette ===== */
+    .slide-before-after-split {
+      background: var(--corp-white) !important;
+      padding: 40px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-before-after-split h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-before-after-split .ba-container {
+      display: flex;
+      gap: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .slide-before-after-split .ba-column {
+      flex: 1;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .slide-before-after-split .ba-before {
+      background: linear-gradient(135deg, #fef2f2, #fff1f2);
+      border-right: 3px solid var(--corp-light);
+    }
+
+    .slide-before-after-split .ba-after {
+      background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    }
+
+    .slide-before-after-split .ba-column-header {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-before-after-split .ba-before .ba-column-header {
+      color: var(--corp-rose);
+    }
+
+    .slide-before-after-split .ba-after .ba-column-header {
+      color: var(--corp-emerald);
+    }
+
+    .slide-before-after-split .ba-metric {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .slide-before-after-split .ba-metric-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0;
+    }
+
+    .slide-before-after-split .ba-metric-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .slide-before-after-split .ba-before .ba-metric-value {
+      color: var(--corp-navy);
+    }
+
+    .slide-before-after-split .ba-after .ba-metric-value {
+      color: var(--corp-navy);
+    }
+
+    .slide-before-after-split .ba-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      flex-shrink: 0;
+      background: var(--corp-navy);
+      color: var(--corp-white);
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    /* ===== Variant B: Timeline Arrow Before/After — Technical Palette ===== */
+    .slide-before-after-timeline {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-before-after-timeline h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 40px 0;
+    }
+
+    .slide-before-after-timeline .timeline-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .slide-before-after-timeline .timeline-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .slide-before-after-timeline .timeline-side.before {
+      padding-right: 32px;
+    }
+
+    .slide-before-after-timeline .timeline-side.after {
+      padding-left: 32px;
+    }
+
+    .slide-before-after-timeline .timeline-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 0 8px 0;
+    }
+
+    .slide-before-after-timeline .timeline-side.before .timeline-label {
+      color: var(--corp-rose);
+    }
+
+    .slide-before-after-timeline .timeline-side.after .timeline-label {
+      color: var(--corp-emerald);
+    }
+
+    .slide-before-after-timeline .tl-metric {
+      background: var(--tech-charcoal);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .slide-before-after-timeline .tl-metric-name {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0;
+    }
+
+    .slide-before-after-timeline .tl-metric-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-body);
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0;
+    }
+
+    .slide-before-after-timeline .timeline-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .slide-before-after-timeline .timeline-arrow {
+      width: 4px;
+      height: 140px;
+      background: linear-gradient(to bottom, var(--corp-rose), var(--tech-cyan), var(--corp-emerald));
+      border-radius: 2px;
+      position: relative;
+    }
+
+    .slide-before-after-timeline .timeline-arrow::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid var(--corp-emerald);
+    }
+
+    .slide-before-after-timeline .delta-badge {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 8px;
+      padding: 8px 14px;
+      text-align: center;
+    }
+
+    .slide-before-after-timeline .delta-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: var(--tech-cyan);
+      margin: 0;
+      display: block;
+    }
+
+    /* ===== Variant C: Stacked Cards with Improvement Badges ===== */
+    .slide-before-after-cards {
+      background: var(--corp-light) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-before-after-cards h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-before-after-cards .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .slide-before-after-cards .ba-card-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--corp-white);
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .slide-before-after-cards .ba-card-label {
+      width: 160px;
+      flex-shrink: 0;
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-before-after-cards .ba-card-old {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #fef2f2;
+      border-radius: 8px;
+    }
+
+    .slide-before-after-cards .ba-card-old-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-body);
+      font-weight: 700;
+      color: #991b1b;
+      margin: 0;
+    }
+
+    .slide-before-after-cards .ba-card-arrow {
+      font-size: var(--text-body);
+      color: var(--tech-slate);
+      flex-shrink: 0;
+    }
+
+    .slide-before-after-cards .ba-card-new {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #ecfdf5;
+      border-radius: 8px;
+    }
+
+    .slide-before-after-cards .ba-card-new-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-body);
+      font-weight: 700;
+      color: #065f46;
+      margin: 0;
+    }
+
+    .slide-before-after-cards .ba-card-badge {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--corp-emerald);
+      color: var(--corp-white);
+      min-width: 60px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Two-column split Before/After — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .ba-metric-value and .ba-metric-label for each metric, adjust background gradients for different tinting -->
+      <section class="slide-before-after-split">
+        <h2>Automated pipeline reduced processing time by 87% and errors by 94%</h2>
+        <div class="ba-container">
+          <div class="ba-column ba-before">
+            <div class="ba-column-header">Before</div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Processing Time</p>
+              <p class="ba-metric-value">6.5 hours</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Manual Steps</p>
+              <p class="ba-metric-value">23 steps</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Error Rate</p>
+              <p class="ba-metric-value">12.3%</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Data Freshness</p>
+              <p class="ba-metric-value">24 hours</p>
+            </div>
+          </div>
+          <div class="ba-divider">&#10132;</div>
+          <div class="ba-column ba-after">
+            <div class="ba-column-header">After</div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Processing Time</p>
+              <p class="ba-metric-value">48 minutes</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Manual Steps</p>
+              <p class="ba-metric-value">3 steps</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Error Rate</p>
+              <p class="ba-metric-value">0.7%</p>
+            </div>
+            <div class="ba-metric">
+              <p class="ba-metric-label">Data Freshness</p>
+              <p class="ba-metric-value">15 minutes</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This slide shows the impact of migrating from our manual data processing workflow to the automated Airflow pipeline. Processing time dropped from 6.5 hours to 48 minutes — an 87% reduction. The number of manual steps went from 23 to just 3, which are all approval gates. Error rate fell from 12.3% to 0.7%, virtually eliminating data quality issues. And data freshness improved from 24-hour batch cycles to near real-time 15-minute intervals.
+        </aside>
+      </section>
+
+      <!-- Variant B: Timeline arrow with before/after metrics and delta — Technical palette -->
+      <!-- CUSTOMIZATION: Change .tl-metric-name and .tl-metric-val for metrics on each side, .delta-value for the improvement highlights -->
+      <section class="slide-before-after-timeline">
+        <h2>Model retraining pipeline now runs 5x faster with 60% lower cost</h2>
+        <div class="timeline-container">
+          <div class="timeline-side before">
+            <p class="timeline-label">Legacy Pipeline</p>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Retrain Duration</p>
+              <p class="tl-metric-val">14 hours</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">GPU Cost/Run</p>
+              <p class="tl-metric-val">$340</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Deploy Lead Time</p>
+              <p class="tl-metric-val">3 days</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Rollback Time</p>
+              <p class="tl-metric-val">2 hours</p>
+            </div>
+          </div>
+          <div class="timeline-center">
+            <div class="delta-badge">
+              <span class="delta-value">5x faster</span>
+            </div>
+            <div class="timeline-arrow"></div>
+            <div class="delta-badge">
+              <span class="delta-value">-60% cost</span>
+            </div>
+          </div>
+          <div class="timeline-side after">
+            <p class="timeline-label">New Pipeline</p>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Retrain Duration</p>
+              <p class="tl-metric-val">2.8 hours</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">GPU Cost/Run</p>
+              <p class="tl-metric-val">$136</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Deploy Lead Time</p>
+              <p class="tl-metric-val">45 min</p>
+            </div>
+            <div class="tl-metric">
+              <p class="tl-metric-name">Rollback Time</p>
+              <p class="tl-metric-val">8 min</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Here we compare the legacy retraining pipeline against our new architecture. The key wins: retrain duration dropped from 14 hours to 2.8 hours using distributed training with DeepSpeed. GPU cost per run fell 60% from $340 to $136 by switching to spot instances with checkpointing. Deployment lead time collapsed from 3 days to 45 minutes with our new blue-green deployment strategy. And rollback time went from 2 hours of manual intervention to 8 minutes of automated rollback with canary analysis.
+        </aside>
+      </section>
+
+      <!-- Variant C: Stacked cards with old → new values and improvement badges — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .ba-card-label for metric name, .ba-card-old-val and .ba-card-new-val for values, .ba-card-badge for improvement percentage -->
+      <section class="slide-before-after-cards">
+        <h2>Feature engineering automation delivered gains across every metric</h2>
+        <div class="cards-container">
+          <div class="ba-card-row">
+            <p class="ba-card-label">Feature Creation</p>
+            <div class="ba-card-old">
+              <p class="ba-card-old-val">2 weeks</p>
+            </div>
+            <span class="ba-card-arrow">&#10132;</span>
+            <div class="ba-card-new">
+              <p class="ba-card-new-val">4 hours</p>
+            </div>
+            <span class="ba-card-badge">-96%</span>
+          </div>
+          <div class="ba-card-row">
+            <p class="ba-card-label">Feature Count</p>
+            <div class="ba-card-old">
+              <p class="ba-card-old-val">48</p>
+            </div>
+            <span class="ba-card-arrow">&#10132;</span>
+            <div class="ba-card-new">
+              <p class="ba-card-new-val">312</p>
+            </div>
+            <span class="ba-card-badge">+550%</span>
+          </div>
+          <div class="ba-card-row">
+            <p class="ba-card-label">Model AUC</p>
+            <div class="ba-card-old">
+              <p class="ba-card-old-val">0.82</p>
+            </div>
+            <span class="ba-card-arrow">&#10132;</span>
+            <div class="ba-card-new">
+              <p class="ba-card-new-val">0.91</p>
+            </div>
+            <span class="ba-card-badge">+11%</span>
+          </div>
+          <div class="ba-card-row">
+            <p class="ba-card-label">Data Scientists</p>
+            <div class="ba-card-old">
+              <p class="ba-card-old-val">3 FTEs</p>
+            </div>
+            <span class="ba-card-arrow">&#10132;</span>
+            <div class="ba-card-new">
+              <p class="ba-card-new-val">0.5 FTE</p>
+            </div>
+            <span class="ba-card-badge">-83%</span>
+          </div>
+        </div>
+        <aside class="notes">
+          This shows the impact of our automated feature engineering platform across four dimensions. Feature creation time dropped from 2 weeks of manual work to 4 hours of automated generation — a 96% reduction. The number of features we can evaluate increased from 48 hand-crafted features to 312 auto-generated candidates. Model AUC improved from 0.82 to 0.91 due to the richer feature set. And the team headcount required dropped from 3 full-time data scientists to half a person overseeing the automation, freeing up the team for higher-value work.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typography Scale — Presentation Design System</title>
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+      --page-bg: #f8fafc;
+      --page-border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--page-bg);
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    .page-header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 64px;
+      border-bottom: 4px solid #f59e0b;
+    }
+    .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+    .page-header p { font-size: 17px; color: #94a3b8; max-width: 680px; }
+    .page-header .meta { margin-top: 20px; display: flex; gap: 16px; }
+    .page-header .meta span { background: rgba(255,255,255,0.08); padding: 4px 12px; border-radius: 4px; font-size: 14px; color: #64748b; }
+
+    .section-wrapper { padding: 64px; }
+
+    .section-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .section-desc {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    /* ---- Scale table ---- */
+    .scale-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 64px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .scale-table thead tr {
+      background: #0f172a;
+    }
+    .scale-table thead th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .scale-table tbody tr {
+      border-bottom: 1px solid var(--page-border);
+    }
+    .scale-table tbody tr:last-child { border-bottom: none; }
+    .scale-table tbody tr:hover { background: #f8fafc; }
+    .scale-table td {
+      padding: 16px 20px;
+      vertical-align: middle;
+    }
+    .token-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+    .px-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #64748b;
+    }
+    .scale-sample-cell {
+      padding: 20px 20px;
+    }
+    .usage-cell {
+      font-size: 13px;
+      color: #64748b;
+      max-width: 260px;
+    }
+    .usage-cell ul { list-style: none; }
+    .usage-cell li { display: flex; align-items: flex-start; gap: 6px; }
+    .usage-cell li::before { content: "—"; color: #cbd5e1; flex-shrink: 0; }
+    .weight-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .wtag {
+      background: #f1f5f9;
+      color: #374151;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ---- Scale samples ---- */
+    .sample-hero {
+      font-size: 72px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+    .sample-title {
+      font-size: 44px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+    .sample-heading {
+      font-size: 32px;
+      font-weight: 600;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .sample-body {
+      font-size: 24px;
+      font-weight: 400;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .sample-caption {
+      font-size: 18px;
+      font-weight: 400;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* ---- Pairing demos ---- */
+    .pairing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+    .pairing-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .pairing-preview {
+      padding: 32px 36px;
+      min-height: 180px;
+    }
+    .pairing-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--page-border);
+      padding: 12px 16px;
+    }
+
+    /* ---- Line-height demo ---- */
+    .lh-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 64px;
+    }
+    .lh-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+    }
+    .lh-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .lh-sample {
+      font-size: 20px;
+      font-weight: 500;
+      color: #0f172a;
+    }
+    .lh-note {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+
+    /* ---- Mono font ---- */
+    .mono-demo {
+      background: #0f172a;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 64px;
+      box-shadow: var(--shadow-card);
+    }
+    .mono-demo-header {
+      background: #1e293b;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mono-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mono-filename {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 8px;
+    }
+    .mono-body {
+      padding: 28px 32px;
+    }
+    .mono-size-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .mono-size-row:last-child { border-bottom: none; }
+    .mono-size-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #475569;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .mono-sample {
+      font-family: var(--font-mono);
+      color: #e2e8f0;
+    }
+    .kw { color: #93c5fd; }
+    .fn { color: #6ee7b7; }
+    .str { color: #fbbf24; }
+    .num { color: #f9a8d4; }
+    .cm { color: #475569; }
+
+    /* ---- Recommended usage rules ---- */
+    .rules-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 64px;
+    }
+    .rules-header {
+      background: #0f172a;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .rules-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--page-border);
+    }
+    .rules-row:last-child { border-bottom: none; }
+    .rules-size {
+      padding: 16px 20px;
+      background: #f8fafc;
+      border-right: 1px solid var(--page-border);
+    }
+    .rules-size .rs-token { font-family: var(--font-mono); font-size: 13px; color: #3b82f6; font-weight: 700; }
+    .rules-size .rs-px { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .rules-detail { padding: 16px 20px; }
+    .rules-do { font-size: 13px; color: #15803d; font-weight: 600; margin-bottom: 4px; }
+    .rules-do::before { content: "Use for: "; color: #374151; font-weight: 400; }
+    .rules-dont { font-size: 13px; color: #b91c1c; font-weight: 600; }
+    .rules-dont::before { content: "Avoid: "; color: #374151; font-weight: 400; }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Typography Scale</h1>
+  <p>The complete 5-level type scale rendered at all sizes with font pairing examples, line height guidelines, and monospace code styles.</p>
+  <div class="meta">
+    <span>5 size levels</span>
+    <span>Inter + JetBrains Mono</span>
+    <span>Min 18px body text</span>
+  </div>
+</header>
+
+<div class="section-wrapper">
+
+  <!-- ================================================================
+       COMPLETE SCALE TABLE
+       ================================================================ -->
+  <div class="section-heading">Complete Type Scale</div>
+  <div class="section-desc">All five size tokens from the design system, with usage guidance and weight variants for each.</div>
+
+  <table class="scale-table">
+    <thead>
+      <tr>
+        <th>Token</th>
+        <th>Size</th>
+        <th style="min-width:360px;">Sample</th>
+        <th>Weights</th>
+        <th>Recommended Usage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="token-name">--text-hero</div></td>
+        <td><div class="px-value">72px</div></td>
+        <td class="scale-sample-cell">
+          <div class="sample-hero">94.2%</div>
+        </td>
+        <td>
+          <div class="weight-tags">
+            <span class="wtag">800 (primary)</span>
+          </div>
+        </td>
+        <td class="usage-cell">
+          <ul>
+            <li>Single big-number slides</li>
+            <li>Opening impact statistics</li>
+            <li>Maximum 1–2 numbers per slide</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><div class="token-name">--text-title</div></td>
+        <td><div class="px-value">44px</div></td>
+        <td class="scale-sample-cell">
+          <div class="sample-title">Scaling AI to Production</div>
+        </td>
+        <td>
+          <div class="weight-tags">
+            <span class="wtag">700 / 800</span>
+          </div>
+        </td>
+        <td class="usage-cell">
+          <ul>
+            <li>Presentation title</li>
+            <li>Section divider headings</li>
+            <li>Assertion-evidence slide titles</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><div class="token-name">--text-heading</div></td>
+        <td><div class="px-value">32px</div></td>
+        <td class="scale-sample-cell">
+          <div class="sample-heading">XGBoost outperforms baseline by 11pp on F1 score</div>
+        </td>
+        <td>
+          <div class="weight-tags">
+            <span class="wtag">600 / 700</span>
+          </div>
+        </td>
+        <td class="usage-cell">
+          <ul>
+            <li>Slide assertion titles</li>
+            <li>Section sub-headings</li>
+            <li>Card headlines in grids</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><div class="token-name">--text-body</div></td>
+        <td><div class="px-value">24px</div></td>
+        <td class="scale-sample-cell">
+          <div class="sample-body">Feature drift in fraud_score_v2 exceeded the 0.10 PSI threshold — retraining is recommended within 72 hours to maintain precision.</div>
+        </td>
+        <td>
+          <div class="weight-tags">
+            <span class="wtag">400 (default)</span>
+            <span class="wtag">600 (emphasis)</span>
+          </div>
+        </td>
+        <td class="usage-cell">
+          <ul>
+            <li>All readable body copy on slides</li>
+            <li>Short supporting statements</li>
+            <li>Keep to &le; 2 lines per text block</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><div class="token-name">--text-caption</div></td>
+        <td><div class="px-value">18px</div></td>
+        <td class="scale-sample-cell">
+          <div class="sample-caption">Source: Internal ML platform evaluation — Platform Risk Team, Nov 2025. Metrics computed using scikit-learn 1.4.0 with 5-fold cross-validation on n=12,400 holdout samples.</div>
+        </td>
+        <td>
+          <div class="weight-tags">
+            <span class="wtag">400 (captions)</span>
+            <span class="wtag">700 (labels)</span>
+          </div>
+        </td>
+        <td class="usage-cell">
+          <ul>
+            <li>Figure captions</li>
+            <li>Data source citations</li>
+            <li>KPI labels / axis labels</li>
+            <li>Absolute minimum for any text</li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- ================================================================
+       HEADING + BODY PAIRING EXAMPLES
+       ================================================================ -->
+  <div class="section-heading">Heading + Body Font Pairing Examples</div>
+  <div class="section-desc">Inter is used for both heading and body. Contrast is created through weight and size — not different typefaces. Max 2 typefaces per presentation.</div>
+
+  <div class="pairing-grid">
+
+    <!-- Pairing 1: Dark slide, assertion + sub -->
+    <div class="pairing-card">
+      <div class="pairing-label">Dark Slide — Assertion Title + Body Descriptor</div>
+      <div class="pairing-preview" style="background:#0f172a;">
+        <div style="font-size:12px;font-weight:700;color:#3b82f6;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">MODEL EVALUATION</div>
+        <div style="font-size:36px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:16px;letter-spacing:-0.5px;">XGBoost reduces false negatives by 38% compared to the production baseline</div>
+        <div style="font-size:20px;font-weight:400;color:#94a3b8;line-height:1.5;">Holdout test set — 12,400 samples — November 2025 production data</div>
+      </div>
+    </div>
+
+    <!-- Pairing 2: Light slide, content -->
+    <div class="pairing-card">
+      <div class="pairing-label">Light Slide — Content Slide Typography</div>
+      <div class="pairing-preview" style="background:#fff;">
+        <div style="font-size:30px;font-weight:700;color:#0f172a;line-height:1.2;margin-bottom:16px;">Our inference stack now handles 50M predictions per day under 50ms</div>
+        <div style="font-size:18px;font-weight:400;color:#475569;line-height:1.6;margin-bottom:8px;">The move to an async serving architecture eliminated our latency ceiling. P95 dropped from 142ms to 47ms across all model versions.</div>
+        <div style="font-size:14px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;">Source: Platform Observability dashboard — Dec 2025</div>
+      </div>
+    </div>
+
+    <!-- Pairing 3: Title slide hierarchy -->
+    <div class="pairing-card">
+      <div class="pairing-label">Title Slide — Full Hierarchy</div>
+      <div class="pairing-preview" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#3b82f6 100%);">
+        <div style="font-size:12px;font-weight:700;color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">PLATFORM ENGINEERING · MARCH 2026</div>
+        <div style="font-size:40px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:16px;letter-spacing:-1px;">Scaling AI from<br>Experiment to Production</div>
+        <div style="width:48px;height:4px;background:#3b82f6;border-radius:2px;margin-bottom:16px;"></div>
+        <div style="font-size:20px;font-weight:400;color:#94a3b8;line-height:1.4;margin-bottom:20px;">How we cut model deployment time from 14 days to 5 — and what comes next</div>
+        <div style="font-size:15px;color:#64748b;">Dr. James Okafor &nbsp;&middot;&nbsp; VP of Machine Learning</div>
+      </div>
+    </div>
+
+    <!-- Pairing 4: Split slide -->
+    <div class="pairing-card">
+      <div class="pairing-label">Split Slide — Headline + Supporting Points</div>
+      <div class="pairing-preview" style="background:#f8fafc; display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+        <div>
+          <div style="font-size:28px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:12px;">Three signals that triggered the retraining decision</div>
+          <div style="font-size:16px;color:#64748b;">Data from the production monitoring dashboard</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;">
+            <div style="font-size:15px;font-weight:700;color:#0f172a;">PSI = 0.18 on fraud_score_v2</div>
+            <div style="font-size:13px;color:#64748b;">Threshold crossed on Nov 14</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;">
+            <div style="font-size:15px;font-weight:700;color:#0f172a;">Precision drop: 94.2% to 88.7%</div>
+            <div style="font-size:13px;color:#64748b;">7-day rolling average</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;">
+            <div style="font-size:15px;font-weight:700;color:#0f172a;">FN rate up 12% week-on-week</div>
+            <div style="font-size:13px;color:#64748b;">Class C most affected</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ================================================================
+       LINE HEIGHT DEMONSTRATIONS
+       ================================================================ -->
+  <div class="section-heading">Line Height Demonstrations</div>
+  <div class="section-desc">Recommended line heights for each context. Tight for display text, looser for readable body copy.</div>
+
+  <div class="lh-demo">
+    <div class="lh-card">
+      <div class="lh-label">Tight — line-height: 1.1</div>
+      <div class="lh-sample" style="line-height:1.1;font-weight:800;font-size:36px;">Machine Learning<br>Platform Review</div>
+      <div class="lh-note">For headlines at 32px+ only. Tight leading reinforces visual weight. Do not use for body copy.</div>
+    </div>
+    <div class="lh-card">
+      <div class="lh-label">Default — line-height: 1.4</div>
+      <div class="lh-sample" style="line-height:1.4;font-size:22px;">Feature drift in fraud_score_v2 exceeded the PSI threshold. Retraining recommended within 72 hours to maintain model precision.</div>
+      <div class="lh-note">Standard for body text 24px and assertion titles. Balanced readability at distance.</div>
+    </div>
+    <div class="lh-card">
+      <div class="lh-label">Open — line-height: 1.6</div>
+      <div class="lh-sample" style="line-height:1.6;font-size:18px;color:#64748b;">Source: Internal ML platform evaluation — Platform Risk Team, November 2025. Metrics computed using scikit-learn 1.4.0 with stratified 5-fold cross-validation.</div>
+      <div class="lh-note">For captions, citations, and footnotes at 18px. Extra leading compensates for reduced size.</div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       MONOSPACE FONT — CODE
+       ================================================================ -->
+  <div class="section-heading">Monospace Font — Code and Technical Values</div>
+  <div class="section-desc">JetBrains Mono (fallback: Fira Code, then system monospace). Used for code blocks, CLI commands, hex values, and precision metric values.</div>
+
+  <div class="mono-demo">
+    <div class="mono-demo-header">
+      <div class="mono-dot" style="background:#f43f5e;"></div>
+      <div class="mono-dot" style="background:#f59e0b;"></div>
+      <div class="mono-dot" style="background:#10b981;"></div>
+      <div class="mono-filename">inference_pipeline.py &nbsp; — monospace scale reference</div>
+    </div>
+    <div class="mono-body">
+      <div class="mono-size-row">
+        <div class="mono-size-label">24px / body</div>
+        <div class="mono-sample" style="font-size:24px;">
+          <span class="kw">model</span>.<span class="fn">predict</span>(<span class="var">X_test</span>) <span class="cm"># F1: 0.942</span>
+        </div>
+      </div>
+      <div class="mono-size-row">
+        <div class="mono-size-label">20px / large</div>
+        <div class="mono-sample" style="font-size:20px;">
+          <span class="kw">selected</span> = <span class="fn">shap_select</span>(<span class="var">features</span>, n=<span class="num">45</span>)
+        </div>
+      </div>
+      <div class="mono-size-row">
+        <div class="mono-size-label">18px / caption</div>
+        <div class="mono-sample" style="font-size:18px;">
+          <span class="cm"># Training throughput: 2.4M rows/sec &nbsp; P95 latency: 47ms</span>
+        </div>
+      </div>
+      <div class="mono-size-row">
+        <div class="mono-size-label">14px / inline</div>
+        <div class="mono-sample" style="font-size:14px;">
+          <span class="kw">XGBClassifier</span>(n_estimators=<span class="num">400</span>, max_depth=<span class="num">6</span>, learning_rate=<span class="num">0.05</span>)
+        </div>
+      </div>
+      <div class="mono-size-row">
+        <div class="mono-size-label">12px / code-ref</div>
+        <div class="mono-sample" style="font-size:12px;color:#64748b;">
+          Use only for reference pages and CSS snippets. Never below 18px on slide body. Code on slides: minimum 18px, recommended 20-24px for readability at projection distance.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       USAGE RULES PER SIZE
+       ================================================================ -->
+  <div class="section-heading">Usage Rules by Size</div>
+  <div class="section-desc">Decision guide for choosing the right size token on each slide element.</div>
+
+  <div class="rules-card">
+    <div class="rules-header">When to use each size token</div>
+    <div class="rules-row">
+      <div class="rules-size">
+        <div class="rs-token">--text-hero</div>
+        <div class="rs-px">72px</div>
+      </div>
+      <div class="rules-detail">
+        <div class="rules-do">Big-number slides (stats, KPIs), opening impact statements, closing callout numbers</div>
+        <div class="rules-dont">More than 2 instances per slide; mixed with body copy on the same slide</div>
+      </div>
+    </div>
+    <div class="rules-row">
+      <div class="rules-size">
+        <div class="rs-token">--text-title</div>
+        <div class="rs-px">44px</div>
+      </div>
+      <div class="rules-detail">
+        <div class="rules-do">Presentation title (title slide), section divider headings, CTA closing statements</div>
+        <div class="rules-dont">Slide assertion titles (too large — use --text-heading instead); multiple lines at this size</div>
+      </div>
+    </div>
+    <div class="rules-row">
+      <div class="rules-size">
+        <div class="rs-token">--text-heading</div>
+        <div class="rs-px">32px</div>
+      </div>
+      <div class="rules-detail">
+        <div class="rules-do">Slide assertion titles (full sentence assertions per slide), section sub-headings, card headlines</div>
+        <div class="rules-dont">Body content (too large for multi-sentence copy); labels on charts (use caption size)</div>
+      </div>
+    </div>
+    <div class="rules-row">
+      <div class="rules-size">
+        <div class="rs-token">--text-body</div>
+        <div class="rs-px">24px</div>
+      </div>
+      <div class="rules-detail">
+        <div class="rules-do">Supporting statements (2 sentences max), sub-title beneath slide assertion, speaker-visible key points</div>
+        <div class="rules-dont">Paragraphs longer than 2 lines (split the slide); chart axis labels; captions; footnotes</div>
+      </div>
+    </div>
+    <div class="rules-row">
+      <div class="rules-size">
+        <div class="rs-token">--text-caption</div>
+        <div class="rs-px">18px</div>
+      </div>
+      <div class="rules-detail">
+        <div class="rules-do">Figure captions, data source citations, chart axis labels, KPI card labels, slide footnotes</div>
+        <div class="rules-dont">Going below 18px on any element on any slide. 18px is the absolute minimum.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section-wrapper -->
+</body>
+</html>

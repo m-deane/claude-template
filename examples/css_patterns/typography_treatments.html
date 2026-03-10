@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typography Treatments — Presentation Design System</title>
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+
+      --page-bg: #f8fafc;
+      --page-border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--page-bg);
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    .page-header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 64px;
+      border-bottom: 4px solid #8b5cf6;
+    }
+    .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+    .page-header p { font-size: 17px; color: #94a3b8; max-width: 680px; }
+    .page-header .meta { margin-top: 20px; display: flex; gap: 16px; }
+    .page-header .meta span { background: rgba(255,255,255,0.08); padding: 4px 12px; border-radius: 4px; font-size: 14px; color: #64748b; }
+
+    .section-header {
+      padding: 48px 64px 24px;
+      border-bottom: 1px solid var(--page-border);
+      margin-bottom: 40px;
+    }
+    .section-header h2 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+    .section-header p { font-size: 15px; color: #64748b; }
+
+    .type-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      padding: 0 64px 64px;
+    }
+
+    .type-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .type-card-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--page-border);
+    }
+    .type-card-header .tc-name { font-size: 18px; font-weight: 700; }
+    .type-card-header .tc-desc { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .use-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .use-tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .type-preview {
+      padding: 40px 48px;
+      border-bottom: 1px solid var(--page-border);
+    }
+    .type-preview.dark {
+      background: #0f172a;
+    }
+    .type-preview.gradient-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #3b82f6 100%);
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.7;
+      padding: 20px 24px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* =========================================================
+       1. HERO STATISTIC
+       ========================================================= */
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero-stat .eyebrow {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3b82f6;
+      margin-bottom: 4px;
+    }
+    .hero-stat .number {
+      font-size: 88px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+      letter-spacing: -4px;
+    }
+    .hero-stat .number.white { color: #fff; }
+    .hero-stat .unit {
+      font-size: 40px;
+      font-weight: 300;
+      color: #3b82f6;
+      letter-spacing: -1px;
+    }
+    .hero-stat .descriptor {
+      font-size: 22px;
+      font-weight: 400;
+      color: #475569;
+      margin-top: 12px;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+    .hero-stat .descriptor.white { color: #94a3b8; }
+
+    /* =========================================================
+       2. PULL QUOTE
+       ========================================================= */
+    .pull-quote-wrap {
+      position: relative;
+      padding: 0 0 0 36px;
+      border-left: 5px solid #3b82f6;
+    }
+    .pull-quote-text {
+      font-size: 28px;
+      font-style: italic;
+      font-weight: 500;
+      color: #0f172a;
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+    .pull-quote-text.white { color: #f8fafc; }
+    .pull-quote-mark {
+      font-size: 96px;
+      line-height: 0.6;
+      color: #dbeafe;
+      font-family: Georgia, serif;
+      position: absolute;
+      top: -8px;
+      left: -20px;
+    }
+    .pull-quote-attribution {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+    }
+    .attribution-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
+      flex-shrink: 0;
+    }
+    .attribution-name { font-weight: 700; color: #0f172a; }
+    .attribution-title { color: #64748b; font-size: 13px; }
+
+    /* =========================================================
+       3. ASSERTION-EVIDENCE TITLE
+       ========================================================= */
+    .ae-title {
+      font-size: 38px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .ae-title .underline-accent {
+      text-decoration: underline;
+      text-decoration-color: #3b82f6;
+      text-underline-offset: 6px;
+    }
+    .ae-subtitle {
+      font-size: 18px;
+      color: #64748b;
+      font-weight: 400;
+    }
+
+    /* =========================================================
+       4. HEADLINE + SUBTITLE COMBINATIONS
+       ========================================================= */
+    .headline-combo {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hl-tag {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3b82f6;
+    }
+    .hl-headline {
+      font-size: 44px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+    .hl-headline.white { color: #fff; }
+    .hl-subtitle {
+      font-size: 22px;
+      font-weight: 400;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .hl-subtitle.light { color: #94a3b8; }
+    .hl-divider {
+      width: 48px;
+      height: 4px;
+      background: #3b82f6;
+      border-radius: 2px;
+      margin: 8px 0;
+    }
+    .hl-presenter {
+      font-size: 16px;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    /* =========================================================
+       5. DATA CALLOUT (number + trend + label)
+       ========================================================= */
+    .data-callout-grid {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .data-callout {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .dc-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .dc-value {
+      font-size: 56px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    .dc-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .dc-delta.up { color: #10b981; }
+    .dc-delta.down { color: #f43f5e; }
+    .dc-delta .arrow { font-size: 12px; }
+    .dc-context { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .dc-divider {
+      width: 1px;
+      background: #e2e8f0;
+      align-self: stretch;
+      margin: 8px 0;
+    }
+
+    /* =========================================================
+       6. METRIC CARD TYPOGRAPHY (KPI)
+       ========================================================= */
+    .metric-card-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px 28px;
+      min-width: 180px;
+      box-shadow: var(--shadow-card);
+    }
+    .metric-card .mc-kpi-name {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .metric-card .mc-value {
+      font-size: 42px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -1.5px;
+      line-height: 1;
+    }
+    .metric-card .mc-delta {
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .metric-card .mc-delta.up { color: #10b981; }
+    .metric-card .mc-delta.down { color: #f43f5e; }
+    .metric-card .mc-period {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .metric-card.highlight {
+      background: #0f172a;
+      border-color: #3b82f6;
+    }
+    .metric-card.highlight .mc-kpi-name { color: #93c5fd; }
+    .metric-card.highlight .mc-value { color: #fff; }
+    .metric-card.highlight .mc-period { color: #64748b; }
+
+    /* =========================================================
+       7. CODE BLOCK
+       ========================================================= */
+    .code-slide-preview {
+      background: #0f172a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .code-slide-header {
+      background: #1e293b;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .code-slide-filename {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #64748b;
+      margin-left: 8px;
+    }
+    .code-slide-body {
+      font-family: var(--font-mono);
+      font-size: 17px;
+      line-height: 1.7;
+      padding: 24px 28px;
+      color: #e2e8f0;
+      overflow-x: auto;
+    }
+    .kw { color: #93c5fd; }     /* keywords */
+    .fn { color: #6ee7b7; }     /* function names */
+    .str { color: #fbbf24; }    /* strings */
+    .cm { color: #475569; }     /* comments */
+    .num { color: #f9a8d4; }    /* numbers */
+    .var { color: #e2e8f0; }    /* variables */
+
+    /* =========================================================
+       8. CAPTION AND CITATION STYLING
+       ========================================================= */
+    .caption-examples {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .fig-caption {
+      font-size: 14px;
+      color: #64748b;
+      font-style: italic;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+    }
+    .fig-caption strong { font-style: normal; font-weight: 700; color: #374151; }
+    .source-citation {
+      font-size: 12px;
+      color: #94a3b8;
+      border-left: 3px solid #e2e8f0;
+      padding-left: 12px;
+    }
+    .footnote {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .footnote sup { font-size: 9px; color: #3b82f6; margin-right: 3px; }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Typography Treatments</h1>
+  <p>Reusable typographic patterns for reveal.js slides. Each treatment is designed to the design token scale and works with all four colour palettes.</p>
+  <div class="meta">
+    <span>8 patterns</span>
+    <span>Min 18px body text</span>
+    <span>WCAG AA contrast throughout</span>
+  </div>
+</header>
+
+<div class="section-header">
+  <h2>Typography Patterns</h2>
+  <p>Live rendered previews with copy-paste CSS. All sizes reference the design token scale.</p>
+</div>
+
+<div class="type-entries">
+
+  <!-- ============================================================
+       1. HERO STATISTIC
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Hero Statistic</div>
+      <div class="tc-desc">72px+ numbers with an eyebrow label and contextual descriptor. The most impactful single-number treatment.</div>
+      <div class="use-tags">
+        <span class="use-tag">Big Number Slide</span>
+        <span class="use-tag">Opening Hook</span>
+        <span class="use-tag">Key Metric</span>
+      </div>
+    </div>
+    <div class="type-preview" style="background:#fff; display:flex; gap:80px; flex-wrap:wrap;">
+      <!-- Light variant -->
+      <div class="hero-stat">
+        <div class="eyebrow">Model F1 Score</div>
+        <div class="number">94<span class="unit">.2%</span></div>
+        <div class="descriptor">Up from 83.4% — the highest accuracy we have shipped to production</div>
+      </div>
+      <!-- Dark variant -->
+      <div class="hero-stat" style="background:#0f172a; padding:32px; border-radius:12px;">
+        <div class="eyebrow">Inference Latency</div>
+        <div class="number white">47<span class="unit" style="color:#06b6d4;">ms</span></div>
+        <div class="descriptor white">P95 — down 32% from the previous architecture</div>
+      </div>
+    </div>
+    <div class="code-block">/* Hero Statistic — light variant */
+.hero-stat .eyebrow {
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: #3b82f6; margin-bottom: 4px;
+}
+
+.hero-stat .number {
+  font-size: 88px; font-weight: 800;
+  color: #0f172a; line-height: 1;
+  letter-spacing: -4px;
+  font-family: var(--font-heading);
+}
+
+/* The unit suffix (%, ms, x) uses lighter weight for visual contrast */
+.hero-stat .unit {
+  font-size: 40px; font-weight: 300;
+  color: #3b82f6; letter-spacing: -1px;
+}
+
+.hero-stat .descriptor {
+  font-size: 22px; font-weight: 400;
+  color: #475569; margin-top: 12px;
+  max-width: 420px; line-height: 1.4;
+}
+
+/* Dark variant — change colours only */
+.hero-stat.dark .number   { color: #ffffff; }
+.hero-stat.dark .descriptor { color: #94a3b8; }</div>
+  </div>
+
+  <!-- ============================================================
+       2. PULL QUOTE
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Pull Quote with Attribution</div>
+      <div class="tc-desc">Italic body text with a left accent bar, decorative opening quote mark, and attributed speaker. For quote slides and testimonials.</div>
+      <div class="use-tags">
+        <span class="use-tag">Quote Slide</span>
+        <span class="use-tag">Testimonial</span>
+        <span class="use-tag">Expert Voice</span>
+      </div>
+    </div>
+    <div class="type-preview" style="background:#fff;">
+      <div class="pull-quote-wrap" style="max-width:680px;">
+        <div class="pull-quote-mark">"</div>
+        <div class="pull-quote-text">
+          The model did not just predict outcomes — it surfaced the reasons behind them. That changed how our risk team makes decisions every day.
+        </div>
+        <div class="pull-quote-attribution">
+          <div class="attribution-avatar"></div>
+          <div>
+            <div class="attribution-name">Dr. Sarah Chen</div>
+            <div class="attribution-title">Principal ML Engineer, Platform Risk — FinCo Ltd</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* Pull Quote */
+.pull-quote-wrap {
+  position: relative;
+  padding: 0 0 0 36px;
+  border-left: 5px solid #3b82f6;
+}
+
+/* Decorative opening quote mark */
+.pull-quote-mark {
+  font-size: 96px; line-height: 0.6;
+  color: #dbeafe;
+  font-family: Georgia, serif;
+  position: absolute; top: -8px; left: -20px;
+}
+
+.pull-quote-text {
+  font-size: 28px; font-style: italic;
+  font-weight: 500; color: #0f172a;
+  line-height: 1.45; margin-bottom: 20px;
+}
+
+/* Attribution row */
+.pull-quote-attribution {
+  display: flex; align-items: center;
+  gap: 12px; font-size: 15px;
+}
+.attribution-name  { font-weight: 700; }
+.attribution-title { color: #64748b; font-size: 13px; }</div>
+  </div>
+
+  <!-- ============================================================
+       3. ASSERTION-EVIDENCE TITLE
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Assertion-Evidence Title Formatting</div>
+      <div class="tc-desc">Full-sentence slide title (the assertion) with an underline accent on the key claim, followed by a subtitle that frames the evidence. Implements Barbara Minto's Pyramid Principle.</div>
+      <div class="use-tags">
+        <span class="use-tag">Content Slides</span>
+        <span class="use-tag">Data Slides</span>
+        <span class="use-tag">All Slide Types</span>
+      </div>
+    </div>
+    <div class="type-preview">
+      <div class="ae-title">
+        XGBoost reduces false-negative rate by <span class="underline-accent">38%</span> versus the baseline model
+      </div>
+      <div class="ae-subtitle">
+        Measured on 12,400 holdout samples — production test set, November 2025
+      </div>
+    </div>
+    <div class="code-block">/* Assertion-Evidence Title */
+.slide-title-assertion {
+  font-size: var(--text-title); /* 44px */
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  max-width: 820px; /* Prevent full-width sprawl */
+}
+
+/* Accent underline on the key claim */
+.slide-title-assertion .key-claim {
+  text-decoration: underline;
+  text-decoration-color: #3b82f6;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
+}
+
+/* Evidence subtitle — smaller, lighter */
+.slide-subtitle-evidence {
+  font-size: var(--text-caption); /* 18px */
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Guidance: Slide titles should be full sentences, not topic labels.
+   BAD:  "Model Accuracy Results"
+   GOOD: "XGBoost achieves 94.2% F1 — 11pp above the baseline" */</div>
+  </div>
+
+  <!-- ============================================================
+       4. HEADLINE + SUBTITLE COMBINATIONS
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Headline and Subtitle Combinations</div>
+      <div class="tc-desc">Three pairings: title slide (dark), content slide (light), and section divider (accent rule). Each uses tag + headline + subtitle hierarchy.</div>
+      <div class="use-tags">
+        <span class="use-tag">Title Slide</span>
+        <span class="use-tag">Section Divider</span>
+        <span class="use-tag">Content Slide Header</span>
+      </div>
+    </div>
+    <div class="type-preview gradient-bg">
+      <div class="headline-combo">
+        <div class="hl-tag" style="color:#93c5fd;">Engineering Leadership — Q1 2026</div>
+        <div class="hl-headline white">Scaling AI from Experiment to Production</div>
+        <div class="hl-divider"></div>
+        <div class="hl-subtitle light">How we cut model deployment time from 14 days to 5 — and what comes next</div>
+        <div class="hl-presenter" style="margin-top:16px;">Dr. James Okafor &nbsp;·&nbsp; VP of Machine Learning</div>
+      </div>
+    </div>
+    <div class="type-preview" style="background:#f8fafc; border-top: 1px solid #e2e8f0;">
+      <div class="headline-combo">
+        <div class="hl-tag">Section 02 — Architecture</div>
+        <div class="hl-headline">Our inference stack serves 50M predictions per day at under 50ms</div>
+        <div class="hl-subtitle">Deployed across 3 cloud regions — zero single-point-of-failure since June 2025</div>
+      </div>
+    </div>
+    <div class="code-block">/* Title slide heading hierarchy */
+.slide-eyebrow {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: #93c5fd; /* or #3b82f6 on light bg */
+}
+
+.slide-headline {
+  font-size: var(--text-title); /* 44px */
+  font-weight: 800;
+  line-height: 1.1; letter-spacing: -1px;
+  color: #fff; /* or #0f172a on light bg */
+}
+
+/* Accent divider rule — draws the eye down */
+.hl-divider {
+  width: 48px; height: 4px;
+  background: #3b82f6; border-radius: 2px;
+  margin: 12px 0;
+}
+
+.slide-subtitle {
+  font-size: var(--text-body); /* 24px */
+  font-weight: 400; line-height: 1.4;
+  color: #94a3b8; /* or #64748b on light bg */
+}
+
+.slide-presenter {
+  font-size: 16px; color: #64748b;
+  margin-top: 20px;
+}</div>
+  </div>
+
+  <!-- ============================================================
+       5. DATA CALLOUT
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Data Callout — Number, Trend Arrow, Context Label</div>
+      <div class="tc-desc">Large metric value with a semantic delta badge (green up / red down) and a concise context line. Use for 2-3 callouts on a split slide.</div>
+      <div class="use-tags">
+        <span class="use-tag">Stat Callout</span>
+        <span class="use-tag">Split Slide KPI</span>
+        <span class="use-tag">Executive Summary</span>
+      </div>
+    </div>
+    <div class="type-preview">
+      <div class="data-callout-grid">
+        <div class="data-callout">
+          <div class="dc-label">F1 Score</div>
+          <div class="dc-value">94.2<span style="font-size:32px;font-weight:300;color:#3b82f6;">%</span></div>
+          <div class="dc-delta up"><span class="arrow">&#9650;</span> +11.4pp vs baseline</div>
+          <div class="dc-context">Holdout test — Nov 2025</div>
+        </div>
+        <div class="dc-divider"></div>
+        <div class="data-callout">
+          <div class="dc-label">Inference Latency</div>
+          <div class="dc-value">47<span style="font-size:32px;font-weight:300;color:#06b6d4;">ms</span></div>
+          <div class="dc-delta up"><span class="arrow">&#9650;</span> -32% vs v1</div>
+          <div class="dc-context">P95 — production traffic</div>
+        </div>
+        <div class="dc-divider"></div>
+        <div class="data-callout">
+          <div class="dc-label">False Negative Rate</div>
+          <div class="dc-value">5.8<span style="font-size:32px;font-weight:300;color:#f43f5e;">%</span></div>
+          <div class="dc-delta down"><span class="arrow">&#9660;</span> -38% improvement</div>
+          <div class="dc-context">Needs further reduction in Class C</div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* Data Callout */
+.dc-label {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: #64748b;
+}
+
+.dc-value {
+  font-size: 56px; font-weight: 800;
+  color: #0f172a; line-height: 1;
+  letter-spacing: -2px;
+  font-family: var(--font-heading);
+}
+
+/* Unit suffix — lighter weight for visual separation */
+.dc-value .unit {
+  font-size: 32px; font-weight: 300;
+  color: #3b82f6; /* or #06b6d4, #f43f5e */
+}
+
+/* Delta badge */
+.dc-delta {
+  display: inline-flex; align-items: center;
+  gap: 4px; font-size: 15px; font-weight: 700;
+}
+.dc-delta.up   { color: #10b981; }
+.dc-delta.down { color: #f43f5e; }
+
+.dc-context { font-size: 13px; color: #94a3b8; }</div>
+  </div>
+
+  <!-- ============================================================
+       6. METRIC CARD TYPOGRAPHY (KPI)
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Metric Card Typography — KPI Name, Value, Delta</div>
+      <div class="tc-desc">Self-contained KPI card component. Stack 3-4 in a row for a dashboard-style summary slide. Dark highlight variant for primary metric.</div>
+      <div class="use-tags">
+        <span class="use-tag">Dashboard Slide</span>
+        <span class="use-tag">KPI Summary</span>
+        <span class="use-tag">2x2 Grid</span>
+      </div>
+    </div>
+    <div class="type-preview">
+      <div class="metric-card-row">
+        <div class="metric-card highlight">
+          <div class="mc-kpi-name">Model Accuracy</div>
+          <div class="mc-value" style="color:#3b82f6;">94.2<span style="font-size:22px;font-weight:300;">%</span></div>
+          <div class="mc-delta up">&#9650; +11.4pp vs baseline</div>
+          <div class="mc-period">Nov 2025 production test</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-kpi-name">Avg Latency</div>
+          <div class="mc-value">47<span style="font-size:22px;font-weight:300;color:#06b6d4;">ms</span></div>
+          <div class="mc-delta up">&#9650; -32% vs v1</div>
+          <div class="mc-period">P95 — production</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-kpi-name">Uptime SLA</div>
+          <div class="mc-value">99.97<span style="font-size:22px;font-weight:300;color:#10b981;">%</span></div>
+          <div class="mc-delta up">&#9650; 0 P1 incidents</div>
+          <div class="mc-period">30-day rolling window</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-kpi-name">Drift Score</div>
+          <div class="mc-value">0.04<span style="font-size:22px;font-weight:300;color:#f59e0b;">PSI</span></div>
+          <div class="mc-delta down">&#9660; Watch: Class C</div>
+          <div class="mc-period">Threshold: PSI &gt; 0.10</div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* KPI Metric Card */
+.metric-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.mc-kpi-name {
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: #64748b; margin-bottom: 8px;
+}
+
+.mc-value {
+  font-size: 42px; font-weight: 800;
+  color: #0f172a; letter-spacing: -1.5px; line-height: 1;
+}
+
+.mc-delta {
+  font-size: 14px; font-weight: 700;
+  margin-top: 6px; display: flex;
+  align-items: center; gap: 4px;
+}
+.mc-delta.up   { color: #10b981; }
+.mc-delta.down { color: #f43f5e; }
+
+.mc-period { font-size: 11px; color: #94a3b8; }
+
+/* Dark highlight card */
+.metric-card.highlight {
+  background: #0f172a;
+  border-color: #3b82f6;
+}
+.metric-card.highlight .mc-kpi-name { color: #93c5fd; }
+.metric-card.highlight .mc-value    { color: #fff; }</div>
+  </div>
+
+  <!-- ============================================================
+       7. CODE BLOCK STYLING
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Code Block Styling</div>
+      <div class="tc-desc">Monospace code with syntax-highlight colour classes. Use sparingly — one code block per slide maximum, kept to 8-10 lines visible.</div>
+      <div class="use-tags">
+        <span class="use-tag">Technical Slide</span>
+        <span class="use-tag">Developer Audience</span>
+        <span class="use-tag">Implementation Detail</span>
+      </div>
+    </div>
+    <div class="type-preview dark">
+      <div class="code-slide-preview">
+        <div class="code-slide-header">
+          <div class="code-dot" style="background:#f43f5e;"></div>
+          <div class="code-dot" style="background:#f59e0b;"></div>
+          <div class="code-dot" style="background:#10b981;"></div>
+          <div class="code-slide-filename">train_pipeline.py</div>
+        </div>
+        <div class="code-slide-body"><span class="cm"># Feature selection via SHAP importance — top 45 of 213 features</span>
+<span class="kw">import</span> <span class="var">shap</span>
+
+<span class="fn">explainer</span> = shap.TreeExplainer(<span class="var">xgb_model</span>)
+<span class="var">shap_values</span> = <span class="fn">explainer</span>.<span class="fn">shap_values</span>(<span class="var">X_train</span>)
+
+<span class="var">selected_features</span> = <span class="fn">select_top_features</span>(
+    <span class="var">shap_values</span>,
+    n=<span class="num">45</span>,
+    threshold=<span class="num">0.01</span>   <span class="cm"># Min mean |SHAP| to qualify</span>
+)
+
+<span class="cm"># Retrain on selected feature set</span>
+<span class="var">model_v2</span> = <span class="var">XGBClassifier</span>(<span class="var">n_estimators</span>=<span class="num">400</span>, <span class="var">max_depth</span>=<span class="num">6</span>)
+<span class="var">model_v2</span>.<span class="fn">fit</span>(<span class="var">X_train</span>[<span class="var">selected_features</span>], <span class="var">y_train</span>)</div>
+      </div>
+    </div>
+    <div class="code-block">/* Code block container */
+.slide-code-block {
+  background: #0f172a;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 18px;   /* Never below 18px in presentations */
+  line-height: 1.7;
+}
+
+/* Mac-style window chrome */
+.code-header {
+  background: #1e293b;
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.code-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Syntax highlight classes */
+.kw  { color: #93c5fd; }   /* keywords: import, def, class */
+.fn  { color: #6ee7b7; }   /* function names */
+.str { color: #fbbf24; }   /* string literals */
+.num { color: #f9a8d4; }   /* numeric literals */
+.cm  { color: #475569; }   /* comments — muted */
+.var { color: #e2e8f0; }   /* variables / default */
+
+/* Reveal.js: use highlight.js plugin for automatic syntax highlighting */
+&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/...highlight.min.css"&gt;</div>
+  </div>
+
+  <!-- ============================================================
+       8. CAPTION AND SOURCE CITATION STYLING
+       ============================================================ -->
+  <div class="type-card">
+    <div class="type-card-header">
+      <div class="tc-name">Caption and Source Citation Styling</div>
+      <div class="tc-desc">Figure captions, data source citations, and footnotes. Tufte-inspired: all necessary, never decorative. Always at minimum 12px.</div>
+      <div class="use-tags">
+        <span class="use-tag">Chart Attribution</span>
+        <span class="use-tag">Data Source</span>
+        <span class="use-tag">Slide Footer</span>
+      </div>
+    </div>
+    <div class="type-preview">
+      <div class="caption-examples">
+        <!-- Figure caption -->
+        <div>
+          <div style="height:80px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8;margin-bottom:8px;">[ Figure: XGBoost vs Baseline F1 Scores — Bar Chart ]</div>
+          <div class="fig-caption">
+            <strong>Figure 1.</strong> F1 scores across four model candidates on the November 2025 holdout set (n=12,400). XGBoost with SHAP-selected features achieves the highest accuracy at 94.2%.
+          </div>
+        </div>
+
+        <!-- Source citation -->
+        <div class="source-citation">
+          Source: Internal ML platform evaluation — Platform Risk Team, Nov 2025. Metrics computed using scikit-learn 1.4.0 with stratified 5-fold cross-validation.
+        </div>
+
+        <!-- Footnotes -->
+        <div class="footnote">
+          <sup>1</sup> F1 score calculated as the harmonic mean of precision and recall at the 0.5 classification threshold.<br>
+          <sup>2</sup> Baseline model: logistic regression trained on all 213 raw features, no feature selection applied.
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* Figure caption — appears immediately below a chart */
+.fig-caption {
+  font-size: 14px;          /* Minimum readable at presentation scale */
+  color: #64748b;
+  font-style: italic;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.fig-caption strong { font-style: normal; font-weight: 700; color: #374151; }
+
+/* Source citation — data provenance */
+.source-citation {
+  font-size: 12px;
+  color: #94a3b8;
+  border-left: 3px solid #e2e8f0;
+  padding-left: 12px;
+  line-height: 1.5;
+}
+
+/* Footnotes — bottom of slide */
+.slide-footnote {
+  position: absolute;
+  bottom: var(--slide-padding);
+  left: var(--slide-padding);
+  right: var(--slide-padding);
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+}
+
+/* Rule: if a citation line pushes body text below 24px,
+   remove the citation and move it to speaker notes instead. */</div>
+  </div>
+
+</div><!-- /type-entries -->
+
+</body>
+</html>

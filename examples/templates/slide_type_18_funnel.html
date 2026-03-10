@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Funnel/Conversion — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-darkgray: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Vertical Funnel — Corporate Palette ===== */
+    .slide-funnel-vertical {
+      background: var(--corp-white) !important;
+      padding: 40px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-funnel-vertical h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 24px 0;
+    }
+
+    .slide-funnel-vertical .funnel-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      max-width: 700px;
+    }
+
+    .slide-funnel-vertical .funnel-stage {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      position: relative;
+    }
+
+    .slide-funnel-vertical .funnel-bar-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .slide-funnel-vertical .funnel-bar {
+      height: 52px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+      transition: width 0.3s ease;
+    }
+
+    .slide-funnel-vertical .funnel-stage:nth-child(1) .funnel-bar {
+      width: 100%;
+      background: linear-gradient(135deg, var(--corp-blue), #60a5fa);
+    }
+    .slide-funnel-vertical .funnel-stage:nth-child(2) .funnel-bar {
+      width: 82%;
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+    }
+    .slide-funnel-vertical .funnel-stage:nth-child(3) .funnel-bar {
+      width: 61%;
+      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    }
+    .slide-funnel-vertical .funnel-stage:nth-child(4) .funnel-bar {
+      width: 48%;
+      background: linear-gradient(135deg, #a855f7, #c084fc);
+    }
+    .slide-funnel-vertical .funnel-stage:nth-child(5) .funnel-bar {
+      width: 32%;
+      background: linear-gradient(135deg, var(--corp-emerald), #34d399);
+    }
+
+    .slide-funnel-vertical .funnel-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--corp-white);
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .slide-funnel-vertical .funnel-count {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .slide-funnel-vertical .funnel-dropoff {
+      position: absolute;
+      right: -110px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .slide-funnel-vertical .dropoff-value {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--corp-rose);
+      margin: 0;
+    }
+
+    .slide-funnel-vertical .funnel-connector {
+      display: flex;
+      justify-content: center;
+      height: 8px;
+      width: 100%;
+    }
+
+    .slide-funnel-vertical .connector-line {
+      width: 2px;
+      height: 100%;
+      background: #cbd5e1;
+    }
+
+    /* ===== Variant B: Horizontal Pipeline Funnel — Sales Palette ===== */
+    .slide-funnel-horizontal {
+      background: var(--sales-darkgray) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-funnel-horizontal h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--sales-white);
+      margin: 0 0 8px 0;
+    }
+
+    .slide-funnel-horizontal .funnel-h-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: #9ca3af;
+      margin: 0 0 32px 0;
+    }
+
+    .slide-funnel-horizontal .funnel-h-container {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .slide-funnel-horizontal .funnel-h-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .slide-funnel-horizontal .funnel-h-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      width: 140px;
+      position: relative;
+    }
+
+    .slide-funnel-horizontal .funnel-h-stage:nth-child(1) .funnel-h-bar {
+      height: 180px;
+      background: linear-gradient(180deg, var(--sales-blue), #3b82f6);
+    }
+    .slide-funnel-horizontal .funnel-h-stage:nth-child(3) .funnel-h-bar {
+      height: 148px;
+      background: linear-gradient(180deg, #4f46e5, #6366f1);
+    }
+    .slide-funnel-horizontal .funnel-h-stage:nth-child(5) .funnel-h-bar {
+      height: 112px;
+      background: linear-gradient(180deg, #7c3aed, #8b5cf6);
+    }
+    .slide-funnel-horizontal .funnel-h-stage:nth-child(7) .funnel-h-bar {
+      height: 80px;
+      background: linear-gradient(180deg, #9333ea, #a855f7);
+    }
+    .slide-funnel-horizontal .funnel-h-stage:nth-child(9) .funnel-h-bar {
+      height: 52px;
+      background: linear-gradient(180deg, var(--sales-orange), #fb923c);
+    }
+
+    .slide-funnel-horizontal .funnel-h-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 800;
+      color: var(--sales-white);
+      margin: 0;
+    }
+
+    .slide-funnel-horizontal .funnel-h-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--sales-white);
+      margin: 10px 0 0 0;
+      text-align: center;
+      max-width: 130px;
+      line-height: 1.3;
+    }
+
+    .slide-funnel-horizontal .funnel-h-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+      margin-bottom: 24px;
+    }
+
+    .slide-funnel-horizontal .h-arrow-line {
+      width: 20px;
+      height: 2px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .slide-funnel-horizontal .h-arrow-head {
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid rgba(255,255,255,0.2);
+    }
+
+    .slide-funnel-horizontal .h-arrow-pct {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sales-orange);
+      margin: 0;
+    }
+
+    /* ===== Variant C: Side-by-Side Comparison Funnels ===== */
+    .slide-funnel-comparison {
+      background: var(--corp-light) !important;
+      padding: 40px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-funnel-comparison h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 24px 0;
+    }
+
+    .slide-funnel-comparison .funnels-side-by-side {
+      display: flex;
+      gap: 40px;
+    }
+
+    .slide-funnel-comparison .funnel-column {
+      flex: 1;
+      background: var(--corp-white);
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .slide-funnel-comparison .funnel-col-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--corp-light);
+    }
+
+    .slide-funnel-comparison .funnel-col-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .slide-funnel-comparison .funnel-column.old .funnel-col-badge {
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--corp-rose);
+    }
+
+    .slide-funnel-comparison .funnel-column.new .funnel-col-badge {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--corp-emerald);
+    }
+
+    .slide-funnel-comparison .funnel-col-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-funnel-comparison .comp-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slide-funnel-comparison .comp-stage {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-funnel-comparison .comp-bar-bg {
+      flex: 1;
+      height: 36px;
+      background: var(--corp-light);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide-funnel-comparison .comp-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding-left: 12px;
+    }
+
+    .slide-funnel-comparison .funnel-column.old .comp-bar-fill {
+      background: linear-gradient(to right, #fca5a5, #fecaca);
+    }
+
+    .slide-funnel-comparison .funnel-column.new .comp-bar-fill {
+      background: linear-gradient(to right, #6ee7b7, #a7f3d0);
+    }
+
+    .slide-funnel-comparison .comp-bar-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--corp-navy);
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .slide-funnel-comparison .comp-value {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      min-width: 56px;
+      text-align: right;
+      margin: 0;
+    }
+
+    .slide-funnel-comparison .comp-rate {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--tech-slate);
+      min-width: 40px;
+      text-align: right;
+      margin: 0;
+    }
+
+    .slide-funnel-comparison .improvement-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .slide-funnel-comparison .improvement-item {
+      text-align: center;
+    }
+
+    .slide-funnel-comparison .improvement-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 800;
+      color: var(--corp-emerald);
+      margin: 0;
+    }
+
+    .slide-funnel-comparison .improvement-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--tech-slate);
+      margin: 2px 0 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Vertical funnel with drop-off percentages — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .funnel-label for stage names, .funnel-count for volume at each stage, .dropoff-value for drop-off percentages, .funnel-bar width percentages and colors for funnel shape -->
+      <section class="slide-funnel-vertical">
+        <h2>Data pipeline retains only 32% of raw records as valid predictions</h2>
+        <div class="funnel-container">
+          <div class="funnel-stage">
+            <div class="funnel-bar-wrapper">
+              <div class="funnel-bar">
+                <span class="funnel-label">Raw Data</span>
+                <span class="funnel-count">10.0M rows</span>
+              </div>
+            </div>
+            <div class="funnel-dropoff">
+              <span class="dropoff-value">-18%</span>
+            </div>
+          </div>
+          <div class="funnel-connector"><div class="connector-line"></div></div>
+          <div class="funnel-stage">
+            <div class="funnel-bar-wrapper">
+              <div class="funnel-bar">
+                <span class="funnel-label">Cleaned</span>
+                <span class="funnel-count">8.2M rows</span>
+              </div>
+            </div>
+            <div class="funnel-dropoff">
+              <span class="dropoff-value">-26%</span>
+            </div>
+          </div>
+          <div class="funnel-connector"><div class="connector-line"></div></div>
+          <div class="funnel-stage">
+            <div class="funnel-bar-wrapper">
+              <div class="funnel-bar">
+                <span class="funnel-label">Features</span>
+                <span class="funnel-count">6.1M rows</span>
+              </div>
+            </div>
+            <div class="funnel-dropoff">
+              <span class="dropoff-value">-21%</span>
+            </div>
+          </div>
+          <div class="funnel-connector"><div class="connector-line"></div></div>
+          <div class="funnel-stage">
+            <div class="funnel-bar-wrapper">
+              <div class="funnel-bar">
+                <span class="funnel-label">Training Set</span>
+                <span class="funnel-count">4.8M rows</span>
+              </div>
+            </div>
+            <div class="funnel-dropoff">
+              <span class="dropoff-value">-33%</span>
+            </div>
+          </div>
+          <div class="funnel-connector"><div class="connector-line"></div></div>
+          <div class="funnel-stage">
+            <div class="funnel-bar-wrapper">
+              <div class="funnel-bar">
+                <span class="funnel-label">Valid Predictions</span>
+                <span class="funnel-count">3.2M rows</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This funnel visualizes how data flows through our prediction pipeline, with attrition at each stage. We start with 10 million raw rows. After data cleaning — removing duplicates, null values, and invalid records — we're down to 8.2 million, an 18% drop. Feature engineering further reduces this to 6.1 million because some records lack the required fields for feature computation. The training set is 4.8 million after applying our temporal train-test split and removing data leakage candidates. Finally, only 3.2 million rows produce valid predictions — those that pass our confidence threshold of 0.7. The biggest drop-off is at the prediction confidence gate at 33%. We should investigate whether lowering the threshold to 0.6 would meaningfully increase coverage without degrading precision.
+        </aside>
+      </section>
+
+      <!-- Variant B: Horizontal pipeline funnel — Sales palette -->
+      <!-- CUSTOMIZATION: Change .funnel-h-value for counts, .funnel-h-label for stage names, .funnel-h-bar height for visual scaling, .h-arrow-pct for conversion rates -->
+      <section class="slide-funnel-horizontal">
+        <h2>ML model serving funnel converts 23% of API requests into actioned results</h2>
+        <p class="funnel-h-subtitle">Production serving pipeline — daily average, February 2026</p>
+        <div class="funnel-h-container">
+          <div class="funnel-h-stage">
+            <div class="funnel-h-bar">
+              <span class="funnel-h-value">500K</span>
+            </div>
+            <p class="funnel-h-label">API Requests</p>
+          </div>
+          <div class="funnel-h-arrow">
+            <p class="h-arrow-pct">84%</p>
+            <div style="display:flex;align-items:center">
+              <div class="h-arrow-line"></div>
+              <div class="h-arrow-head"></div>
+            </div>
+          </div>
+          <div class="funnel-h-stage">
+            <div class="funnel-h-bar">
+              <span class="funnel-h-value">420K</span>
+            </div>
+            <p class="funnel-h-label">Valid Inputs</p>
+          </div>
+          <div class="funnel-h-arrow">
+            <p class="h-arrow-pct">76%</p>
+            <div style="display:flex;align-items:center">
+              <div class="h-arrow-line"></div>
+              <div class="h-arrow-head"></div>
+            </div>
+          </div>
+          <div class="funnel-h-stage">
+            <div class="funnel-h-bar">
+              <span class="funnel-h-value">320K</span>
+            </div>
+            <p class="funnel-h-label">Model Inference</p>
+          </div>
+          <div class="funnel-h-arrow">
+            <p class="h-arrow-pct">56%</p>
+            <div style="display:flex;align-items:center">
+              <div class="h-arrow-line"></div>
+              <div class="h-arrow-head"></div>
+            </div>
+          </div>
+          <div class="funnel-h-stage">
+            <div class="funnel-h-bar">
+              <span class="funnel-h-value">180K</span>
+            </div>
+            <p class="funnel-h-label">High-Confidence</p>
+          </div>
+          <div class="funnel-h-arrow">
+            <p class="h-arrow-pct">64%</p>
+            <div style="display:flex;align-items:center">
+              <div class="h-arrow-line"></div>
+              <div class="h-arrow-head"></div>
+            </div>
+          </div>
+          <div class="funnel-h-stage">
+            <div class="funnel-h-bar">
+              <span class="funnel-h-value">115K</span>
+            </div>
+            <p class="funnel-h-label">Actioned</p>
+          </div>
+        </div>
+        <aside class="notes">
+          This horizontal funnel tracks how requests flow through our model serving pipeline. We receive 500,000 daily API requests. 84% pass input validation, dropping to 420,000 valid inputs. Of those, 320,000 successfully complete model inference — the 24% drop comes from timeouts and feature store cache misses. The biggest bottleneck is the confidence gate: only 56% of inferences produce high-confidence results above our 0.75 threshold, yielding 180,000 predictions. Finally, 64% of those are actioned by downstream systems, giving us 115,000 end-to-end completions or a 23% overall conversion rate. The model inference to high-confidence drop is our biggest opportunity — improving model accuracy at the decision boundary could recover tens of thousands of daily predictions.
+        </aside>
+      </section>
+
+      <!-- Variant C: Side-by-side comparison funnels — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .funnel-col-title for pipeline names, .comp-bar-label for stage names, .comp-value for counts, .comp-bar-fill width for relative sizing, .improvement-value and .improvement-label for summary metrics -->
+      <section class="slide-funnel-comparison">
+        <h2>New pipeline retains 2.4x more data through every processing stage</h2>
+        <div class="funnels-side-by-side">
+          <div class="funnel-column old">
+            <div class="funnel-col-header">
+              <span class="funnel-col-badge">Legacy</span>
+              <p class="funnel-col-title">Batch Pipeline v1</p>
+            </div>
+            <div class="comp-stages">
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 100%">
+                    <span class="comp-bar-label">Ingested</span>
+                  </div>
+                </div>
+                <p class="comp-value">5.0M</p>
+                <p class="comp-rate">100%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 60%">
+                    <span class="comp-bar-label">Validated</span>
+                  </div>
+                </div>
+                <p class="comp-value">3.0M</p>
+                <p class="comp-rate">60%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 36%">
+                    <span class="comp-bar-label">Featured</span>
+                  </div>
+                </div>
+                <p class="comp-value">1.8M</p>
+                <p class="comp-rate">36%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 22%">
+                    <span class="comp-bar-label">Scored</span>
+                  </div>
+                </div>
+                <p class="comp-value">1.1M</p>
+                <p class="comp-rate">22%</p>
+              </div>
+            </div>
+          </div>
+          <div class="funnel-column new">
+            <div class="funnel-col-header">
+              <span class="funnel-col-badge">Current</span>
+              <p class="funnel-col-title">Streaming Pipeline v2</p>
+            </div>
+            <div class="comp-stages">
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 100%">
+                    <span class="comp-bar-label">Ingested</span>
+                  </div>
+                </div>
+                <p class="comp-value">5.0M</p>
+                <p class="comp-rate">100%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 88%">
+                    <span class="comp-bar-label">Validated</span>
+                  </div>
+                </div>
+                <p class="comp-value">4.4M</p>
+                <p class="comp-rate">88%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 72%">
+                    <span class="comp-bar-label">Featured</span>
+                  </div>
+                </div>
+                <p class="comp-value">3.6M</p>
+                <p class="comp-rate">72%</p>
+              </div>
+              <div class="comp-stage">
+                <div class="comp-bar-bg">
+                  <div class="comp-bar-fill" style="width: 52%">
+                    <span class="comp-bar-label">Scored</span>
+                  </div>
+                </div>
+                <p class="comp-value">2.6M</p>
+                <p class="comp-rate">52%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="improvement-row">
+          <div class="improvement-item">
+            <p class="improvement-value">+2.4x</p>
+            <p class="improvement-label">More scored records</p>
+          </div>
+          <div class="improvement-item">
+            <p class="improvement-value">+30pts</p>
+            <p class="improvement-label">End-to-end retention</p>
+          </div>
+          <div class="improvement-item">
+            <p class="improvement-value">+47%</p>
+            <p class="improvement-label">Validation pass rate</p>
+          </div>
+        </div>
+        <aside class="notes">
+          This side-by-side funnel comparison tells the story of our pipeline migration. On the left, the legacy batch pipeline v1 started with 5 million records but retained only 22% through to scoring — 1.1 million records. The biggest loss was at validation where 40% of data was dropped due to rigid schema checks. On the right, the new streaming pipeline v2 starts from the same 5 million but retains 52% through to scoring — 2.6 million records. The validation stage now passes 88% of data thanks to flexible schema evolution and better null handling. Feature engineering retention improved from 36% to 72% because we added fallback feature computation for incomplete records. Overall, we get 2.4 times more scored records, a 30 percentage point improvement in end-to-end retention, and a 47% improvement in validation pass rate. This directly translates to better model coverage and more revenue.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

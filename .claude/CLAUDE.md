@@ -1,30 +1,53 @@
-# Behavioral Directives
+# Behavioural Directives
 
-## Implementation Philosophy
-- Direct implementation only - complete, working code on first attempt
-- No partial implementations, mocks, stubs, TODOs, or placeholder functions
-- Use tRPC + React Query for all server state management
-- All tRPC errors use `TRPCError` from `@trpc/server`
+## Presentation Production Rules
 
-## Analysis Framework
-When encountering complex requirements:
-1. **Technical feasibility**: Can this be done with existing tRPC/Prisma/Next.js patterns?
-2. **Edge cases**: Empty data, invalid inputs, unauthorized access?
-3. **Performance**: Proper includes? N+1 query risks? Parallelize with Promise.all?
-4. **Integration**: Does this affect existing routers or components?
+- Direct production output only — complete, working deliverables on first attempt
+- No stub slides — never produce a slide with only a title and empty body
+- Never write "See speaker notes for full content" as slide body text
+- Every slide must have speaker notes (full sentences, not bullet points)
+- Every pptxgenjs script must run without errors on first attempt
 
-## Prohibited Patterns
-- Queries without user scoping (`userId: ctx.session.user.id`)
-- Direct database access outside tRPC routers
-- Using `any` type when proper types exist in `src/types/`
-- Components missing loading/error states
-- Mutations missing cache invalidation (`useUtils` + `invalidate`)
-- `console.log` left in production code
-- Social validation ("Great question!"), hedging language ("might", "could potentially")
+## Content Standards
+
+- Max 40 words visible on any slide body
+- One key assertion per slide — not a list of facts
+- Narrative arc must be traceable: hook → 3 MECE pillars → specific CTA
+- Speaker notes: 130 words per minute model — verify timing before finalising
+- Demo slides: the big number (time saved, ROI, improvement) must be the visual centrepiece, not a supporting element
+
+## pptxgenjs Technical Rules
+
+Reference: see root `CLAUDE.md` for the complete list.
+
+Quick reference — check before writing any code:
+
+- `.cjs` extension ✓
+- No `#` on hex colors ✓
+- No `shadow` ✓
+- No `bullet: true` ✓
+- Fresh option objects per call ✓
+- `pres.ShapeType.rect` ✓
+- `LAYOUT_16x9` ✓
 
 ## Quality Gates
-- `npm run lint` passes with 0 errors
-- `npm run build` succeeds (38/38 pages)
-- `npm test` passes (320 tests)
-- All tRPC procedures are user-scoped
-- No TypeScript errors
+
+Before delivering any output:
+
+- pptxgenjs script runs: `node generate_pptx.cjs` exits 0
+- HTML opens in Chrome without console errors; `S` key opens speaker notes
+- Slide count within ±2 of duration target (8 slides per 10 min)
+- 100% of slides have speaker notes
+- Narrative arc reviewable in slide titles alone
+
+## Prohibited Patterns
+
+- `console.log` left in production scripts
+- Slides with >50 words of body text
+- Grids with more than 4 cards
+- Cards with fewer than 30 words of body content
+- `bullet: true` in any pptxgenjs call
+- `shadow` in any pptxgenjs call
+- `#` prefix on any hex color value
+- Reused option objects across `addShape`/`addText` calls
+- Social validation ("Great question!"), hedging language ("might", "could potentially")

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Data/Chart — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Creative palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: CSS horizontal bar chart (Corporate) ===== */
+    .slide-chart-bar {
+      background: var(--corp-white) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      height: 100%;
+    }
+
+    .slide-chart-bar h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      line-height: 1.25;
+      margin: 0 0 8px 0;
+    }
+
+    .slide-chart-bar .chart-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 32px 0;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .bar-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-charcoal);
+      width: 160px;
+      text-align: right;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 36px;
+      background: var(--corp-light);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 12px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-fill .bar-value {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--corp-white);
+    }
+
+    .bar-fill.primary { background: var(--corp-blue); }
+    .bar-fill.highlight { background: var(--corp-emerald); }
+    .bar-fill.secondary { background: var(--corp-navy); }
+    .bar-fill.muted { background: var(--tech-slate); }
+
+    .bar-annotation {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--corp-emerald);
+      font-weight: 600;
+      width: 60px;
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    .chart-source {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+      margin-top: 24px;
+      opacity: 0.7;
+    }
+
+    /* ===== Variant B: CSS donut chart (Technical) ===== */
+    .slide-chart-donut {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100%;
+    }
+
+    .slide-chart-donut h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-white);
+      line-height: 1.25;
+      margin: 0 0 8px 0;
+    }
+
+    .slide-chart-donut .chart-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 32px 0;
+    }
+
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      flex: 1;
+    }
+
+    .donut-wrapper {
+      position: relative;
+      width: 280px;
+      height: 280px;
+    }
+
+    .donut-chart {
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      /* CUSTOMIZATION: Adjust percentages in conic-gradient to change segment sizes */
+      background: conic-gradient(
+        var(--tech-cyan) 0deg 126deg,
+        var(--creative-violet) 126deg 216deg,
+        var(--creative-gold) 216deg 280deg,
+        var(--corp-rose) 280deg 324deg,
+        var(--tech-slate) 324deg 360deg
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-hole {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: var(--tech-nearblack);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-center-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 800;
+      color: var(--corp-white);
+      line-height: 1;
+    }
+
+    .donut-center-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+      margin-top: 4px;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .legend-dot.cyan { background: var(--tech-cyan); }
+    .legend-dot.violet { background: var(--creative-violet); }
+    .legend-dot.gold { background: var(--creative-gold); }
+    .legend-dot.rose { background: var(--corp-rose); }
+    .legend-dot.slate { background: var(--tech-slate); }
+
+    .legend-text {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .legend-text .legend-pct {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--corp-white);
+      margin-left: 8px;
+    }
+
+    /* ===== Variant C: Multiple metric bars with comparison (Sales) ===== */
+    .slide-chart-compare {
+      background: var(--corp-white) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100%;
+    }
+
+    .slide-chart-compare h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--sales-dark);
+      line-height: 1.25;
+      margin: 0 0 8px 0;
+    }
+
+    .slide-chart-compare .chart-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 16px 0;
+    }
+
+    .compare-legend {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .compare-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+    }
+
+    .compare-legend-item .legend-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+
+    .compare-legend-item .legend-swatch.before { background: var(--tech-slate); opacity: 0.5; }
+    .compare-legend-item .legend-swatch.after { background: var(--sales-blue); }
+
+    .compare-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .compare-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .compare-group .compare-metric-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--sales-dark);
+      margin: 0;
+    }
+
+    .compare-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .compare-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .compare-bar-track {
+      flex: 1;
+      height: 24px;
+      background: var(--corp-light);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .compare-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+    }
+
+    .compare-bar-fill.before {
+      background: var(--tech-slate);
+      opacity: 0.4;
+    }
+
+    .compare-bar-fill.after {
+      background: var(--sales-blue);
+    }
+
+    .compare-bar-fill.after.improved {
+      background: var(--corp-emerald);
+    }
+
+    .compare-bar-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--corp-white);
+    }
+
+    .compare-delta {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--corp-emerald);
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .compare-delta.negative {
+      color: var(--corp-rose);
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: CSS horizontal bar chart with assertion title (Corporate) -->
+      <!-- CUSTOMIZATION: Change h2 for assertion title, bar-label for category names, bar-fill width for values, bar-annotation for delta -->
+      <section class="slide-chart-bar">
+        <h2>Random Forest achieved the highest F1 score across all five evaluation datasets</h2>
+        <p class="chart-subtitle">F1 Score comparison — Customer churn prediction benchmark (n=45,000)</p>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">Random Forest</span>
+            <div class="bar-track">
+              <div class="bar-fill highlight" style="width: 89%;">
+                <span class="bar-value">0.891</span>
+              </div>
+            </div>
+            <span class="bar-annotation">Best</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">XGBoost</span>
+            <div class="bar-track">
+              <div class="bar-fill primary" style="width: 87%;">
+                <span class="bar-value">0.873</span>
+              </div>
+            </div>
+            <span class="bar-annotation"></span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">LightGBM</span>
+            <div class="bar-track">
+              <div class="bar-fill primary" style="width: 85%;">
+                <span class="bar-value">0.854</span>
+              </div>
+            </div>
+            <span class="bar-annotation"></span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Logistic Reg.</span>
+            <div class="bar-track">
+              <div class="bar-fill secondary" style="width: 76%;">
+                <span class="bar-value">0.762</span>
+              </div>
+            </div>
+            <span class="bar-annotation"></span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">SVM (RBF)</span>
+            <div class="bar-track">
+              <div class="bar-fill muted" style="width: 71%;">
+                <span class="bar-value">0.714</span>
+              </div>
+            </div>
+            <span class="bar-annotation"></span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Naive Bayes</span>
+            <div class="bar-track">
+              <div class="bar-fill muted" style="width: 58%;">
+                <span class="bar-value">0.583</span>
+              </div>
+            </div>
+            <span class="bar-annotation"></span>
+          </div>
+        </div>
+        <p class="chart-source">Source: Internal benchmark, 5-fold stratified cross-validation, March 2026</p>
+        <aside class="notes">
+          The bar chart makes the ranking clear at a glance. Random Forest leads with an F1 of 0.891, followed closely by XGBoost and LightGBM. Notice the significant drop-off after the tree-based ensemble methods — logistic regression and SVM both fall below 0.77. This reinforces our decision to focus on ensemble methods for this problem. The Naive Bayes baseline at 0.583 shows how much signal the tree-based models are capturing from feature interactions.
+        </aside>
+      </section>
+
+      <!-- Variant B: CSS donut chart with conic-gradient (Technical) -->
+      <!-- CUSTOMIZATION: Change donut conic-gradient angles, legend items, center value, h2 assertion -->
+      <section class="slide-chart-donut">
+        <h2>Model inference time is dominated by feature preprocessing, not prediction</h2>
+        <p class="chart-subtitle">Latency breakdown per prediction request — Production fraud detection pipeline</p>
+        <div class="donut-layout">
+          <div class="donut-wrapper">
+            <div class="donut-chart">
+              <div class="donut-hole">
+                <span class="donut-center-value">47ms</span>
+                <span class="donut-center-label">Total p95</span>
+              </div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot cyan"></div>
+              <span class="legend-text">Feature extraction<span class="legend-pct">35%</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot violet"></div>
+              <span class="legend-text">Data validation<span class="legend-pct">25%</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot gold"></div>
+              <span class="legend-text">Model inference<span class="legend-pct">18%</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot rose"></div>
+              <span class="legend-text">Post-processing<span class="legend-pct">12%</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot slate"></div>
+              <span class="legend-text">Network / serialization<span class="legend-pct">10%</span></span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This breakdown surprised our team. We spent weeks optimizing the model itself — trying quantization, ONNX runtime, batch inference — only to realize that model inference is just 18% of total latency. The real bottleneck is feature extraction at 35%, where we're computing rolling aggregates over the last 30 days of transaction history. That's where we're focusing our optimization efforts now. Caching frequently accessed features cut this segment by 40% in our latest tests.
+        </aside>
+      </section>
+
+      <!-- Variant C: Multiple metric bars with comparison annotations (Sales) -->
+      <!-- CUSTOMIZATION: Change h2 assertion, compare-metric-label, bar widths, bar values, and delta annotations -->
+      <section class="slide-chart-compare">
+        <h2>ML-powered recommendations increased every key engagement metric within 90 days</h2>
+        <p class="chart-subtitle">Before vs. after deploying collaborative filtering model — E-commerce platform</p>
+        <div class="compare-legend">
+          <div class="compare-legend-item">
+            <div class="legend-swatch before"></div>
+            <span>Before ML (Q3 2025)</span>
+          </div>
+          <div class="compare-legend-item">
+            <div class="legend-swatch after"></div>
+            <span>After ML (Q4 2025)</span>
+          </div>
+        </div>
+        <div class="compare-chart">
+          <div class="compare-group">
+            <p class="compare-metric-label">Click-through rate</p>
+            <div class="compare-bars">
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill before" style="width: 22%;">
+                    <span class="compare-bar-value">2.2%</span>
+                  </div>
+                </div>
+                <span class="compare-delta"></span>
+              </div>
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill after improved" style="width: 58%;">
+                    <span class="compare-bar-value">5.8%</span>
+                  </div>
+                </div>
+                <span class="compare-delta">+164%</span>
+              </div>
+            </div>
+          </div>
+          <div class="compare-group">
+            <p class="compare-metric-label">Average order value</p>
+            <div class="compare-bars">
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill before" style="width: 48%;">
+                    <span class="compare-bar-value">$48</span>
+                  </div>
+                </div>
+                <span class="compare-delta"></span>
+              </div>
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill after improved" style="width: 63%;">
+                    <span class="compare-bar-value">$63</span>
+                  </div>
+                </div>
+                <span class="compare-delta">+31%</span>
+              </div>
+            </div>
+          </div>
+          <div class="compare-group">
+            <p class="compare-metric-label">Items per session</p>
+            <div class="compare-bars">
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill before" style="width: 37%;">
+                    <span class="compare-bar-value">3.7</span>
+                  </div>
+                </div>
+                <span class="compare-delta"></span>
+              </div>
+              <div class="compare-bar-row">
+                <div class="compare-bar-track">
+                  <div class="compare-bar-fill after improved" style="width: 52%;">
+                    <span class="compare-bar-value">5.2</span>
+                  </div>
+                </div>
+                <span class="compare-delta">+41%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          The before-and-after comparison is compelling. Click-through rate saw the largest jump at 164% — going from 2.2% to 5.8%. This makes sense: the collaborative filtering model surfaces products that match not just what a user has browsed, but what similar users have purchased. Average order value climbed 31% to 63 dollars, driven by better cross-sell recommendations. And items per session increased 41%, suggesting users are exploring more of the catalog. Collectively, this translated to a 2.1 million dollar quarterly revenue lift.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

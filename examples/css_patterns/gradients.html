@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Gradient Patterns — Presentation Design System</title>
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+
+      /* Page chrome */
+      --page-bg: #f8fafc;
+      --page-text: #0f172a;
+      --page-border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --tag-bg: #eff6ff;
+      --tag-text: #1d4ed8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--page-bg);
+      color: var(--page-text);
+      line-height: 1.6;
+    }
+
+    /* Page header */
+    .page-header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 64px;
+      border-bottom: 4px solid #3b82f6;
+    }
+    .page-header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      font-size: 17px;
+      color: #94a3b8;
+      max-width: 640px;
+    }
+    .page-header .meta {
+      margin-top: 20px;
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .page-header .meta span {
+      background: rgba(255,255,255,0.08);
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+
+    /* Section headers */
+    .section-header {
+      padding: 48px 64px 24px;
+      border-bottom: 1px solid var(--page-border);
+      margin-bottom: 40px;
+    }
+    .section-header h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .section-header p {
+      font-size: 15px;
+      color: #64748b;
+    }
+
+    /* Grid of cards */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 32px;
+      padding: 0 64px 64px;
+    }
+
+    /* Pattern card */
+    .pattern-card {
+      background: #ffffff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: box-shadow 0.2s;
+    }
+    .pattern-card:hover {
+      box-shadow: var(--shadow-elevated);
+    }
+
+    /* Gradient preview area — simulates a slide */
+    .gradient-preview {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .gradient-preview .preview-text {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      z-index: 1;
+      padding: 0 24px;
+    }
+    .gradient-preview .preview-sub {
+      font-size: 14px;
+      font-weight: 400;
+      margin-top: 4px;
+      opacity: 0.75;
+    }
+
+    /* Card info section */
+    .card-info {
+      padding: 20px 24px 0;
+    }
+    .card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .card-use {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+    .use-tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.7;
+      padding: 16px 20px;
+      border-radius: 0 0 12px 12px;
+      overflow-x: auto;
+      margin-top: 12px;
+      white-space: pre;
+    }
+
+    /* Geometric overlay helpers */
+    .geo-dots::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .geo-grid::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .geo-lines::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 12px,
+        rgba(255,255,255,0.06) 12px,
+        rgba(255,255,255,0.06) 13px
+      );
+    }
+
+    /* =========================================================
+       GRADIENT DEFINITIONS
+       ========================================================= */
+
+    /* 1 — Corporate diagonal */
+    .grad-corp-diag {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #3b82f6 100%);
+    }
+    /* 2 — Corporate horizontal */
+    .grad-corp-horiz {
+      background: linear-gradient(90deg, #0f172a 0%, #3b82f6 100%);
+    }
+    /* 3 — Corporate vertical light */
+    .grad-corp-vert {
+      background: linear-gradient(180deg, #f1f5f9 0%, #dbeafe 100%);
+    }
+    /* 4 — Radial spotlight navy */
+    .grad-radial-navy {
+      background: radial-gradient(ellipse at 30% 50%, #3b82f6 0%, #0f172a 65%);
+    }
+    /* 5 — Technical charcoal mesh */
+    .grad-tech-mesh {
+      background:
+        radial-gradient(ellipse at 20% 20%, #06b6d4 0%, transparent 45%),
+        radial-gradient(ellipse at 80% 80%, #0f172a 0%, transparent 50%),
+        #1e293b;
+    }
+    /* 6 — Technical horizontal cyan */
+    .grad-tech-cyan {
+      background: linear-gradient(90deg, #0f172a 0%, #1e293b 55%, #06b6d4 100%);
+    }
+    /* 7 — Creative purple diagonal */
+    .grad-creative-diag {
+      background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 60%, #8b5cf6 100%);
+    }
+    /* 8 — Creative warm radial */
+    .grad-creative-radial {
+      background: radial-gradient(ellipse at 40% 40%, #f59e0b 0%, #7c3aed 45%, #4c1d95 80%);
+    }
+    /* 9 — Sales bold blue diagonal */
+    .grad-sales-diag {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 40%, #f97316 100%);
+    }
+    /* 10 — Sales radial spotlight */
+    .grad-sales-radial {
+      background: radial-gradient(ellipse at 60% 40%, #f97316 0%, #2563eb 55%, #1e3a8a 100%);
+    }
+    /* 11 — Mesh multi-stop (corporate + emerald) */
+    .grad-mesh-emerald {
+      background:
+        radial-gradient(ellipse at 10% 90%, #10b981 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 10%, #3b82f6 0%, transparent 40%),
+        #0f172a;
+    }
+    /* 12 — Light content background */
+    .grad-light-content {
+      background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 50%, #dbeafe 100%);
+    }
+    /* 13 — Dark section divider with diagonal stripe overlay */
+    .grad-section-dark {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+    /* 14 — Full-bleed hero blue */
+    .grad-hero-fullbleed {
+      background: linear-gradient(135deg, #0f172a 0%, #0369a1 45%, #38bdf8 100%);
+    }
+    /* 15 — Warm creative spotlight */
+    .grad-warm-spotlight {
+      background: radial-gradient(ellipse at 50% 30%, #fbbf24 0%, #d97706 30%, #4c1d95 75%);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>CSS Gradient Patterns</h1>
+  <p>Reusable CSS-only gradient backgrounds for reveal.js slides. Each pattern includes the exact CSS, a live preview, and recommended use cases.</p>
+  <div class="meta">
+    <span>15 patterns</span>
+    <span>4 palettes</span>
+    <span>CSS-only — no images required</span>
+  </div>
+</header>
+
+<!-- ================================================================
+     SECTION 1: LINEAR GRADIENTS
+     ================================================================ -->
+<div class="section-header">
+  <h2>Linear Gradients</h2>
+  <p>Directional gradients for title slides, section dividers, and full-bleed backgrounds</p>
+</div>
+
+<div class="pattern-grid">
+
+  <!-- 1 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-corp-diag">
+      <div class="preview-text" style="color:#fff;">
+        AI in Software Engineering
+        <div class="preview-sub">Presented to Engineering Leadership</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Corporate Diagonal — Navy to Blue</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Full-Bleed</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg,
+  #0f172a 0%,
+  #1e3a5f 50%,
+  #3b82f6 100%
+);</div>
+  </div>
+
+  <!-- 2 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-corp-horiz">
+      <div class="preview-text" style="color:#fff;">
+        Section 2: Model Performance
+        <div class="preview-sub">Benchmarks and production metrics</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Corporate Horizontal — Navy to Blue</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Section Divider</span>
+      <span class="use-tag">Header Bar</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  90deg,
+  #0f172a 0%,
+  #3b82f6 100%
+);</div>
+  </div>
+
+  <!-- 3 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-corp-vert">
+      <div class="preview-text" style="color:#0f172a;">
+        Deployment Pipeline Accuracy
+        <div class="preview-sub" style="color:#475569;">Model validation across 3 environments</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Corporate Vertical Light — White to Slate</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Content Slide</span>
+      <span class="use-tag">Data Slide</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  180deg,
+  #f1f5f9 0%,
+  #dbeafe 100%
+);</div>
+  </div>
+
+  <!-- 4 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-tech-cyan">
+      <div class="preview-text" style="color:#fff;">
+        Pipeline Throughput: 2.4M rows/sec
+        <div class="preview-sub">Feature engineering stage — 99.97% uptime</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Technical Horizontal — Charcoal to Cyan</div>
+      <div class="card-use">Palette: Technical/Developer</div>
+      <span class="use-tag">Section Divider</span>
+      <span class="use-tag">Stats Slide</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  90deg,
+  #0f172a 0%,
+  #1e293b 55%,
+  #06b6d4 100%
+);</div>
+  </div>
+
+  <!-- 5 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-creative-diag">
+      <div class="preview-text" style="color:#faf5ff;">
+        The Future of Autonomous Systems
+        <div class="preview-sub" style="color:#ddd6fe;">Why now is the inflection point</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Creative Diagonal — Deep Purple to Violet</div>
+      <div class="card-use">Palette: Creative/Inspirational</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Keynote Opening</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg,
+  #4c1d95 0%,
+  #7c3aed 60%,
+  #8b5cf6 100%
+);</div>
+  </div>
+
+  <!-- 6 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-sales-diag">
+      <div class="preview-text" style="color:#fff;">
+        40% faster time-to-market
+        <div class="preview-sub">Across 12 enterprise deployments in 2025</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Sales Diagonal — Bold Blue to Orange</div>
+      <div class="card-use">Palette: Sales/Marketing</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Impact Stat</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg,
+  #1d4ed8 0%,
+  #2563eb 40%,
+  #f97316 100%
+);</div>
+  </div>
+
+  <!-- 7 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-light-content">
+      <div class="preview-text" style="color:#0f172a;">
+        Precision vs Recall Trade-off
+        <div class="preview-sub" style="color:#475569;">Threshold optimization across model variants</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Light Content — White to Blue-Tinted Slate</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Content Slide</span>
+      <span class="use-tag">Chart Background</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  160deg,
+  #ffffff 0%,
+  #f1f5f9 50%,
+  #dbeafe 100%
+);</div>
+  </div>
+
+</div><!-- /pattern-grid -->
+
+
+<!-- ================================================================
+     SECTION 2: RADIAL / SPOTLIGHT GRADIENTS
+     ================================================================ -->
+<div class="section-header">
+  <h2>Radial and Spotlight Gradients</h2>
+  <p>Focus attention on a central point — ideal for big-number slides and quote callouts</p>
+</div>
+
+<div class="pattern-grid">
+
+  <!-- 8 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-radial-navy">
+      <div class="preview-text" style="color:#fff;">
+        94.7%
+        <div class="preview-sub">Model accuracy on held-out test set</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Radial Spotlight — Blue on Navy</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Big Number</span>
+      <span class="use-tag">Quote Slide</span>
+    </div>
+    <div class="code-block">background: radial-gradient(
+  ellipse at 30% 50%,
+  #3b82f6 0%,
+  #0f172a 65%
+);</div>
+  </div>
+
+  <!-- 9 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-creative-radial">
+      <div class="preview-text" style="color:#fff;">
+        "The model didn't just predict —<br>it understood context."
+        <div class="preview-sub" style="color:#fef3c7;">— Dr. Sarah Chen, Principal ML Engineer</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Radial Burst — Gold to Violet</div>
+      <div class="card-use">Palette: Creative/Inspirational</div>
+      <span class="use-tag">Quote Slide</span>
+      <span class="use-tag">Emotional Impact</span>
+    </div>
+    <div class="code-block">background: radial-gradient(
+  ellipse at 40% 40%,
+  #f59e0b 0%,
+  #7c3aed 45%,
+  #4c1d95 80%
+);</div>
+  </div>
+
+  <!-- 10 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-sales-radial">
+      <div class="preview-text" style="color:#fff;">
+        3x ROI in Year One
+        <div class="preview-sub">Average across 47 customer deployments</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Sales Radial — Orange Burst on Blue</div>
+      <div class="card-use">Palette: Sales/Marketing</div>
+      <span class="use-tag">Impact Stat</span>
+      <span class="use-tag">CTA Slide</span>
+    </div>
+    <div class="code-block">background: radial-gradient(
+  ellipse at 60% 40%,
+  #f97316 0%,
+  #2563eb 55%,
+  #1e3a8a 100%
+);</div>
+  </div>
+
+  <!-- 11 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-warm-spotlight">
+      <div class="preview-text" style="color:#fff;">
+        Transforming How Teams Build
+        <div class="preview-sub" style="color:#fef3c7;">AI-augmented development workflows</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Warm Radial Spotlight — Gold to Purple</div>
+      <div class="card-use">Palette: Creative/Inspirational</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Keynote Closer</span>
+    </div>
+    <div class="code-block">background: radial-gradient(
+  ellipse at 50% 30%,
+  #fbbf24 0%,
+  #d97706 30%,
+  #4c1d95 75%
+);</div>
+  </div>
+
+</div><!-- /pattern-grid -->
+
+
+<!-- ================================================================
+     SECTION 3: MESH / MULTI-STOP GRADIENTS
+     ================================================================ -->
+<div class="section-header">
+  <h2>Mesh-Style Multi-Stop Gradients</h2>
+  <p>Layered radial gradients that create subtle depth and color variation — modern and distinctive</p>
+</div>
+
+<div class="pattern-grid">
+
+  <!-- 12 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-tech-mesh">
+      <div class="preview-text" style="color:#e0f2fe;">
+        Real-Time Inference Architecture
+        <div class="preview-sub" style="color:#7dd3fc;">Sub-50ms latency at scale</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Technical Mesh — Cyan + Charcoal</div>
+      <div class="card-use">Palette: Technical/Developer</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Section Divider</span>
+    </div>
+    <div class="code-block">background:
+  radial-gradient(ellipse at 20% 20%,
+    #06b6d4 0%, transparent 45%),
+  radial-gradient(ellipse at 80% 80%,
+    #0f172a 0%, transparent 50%),
+  #1e293b;</div>
+  </div>
+
+  <!-- 13 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-mesh-emerald">
+      <div class="preview-text" style="color:#fff;">
+        Model Health: All Systems Nominal
+        <div class="preview-sub" style="color:#6ee7b7;">Drift detection — 0 alerts in 30 days</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Mesh — Emerald + Blue on Navy</div>
+      <div class="card-use">Palette: Corporate/Professional with Emerald accent</div>
+      <span class="use-tag">Status Slide</span>
+      <span class="use-tag">Closing</span>
+    </div>
+    <div class="code-block">background:
+  radial-gradient(ellipse at 10% 90%,
+    #10b981 0%, transparent 40%),
+  radial-gradient(ellipse at 90% 10%,
+    #3b82f6 0%, transparent 40%),
+  #0f172a;</div>
+  </div>
+
+</div><!-- /pattern-grid -->
+
+
+<!-- ================================================================
+     SECTION 4: GRADIENT + GEOMETRIC OVERLAYS
+     ================================================================ -->
+<div class="section-header">
+  <h2>Gradient + Geometric Overlay Patterns</h2>
+  <p>CSS pseudo-elements add texture without images — dot grids, line grids, and diagonal stripes</p>
+</div>
+
+<div class="pattern-grid">
+
+  <!-- 14 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-corp-diag geo-dots">
+      <div class="preview-text" style="color:#fff;">
+        Engineering Productivity Report
+        <div class="preview-sub">Q4 2025 — Annual Review</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Corporate Diagonal + Dot Grid Overlay</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Section Divider</span>
+    </div>
+    <div class="code-block">/* Gradient base */
+background: linear-gradient(
+  135deg, #0f172a 0%, #3b82f6 100%
+);
+
+/* Dot overlay via ::before pseudo-element */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(255,255,255,0.15) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+}</div>
+  </div>
+
+  <!-- 15 -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-section-dark geo-grid">
+      <div class="preview-text" style="color:#e2e8f0;">
+        03 — Production Deployment
+        <div class="preview-sub" style="color:#94a3b8;">Infrastructure and monitoring strategy</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Dark Section Divider + Grid Overlay</div>
+      <div class="card-use">Palette: Technical/Developer</div>
+      <span class="use-tag">Section Divider</span>
+      <span class="use-tag">Chapter Break</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg, #1e293b 0%, #0f172a 100%
+);
+
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,0.07) 1px,
+      transparent 1px),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,0.07) 1px,
+      transparent 1px);
+  background-size: 36px 36px;
+}</div>
+  </div>
+
+  <!-- Bonus: diagonal lines -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-creative-diag geo-lines">
+      <div class="preview-text" style="color:#faf5ff;">
+        A New Approach to Model Governance
+        <div class="preview-sub" style="color:#ddd6fe;">Beyond compliance — building trust</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Creative Purple + Diagonal Line Texture</div>
+      <div class="card-use">Palette: Creative/Inspirational</div>
+      <span class="use-tag">Title Slide</span>
+      <span class="use-tag">Keynote Section</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg, #4c1d95 0%, #8b5cf6 100%
+);
+
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgba(255,255,255,0.06) 12px,
+    rgba(255,255,255,0.06) 13px
+  );
+}</div>
+  </div>
+
+  <!-- Bonus: hero fullbleed -->
+  <div class="pattern-card">
+    <div class="gradient-preview grad-hero-fullbleed geo-dots">
+      <div class="preview-text" style="color:#fff;">
+        Scaling AI from Experiment to Production
+        <div class="preview-sub" style="color:#bae6fd;">Platform Engineering — March 2026</div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">Hero Full-Bleed — Navy to Sky Blue + Dots</div>
+      <div class="card-use">Palette: Corporate/Professional</div>
+      <span class="use-tag">Conference Title</span>
+      <span class="use-tag">Full-Bleed Hero</span>
+    </div>
+    <div class="code-block">background: linear-gradient(
+  135deg,
+  #0f172a 0%,
+  #0369a1 45%,
+  #38bdf8 100%
+);
+
+/* + dot overlay ::before as shown above */</div>
+  </div>
+
+</div><!-- /pattern-grid -->
+
+
+<!-- ================================================================
+     USAGE NOTES
+     ================================================================ -->
+<div class="section-header" style="margin-top: 16px;">
+  <h2>Usage Notes for reveal.js</h2>
+  <p>How to apply these gradients to reveal.js section elements</p>
+</div>
+
+<div style="padding: 0 64px 80px;">
+  <div class="pattern-card" style="border-radius: 12px; overflow: hidden;">
+    <div class="card-info" style="padding: 24px;">
+      <div class="card-name" style="font-size: 18px; margin-bottom: 16px;">Applying gradients to slides</div>
+      <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
+        In reveal.js, apply a gradient directly to a <code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-family:monospace;">&lt;section&gt;</code> element via the <code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-family:monospace;">data-background-gradient</code> attribute, or use inline style / a CSS class.
+      </p>
+    </div>
+    <div class="code-block" style="border-radius: 0;">/* Option A — data attribute (reveal.js 4+) */
+&lt;section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #3b82f6 100%)"&gt;
+  &lt;h1&gt;Title Here&lt;/h1&gt;
+&lt;/section&gt;
+
+/* Option B — CSS class */
+&lt;section class="slide-title"&gt;
+  &lt;h1&gt;Title Here&lt;/h1&gt;
+&lt;/section&gt;
+
+.slide-title {
+  background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%) !important;
+}
+
+/* Option C — for geometric overlays, use a wrapper div inside the section */
+&lt;section class="slide-section-divider"&gt;
+  &lt;div class="slide-bg-overlay"&gt;&lt;/div&gt;
+  &lt;h2&gt;Section 2&lt;/h2&gt;
+&lt;/section&gt;
+
+.slide-section-divider {
+  position: relative;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+}
+.slide-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}</div>
+  </div>
+</div>
+
+</body>
+</html>

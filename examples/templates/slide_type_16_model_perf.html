@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Model Performance — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Performance color thresholds */
+      --perf-excellent: #10b981;
+      --perf-good: #f59e0b;
+      --perf-poor: #f43f5e;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: 2x2 Metrics Grid — Technical Palette ===== */
+    .slide-model-metrics {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-model-metrics h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 8px 0;
+    }
+
+    .slide-model-metrics .model-subtitle {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 28px 0;
+    }
+
+    .slide-model-metrics .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 720px;
+    }
+
+    .slide-model-metrics .metric-card {
+      background: var(--tech-charcoal);
+      border-radius: 12px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-model-metrics .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .slide-model-metrics .metric-card.excellent::before { background: var(--perf-excellent); }
+    .slide-model-metrics .metric-card.good::before { background: var(--perf-good); }
+    .slide-model-metrics .metric-card.poor::before { background: var(--perf-poor); }
+
+    .slide-model-metrics .metric-name {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 500;
+      color: var(--tech-slate);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    .slide-model-metrics .metric-value {
+      font-family: var(--font-heading);
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0;
+    }
+
+    .slide-model-metrics .metric-card.excellent .metric-value { color: var(--perf-excellent); }
+    .slide-model-metrics .metric-card.good .metric-value { color: var(--perf-good); }
+    .slide-model-metrics .metric-card.poor .metric-value { color: var(--perf-poor); }
+
+    .slide-model-metrics .metric-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.06);
+      margin-top: 4px;
+    }
+
+    .slide-model-metrics .metric-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .slide-model-metrics .metric-card.excellent .metric-bar-fill { background: var(--perf-excellent); }
+    .slide-model-metrics .metric-card.good .metric-bar-fill { background: var(--perf-good); }
+    .slide-model-metrics .metric-card.poor .metric-bar-fill { background: var(--perf-poor); }
+
+    .slide-model-metrics .metric-threshold {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--tech-slate);
+      margin: 0;
+    }
+
+    /* ===== Variant B: Confusion Matrix + Key Metrics ===== */
+    .slide-model-confusion {
+      background: var(--corp-white) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-model-confusion h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-model-confusion .confusion-layout {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
+
+    .slide-model-confusion .confusion-panel {
+      flex-shrink: 0;
+    }
+
+    .slide-model-confusion .confusion-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tech-slate);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0 0 12px 0;
+      text-align: center;
+    }
+
+    .slide-model-confusion .confusion-matrix {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 0;
+    }
+
+    .slide-model-confusion .cm-corner {
+      width: 60px;
+      height: 40px;
+    }
+
+    .slide-model-confusion .cm-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--corp-navy);
+      padding: 8px 0;
+      min-width: 130px;
+    }
+
+    .slide-model-confusion .cm-row-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--corp-navy);
+      padding: 0 12px;
+      writing-mode: horizontal-tb;
+    }
+
+    .slide-model-confusion .cm-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 130px;
+      height: 110px;
+      border-radius: 8px;
+      margin: 2px;
+    }
+
+    .slide-model-confusion .cm-cell-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .slide-model-confusion .cm-cell-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin: 4px 0 0 0;
+      opacity: 0.7;
+    }
+
+    .slide-model-confusion .cm-tp {
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+    .slide-model-confusion .cm-tp .cm-cell-value { color: #065f46; }
+    .slide-model-confusion .cm-tp .cm-cell-label { color: #065f46; }
+
+    .slide-model-confusion .cm-tn {
+      background: rgba(59, 130, 246, 0.1);
+      border: 2px solid rgba(59, 130, 246, 0.2);
+    }
+    .slide-model-confusion .cm-tn .cm-cell-value { color: #1e40af; }
+    .slide-model-confusion .cm-tn .cm-cell-label { color: #1e40af; }
+
+    .slide-model-confusion .cm-fp {
+      background: rgba(244, 63, 94, 0.1);
+      border: 2px solid rgba(244, 63, 94, 0.2);
+    }
+    .slide-model-confusion .cm-fp .cm-cell-value { color: #9f1239; }
+    .slide-model-confusion .cm-fp .cm-cell-label { color: #9f1239; }
+
+    .slide-model-confusion .cm-fn {
+      background: rgba(249, 115, 22, 0.1);
+      border: 2px solid rgba(249, 115, 22, 0.2);
+    }
+    .slide-model-confusion .cm-fn .cm-cell-value { color: #9a3412; }
+    .slide-model-confusion .cm-fn .cm-cell-label { color: #9a3412; }
+
+    .slide-model-confusion .side-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .slide-model-confusion .side-metric {
+      background: var(--corp-light);
+      border-radius: 10px;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .slide-model-confusion .side-metric-name {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-model-confusion .side-metric-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-body);
+      font-weight: 800;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-model-confusion .axis-label-top {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tech-slate);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin: 0 0 8px 60px;
+    }
+
+    .slide-model-confusion .axis-label-left {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tech-slate);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      text-align: center;
+      margin-right: 6px;
+    }
+
+    .slide-model-confusion .cm-with-axis {
+      display: flex;
+      align-items: center;
+    }
+
+    /* ===== Variant C: Model Comparison Table — Tufte-Inspired ===== */
+    .slide-model-comparison {
+      background: var(--corp-white) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-model-comparison h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 8px 0;
+    }
+
+    .slide-model-comparison .comparison-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+      margin: 0 0 28px 0;
+    }
+
+    .slide-model-comparison .comparison-table {
+      width: 100%;
+      max-width: 800px;
+      border-collapse: collapse;
+    }
+
+    .slide-model-comparison .comparison-table thead th {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: var(--corp-navy);
+      text-align: center;
+      padding: 12px 20px;
+      border-bottom: 2px solid var(--corp-navy);
+    }
+
+    .slide-model-comparison .comparison-table thead th:first-child {
+      text-align: left;
+      width: 160px;
+    }
+
+    .slide-model-comparison .comparison-table tbody td {
+      font-family: var(--font-mono);
+      font-size: var(--text-body);
+      font-weight: 500;
+      color: var(--corp-navy);
+      text-align: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .slide-model-comparison .comparison-table tbody td:first-child {
+      font-family: var(--font-body);
+      font-weight: 600;
+      text-align: left;
+      color: var(--tech-slate);
+      font-size: var(--text-caption);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slide-model-comparison .comparison-table tbody tr:last-child td {
+      border-bottom: 2px solid var(--corp-navy);
+    }
+
+    .slide-model-comparison .best-value {
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 6px;
+      padding: 4px 12px;
+      color: #065f46;
+      font-weight: 800;
+    }
+
+    .slide-model-comparison .comparison-table .model-header {
+      position: relative;
+    }
+
+    .slide-model-comparison .winner-badge {
+      display: inline-block;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--corp-white);
+      background: var(--corp-emerald);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: 2x2 Metrics Grid with color-coded performance indicators — Technical palette -->
+      <!-- CUSTOMIZATION: Change .metric-value for scores, .metric-name for metric names, add class "excellent" (>0.9), "good" (>0.8), or "poor" (<0.8) to .metric-card, adjust .metric-bar-fill width, .metric-threshold for target -->
+      <section class="slide-model-metrics">
+        <h2>Churn prediction model exceeds targets on three of four key metrics</h2>
+        <p class="model-subtitle">// model: gradient_boosting_v3.2 | dataset: customer_churn_2026q1 | n=42,847</p>
+        <div class="metrics-grid">
+          <div class="metric-card excellent">
+            <p class="metric-name">Precision</p>
+            <p class="metric-value">0.94</p>
+            <div class="metric-bar">
+              <div class="metric-bar-fill" style="width: 94%"></div>
+            </div>
+            <p class="metric-threshold">target: 0.90</p>
+          </div>
+          <div class="metric-card excellent">
+            <p class="metric-name">Recall</p>
+            <p class="metric-value">0.91</p>
+            <div class="metric-bar">
+              <div class="metric-bar-fill" style="width: 91%"></div>
+            </div>
+            <p class="metric-threshold">target: 0.85</p>
+          </div>
+          <div class="metric-card excellent">
+            <p class="metric-name">F1-Score</p>
+            <p class="metric-value">0.92</p>
+            <div class="metric-bar">
+              <div class="metric-bar-fill" style="width: 92%"></div>
+            </div>
+            <p class="metric-threshold">target: 0.88</p>
+          </div>
+          <div class="metric-card good">
+            <p class="metric-name">AUC-ROC</p>
+            <p class="metric-value">0.87</p>
+            <div class="metric-bar">
+              <div class="metric-bar-fill" style="width: 87%"></div>
+            </div>
+            <p class="metric-threshold">target: 0.90</p>
+          </div>
+        </div>
+        <aside class="notes">
+          Our gradient boosting model version 3.2 shows strong performance on the Q1 evaluation dataset of nearly 43,000 customers. Precision is 0.94, meaning when the model predicts churn, it is correct 94% of the time — well above our 0.90 target. Recall is 0.91, so we are catching 91% of actual churners. F1-Score at 0.92 confirms the balance between precision and recall. AUC-ROC at 0.87 is the one metric below target — this suggests the model's ranking ability across all thresholds could improve, likely by adding more temporal features. That said, the operating point metrics are excellent for production deployment.
+        </aside>
+      </section>
+
+      <!-- Variant B: Confusion Matrix + Key Metrics — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .cm-cell-value for counts in each quadrant, .side-metric values for derived metrics, axis labels for class names -->
+      <section class="slide-model-confusion">
+        <h2>Fraud detection model achieves 97.8% accuracy with low false positive rate</h2>
+        <div class="confusion-layout">
+          <div class="confusion-panel">
+            <p class="axis-label-top">Predicted</p>
+            <div class="cm-with-axis">
+              <span class="axis-label-left">Actual</span>
+              <div class="confusion-matrix">
+                <div class="cm-corner"></div>
+                <div class="cm-header">Legitimate</div>
+                <div class="cm-header">Fraud</div>
+                <div class="cm-row-label">Legitimate</div>
+                <div class="cm-cell cm-tn">
+                  <p class="cm-cell-value">9,412</p>
+                  <p class="cm-cell-label">True Neg</p>
+                </div>
+                <div class="cm-cell cm-fp">
+                  <p class="cm-cell-value">127</p>
+                  <p class="cm-cell-label">False Pos</p>
+                </div>
+                <div class="cm-row-label">Fraud</div>
+                <div class="cm-cell cm-fn">
+                  <p class="cm-cell-value">89</p>
+                  <p class="cm-cell-label">False Neg</p>
+                </div>
+                <div class="cm-cell cm-tp">
+                  <p class="cm-cell-value">1,372</p>
+                  <p class="cm-cell-label">True Pos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="side-metrics">
+            <div class="side-metric">
+              <p class="side-metric-name">Accuracy</p>
+              <p class="side-metric-value">97.8%</p>
+            </div>
+            <div class="side-metric">
+              <p class="side-metric-name">Precision</p>
+              <p class="side-metric-value">91.5%</p>
+            </div>
+            <div class="side-metric">
+              <p class="side-metric-name">Recall</p>
+              <p class="side-metric-value">93.9%</p>
+            </div>
+            <div class="side-metric">
+              <p class="side-metric-name">F1-Score</p>
+              <p class="side-metric-value">92.7%</p>
+            </div>
+            <div class="side-metric">
+              <p class="side-metric-name">False Positive Rate</p>
+              <p class="side-metric-value">1.3%</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          The confusion matrix shows our fraud detection model's performance on the test set of 11,000 transactions. The diagonal — true negatives and true positives — dominates, which is what we want. We correctly identified 9,412 legitimate transactions and 1,372 fraudulent ones. The 127 false positives represent a 1.3% false positive rate, meaning only 1 in 75 legitimate transactions gets incorrectly flagged. The 89 false negatives are the ones that concern us most — these are fraudulent transactions we missed. That gives us a recall of 93.9%, meaning we catch nearly 94 out of every 100 fraud cases. The combined F1-Score of 92.7% puts us well above the 90% threshold required for production deployment.
+        </aside>
+      </section>
+
+      <!-- Variant C: Model comparison table — Tufte-inspired minimal design — Corporate palette -->
+      <!-- CUSTOMIZATION: Change thead th for model names, tbody td for metric values, add .best-value span around winning values, .winner-badge to best model header -->
+      <section class="slide-model-comparison">
+        <h2>XGBoost outperforms all baselines on the customer lifetime value dataset</h2>
+        <p class="comparison-subtitle">5-fold cross-validation on 128K samples, evaluated March 2026</p>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Logistic Regression</th>
+              <th class="model-header">Random Forest</th>
+              <th class="model-header">XGBoost<span class="winner-badge">Best</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Accuracy</td>
+              <td>0.847</td>
+              <td>0.891</td>
+              <td><span class="best-value">0.923</span></td>
+            </tr>
+            <tr>
+              <td>F1-Score</td>
+              <td>0.831</td>
+              <td>0.878</td>
+              <td><span class="best-value">0.916</span></td>
+            </tr>
+            <tr>
+              <td>AUC-ROC</td>
+              <td>0.892</td>
+              <td>0.934</td>
+              <td><span class="best-value">0.961</span></td>
+            </tr>
+            <tr>
+              <td>Inference (ms)</td>
+              <td><span class="best-value">2.1</span></td>
+              <td>8.4</td>
+              <td>5.7</td>
+            </tr>
+          </tbody>
+        </table>
+        <aside class="notes">
+          This table compares three candidate models for the customer lifetime value prediction task. XGBoost wins decisively on accuracy, F1-Score, and AUC-ROC — achieving 0.923 accuracy compared to Random Forest's 0.891 and Logistic Regression's 0.847. The AUC-ROC gap is especially notable at 0.961 versus 0.934 for Random Forest. However, Logistic Regression has the fastest inference time at 2.1 milliseconds, which matters for our real-time serving use case. XGBoost at 5.7 milliseconds is still well within our 15-millisecond SLA, making it the clear winner. We will proceed with XGBoost for production deployment, with Logistic Regression as our fallback for latency-sensitive edge cases.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

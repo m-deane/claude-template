@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Code + Explanation — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Syntax highlighting colors */
+      --syn-keyword: #c084fc;
+      --syn-string: #86efac;
+      --syn-comment: #64748b;
+      --syn-function: #67e8f9;
+      --syn-number: #fdba74;
+      --syn-decorator: #fbbf24;
+      --syn-class: #38bdf8;
+      --syn-param: #f9a8d4;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Side-by-Side Code + Explanation — Technical Palette ===== */
+    .slide-code-sidebyside {
+      background: var(--tech-nearblack) !important;
+      padding: 40px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-code-sidebyside h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 20px 0;
+    }
+
+    .slide-code-sidebyside .code-explain-container {
+      display: flex;
+      gap: var(--element-gap);
+      align-items: stretch;
+    }
+
+    .slide-code-sidebyside .code-panel {
+      flex: 1.2;
+      background: var(--tech-charcoal);
+      border-radius: 12px;
+      padding: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+
+    .slide-code-sidebyside .code-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .slide-code-sidebyside .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .slide-code-sidebyside .code-dot.red { background: #ef4444; }
+    .slide-code-sidebyside .code-dot.yellow { background: #eab308; }
+    .slide-code-sidebyside .code-dot.green { background: #22c55e; }
+
+    .slide-code-sidebyside .code-filename {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-slate);
+      margin-left: 8px;
+    }
+
+    .slide-code-sidebyside pre {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      margin: 0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .slide-code-sidebyside .explain-panel {
+      flex: 0.8;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .slide-code-sidebyside .explain-item {
+      background: var(--tech-charcoal);
+      border-radius: 10px;
+      padding: 16px 20px;
+      border-left: 3px solid var(--tech-cyan);
+    }
+
+    .slide-code-sidebyside .explain-step {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tech-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0 0 6px 0;
+    }
+
+    .slide-code-sidebyside .explain-text {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: #cbd5e1;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* Syntax highlighting */
+    .kw { color: var(--syn-keyword); }
+    .str { color: var(--syn-string); }
+    .cmt { color: var(--syn-comment); font-style: italic; }
+    .fn { color: var(--syn-function); }
+    .num { color: var(--syn-number); }
+    .dec { color: var(--syn-decorator); }
+    .cls { color: var(--syn-class); }
+    .par { color: var(--syn-param); }
+
+    /* ===== Variant B: Top Code + Bottom Annotated Explanation ===== */
+    .slide-code-annotated {
+      background: var(--corp-white) !important;
+      padding: 36px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-code-annotated h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 16px 0;
+    }
+
+    .slide-code-annotated .code-block-top {
+      background: var(--tech-nearblack);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .slide-code-annotated .code-block-top pre {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      margin: 0;
+      white-space: pre;
+    }
+
+    .slide-code-annotated .code-line-num {
+      color: var(--tech-slate);
+      user-select: none;
+      display: inline-block;
+      width: 28px;
+      text-align: right;
+      margin-right: 16px;
+      font-size: 13px;
+    }
+
+    .slide-code-annotated .annotations {
+      display: flex;
+      gap: 16px;
+    }
+
+    .slide-code-annotated .annotation {
+      flex: 1;
+      background: var(--corp-light);
+      border-radius: 10px;
+      padding: 16px 20px;
+      position: relative;
+    }
+
+    .slide-code-annotated .annotation::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 24px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid var(--corp-light);
+    }
+
+    .slide-code-annotated .annotation-line-ref {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--corp-blue);
+      margin: 0 0 6px 0;
+    }
+
+    .slide-code-annotated .annotation-text {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--corp-navy);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* ===== Variant C: Three-Step Code Progression with Arrows ===== */
+    .slide-code-progression {
+      background: var(--tech-nearblack) !important;
+      padding: 36px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-code-progression h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 20px 0;
+    }
+
+    .slide-code-progression .progression-container {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .slide-code-progression .progression-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide-code-progression .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .slide-code-progression .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--tech-cyan);
+      color: var(--tech-nearblack);
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .slide-code-progression .step-title {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--tech-cyan);
+      margin: 0;
+    }
+
+    .slide-code-progression .step-code {
+      background: var(--tech-charcoal);
+      border-radius: 10px;
+      padding: 16px 18px;
+      border: 1px solid rgba(6, 182, 212, 0.1);
+      flex: 1;
+    }
+
+    .slide-code-progression .step-code pre {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+      color: #e2e8f0;
+      margin: 0;
+      white-space: pre;
+    }
+
+    .slide-code-progression .progression-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      flex-shrink: 0;
+      color: var(--tech-cyan);
+      font-size: 24px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Side-by-side code + explanation — Technical palette -->
+      <!-- CUSTOMIZATION: Change pre content for code, .explain-item blocks for explanations, .code-filename for file name, syntax classes (.kw, .str, .fn, .cmt, .num, .dec, .cls) for highlighting -->
+      <section class="slide-code-sidebyside">
+        <h2>Custom transformer pipeline handles missing values and encodes features in three lines</h2>
+        <div class="code-explain-container">
+          <div class="code-panel">
+            <div class="code-panel-header">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+              <span class="code-filename">pipeline.py</span>
+            </div>
+            <pre><span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+<span class="kw">from</span> sklearn.compose <span class="kw">import</span> ColumnTransformer
+<span class="kw">from</span> sklearn.impute <span class="kw">import</span> SimpleImputer
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> GradientBoostingClassifier
+
+<span class="cmt"># Define feature groups</span>
+numeric_features = [<span class="str">'age'</span>, <span class="str">'income'</span>, <span class="str">'tenure'</span>]
+categorical_features = [<span class="str">'plan_type'</span>, <span class="str">'region'</span>]
+
+<span class="cmt"># Build preprocessing pipeline</span>
+preprocessor = <span class="cls">ColumnTransformer</span>([
+    (<span class="str">'num'</span>, Pipeline([
+        (<span class="str">'imputer'</span>, <span class="cls">SimpleImputer</span>()),
+        (<span class="str">'scaler'</span>, <span class="cls">StandardScaler</span>()),
+    ]), numeric_features),
+    (<span class="str">'cat'</span>, <span class="cls">OneHotEncoder</span>(
+        handle_unknown=<span class="str">'ignore'</span>
+    ), categorical_features),
+])
+
+<span class="cmt"># Full pipeline: preprocess → train</span>
+model = Pipeline([
+    (<span class="str">'prep'</span>, preprocessor),
+    (<span class="str">'clf'</span>, <span class="cls">GradientBoostingClassifier</span>(
+        n_estimators=<span class="num">200</span>,
+        learning_rate=<span class="num">0.1</span>,
+    )),
+])</pre>
+          </div>
+          <div class="explain-panel">
+            <div class="explain-item">
+              <p class="explain-step">Feature Groups</p>
+              <p class="explain-text">Separate numeric and categorical columns so each gets the right preprocessing treatment.</p>
+            </div>
+            <div class="explain-item">
+              <p class="explain-step">Column Transformer</p>
+              <p class="explain-text">Routes each column group through its own sub-pipeline. Numeric columns get imputed and scaled; categorical columns get one-hot encoded.</p>
+            </div>
+            <div class="explain-item">
+              <p class="explain-step">End-to-End Pipeline</p>
+              <p class="explain-text">Chains preprocessing and model training into a single object that prevents data leakage and simplifies deployment.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This slide walks through our sklearn pipeline architecture. On the left is the actual code. On the right, three key design decisions. First, we separate numeric and categorical features upfront so each gets appropriate preprocessing. Second, the ColumnTransformer lets us apply different transformations to different column groups in a single step. Third, wrapping everything in a Pipeline object means we can call fit and predict once, with no risk of data leakage between train and test sets. This pattern is the foundation of every model we deploy to production.
+        </aside>
+      </section>
+
+      <!-- Variant B: Top code block with annotated callouts below -->
+      <!-- CUSTOMIZATION: Change pre content for code, .annotation blocks for callout explanations, .annotation-line-ref for line references -->
+      <section class="slide-code-annotated">
+        <h2>Three-line feature store query replaces 200 lines of SQL and Python glue code</h2>
+        <div class="code-block-top">
+          <pre><span class="code-line-num"> 1</span><span class="kw">from</span> feast <span class="kw">import</span> FeatureStore
+<span class="code-line-num"> 2</span>
+<span class="code-line-num"> 3</span>store = <span class="cls">FeatureStore</span>(repo_path=<span class="str">"./feature_repo"</span>)
+<span class="code-line-num"> 4</span>
+<span class="code-line-num"> 5</span><span class="cmt"># Retrieve training features for historical entity data</span>
+<span class="code-line-num"> 6</span>training_df = store.<span class="fn">get_historical_features</span>(
+<span class="code-line-num"> 7</span>    entity_df=customer_orders_df,
+<span class="code-line-num"> 8</span>    features=[
+<span class="code-line-num"> 9</span>        <span class="str">"customer_profile:lifetime_value"</span>,
+<span class="code-line-num">10</span>        <span class="str">"customer_profile:days_since_last_order"</span>,
+<span class="code-line-num">11</span>        <span class="str">"transaction_stats:avg_order_amount_7d"</span>,
+<span class="code-line-num">12</span>        <span class="str">"transaction_stats:order_count_30d"</span>,
+<span class="code-line-num">13</span>    ],
+<span class="code-line-num">14</span>).<span class="fn">to_df</span>()</pre>
+        </div>
+        <div class="annotations">
+          <div class="annotation">
+            <p class="annotation-line-ref">Line 3</p>
+            <p class="annotation-text">Initialize from a declarative config repo — all feature definitions, data sources, and transformations live as versioned YAML.</p>
+          </div>
+          <div class="annotation">
+            <p class="annotation-line-ref">Lines 6-7</p>
+            <p class="annotation-text">Point-in-time joins happen automatically, preventing future data leakage that manual SQL queries often introduce.</p>
+          </div>
+          <div class="annotation">
+            <p class="annotation-line-ref">Lines 8-13</p>
+            <p class="annotation-text">Features are referenced by name from a shared registry, ensuring training and serving use identical feature logic.</p>
+          </div>
+        </div>
+        <aside class="notes">
+          This shows how a feature store simplifies what used to be the hardest part of ML engineering. Line 3 connects to a versioned feature repository — no more copy-pasting SQL between notebooks. Lines 6 and 7 handle point-in-time joins automatically, which is critical because manual time joins are the number one source of training-serving skew in production ML. Lines 8 through 13 reference features from a shared registry by name, ensuring every team and every environment computes features identically. This replaced roughly 200 lines of custom SQL and Python glue code that three different teams maintained separately.
+        </aside>
+      </section>
+
+      <!-- Variant C: Three-step code progression — Technical palette -->
+      <!-- CUSTOMIZATION: Change .step-title for step labels, .step-code pre content for code blocks, step-number text for numbering -->
+      <section class="slide-code-progression">
+        <h2>Three-stage pipeline transforms raw logs into production-ready model predictions</h2>
+        <div class="progression-container">
+          <div class="progression-step">
+            <div class="step-header">
+              <div class="step-number">1</div>
+              <p class="step-title">Data Loading</p>
+            </div>
+            <div class="step-code">
+              <pre><span class="kw">import</span> polars <span class="kw">as</span> pl
+
+df = pl.<span class="fn">scan_parquet</span>(
+    <span class="str">"s3://data/events/*.parquet"</span>
+).<span class="fn">filter</span>(
+    pl.col(<span class="str">"timestamp"</span>)
+    >= <span class="str">"2026-01-01"</span>
+).<span class="fn">collect</span>()
+
+<span class="cmt"># 12M rows loaded in 3.2s</span>
+<span class="cmt"># via lazy evaluation</span></pre>
+            </div>
+          </div>
+          <div class="progression-arrow">&#10132;</div>
+          <div class="progression-step">
+            <div class="step-header">
+              <div class="step-number">2</div>
+              <p class="step-title">Transformation</p>
+            </div>
+            <div class="step-code">
+              <pre>features = df.<span class="fn">with_columns</span>([
+    pl.col(<span class="str">"amount"</span>)
+      .<span class="fn">rolling_mean</span>(<span class="num">7</span>)
+      .<span class="fn">alias</span>(<span class="str">"avg_7d"</span>),
+    pl.col(<span class="str">"category"</span>)
+      .<span class="fn">cast</span>(pl.Categorical),
+    (pl.col(<span class="str">"clicks"</span>)
+     / pl.col(<span class="str">"impressions"</span>))
+      .<span class="fn">alias</span>(<span class="str">"ctr"</span>),
+])</pre>
+            </div>
+          </div>
+          <div class="progression-arrow">&#10132;</div>
+          <div class="progression-step">
+            <div class="step-header">
+              <div class="step-number">3</div>
+              <p class="step-title">Model Training</p>
+            </div>
+            <div class="step-code">
+              <pre><span class="kw">import</span> lightgbm <span class="kw">as</span> lgb
+
+model = lgb.<span class="cls">LGBMClassifier</span>(
+    n_estimators=<span class="num">500</span>,
+    learning_rate=<span class="num">0.05</span>,
+    num_leaves=<span class="num">31</span>,
+)
+
+model.<span class="fn">fit</span>(
+    features[X_cols],
+    features[<span class="str">"target"</span>],
+)</pre>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This three-step progression shows our end-to-end pipeline. Step one: we use Polars with lazy evaluation to scan 12 million rows of parquet files from S3, filtering server-side for just the data we need. This takes 3.2 seconds compared to 45 seconds with pandas. Step two: feature engineering using Polars' expressive column API — rolling averages, categorical encoding, and derived ratios in a single chained operation. Step three: we feed the features into a LightGBM classifier. The key insight here is that each step is independently testable and the entire pipeline runs in under 30 seconds for 12 million rows.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

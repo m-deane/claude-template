@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Timeline/Process — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate Palette */
+      --corp-navy: #0f172a;
+      --corp-steel: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical Palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-near-black: #0f172a;
+
+      /* Creative Palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+    }
+
+    .reveal .slides section {
+      padding: var(--slide-padding);
+      text-align: left;
+      font-family: var(--font-body);
+    }
+
+    /* ── Variant A: Horizontal 5-step ML Pipeline ── */
+    /* CUSTOMIZATION: Replace step labels, icons, and descriptions for any linear process flow */
+    .pipeline-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 48px;
+      line-height: 1.3;
+    }
+
+    .pipeline-flow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0;
+      width: 100%;
+    }
+
+    .pipeline-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 160px;
+      text-align: center;
+    }
+
+    .pipeline-icon-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--corp-steel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: var(--corp-white);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pipeline-node-label {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-node-desc {
+      font-size: 14px;
+      color: var(--tech-slate);
+      line-height: 1.4;
+    }
+
+    .pipeline-arrow {
+      display: flex;
+      align-items: center;
+      padding-top: 24px;
+      color: var(--corp-steel);
+      font-size: 24px;
+      min-width: 40px;
+      justify-content: center;
+    }
+
+    .pipeline-arrow-line {
+      width: 30px;
+      height: 3px;
+      background: var(--corp-steel);
+      position: relative;
+    }
+
+    .pipeline-arrow-line::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: -5px;
+      border: solid var(--corp-steel);
+      border-width: 0 3px 3px 0;
+      padding: 5px;
+      transform: rotate(-45deg);
+    }
+
+    .pipeline-step-number {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--corp-white);
+      opacity: 0.8;
+      position: absolute;
+      bottom: 6px;
+    }
+
+    /* ── Variant B: Vertical Timeline ── */
+    /* CUSTOMIZATION: Change milestone dates, titles, descriptions, and accent colors for any chronological timeline -->
+    .vertical-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--tech-near-black);
+      margin-bottom: 36px;
+      line-height: 1.3;
+    }
+
+    .vertical-timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .vertical-timeline::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: linear-gradient(180deg, var(--tech-cyan), var(--creative-violet));
+      border-radius: 2px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .timeline-item:last-child { padding-bottom: 0; }
+
+    .timeline-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--tech-cyan);
+      border: 3px solid var(--corp-white);
+      box-shadow: 0 0 0 3px var(--tech-cyan);
+      position: absolute;
+      left: -35px;
+      top: 4px;
+      z-index: 2;
+    }
+
+    .timeline-dot.highlight {
+      background: var(--creative-violet);
+      box-shadow: 0 0 0 3px var(--creative-violet);
+    }
+
+    .timeline-date {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-cyan);
+      font-weight: 700;
+      min-width: 60px;
+      padding-top: 2px;
+    }
+
+    .timeline-date.highlight { color: var(--creative-violet); }
+
+    .timeline-content {
+      background: var(--corp-white);
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-card);
+      flex: 1;
+    }
+
+    .timeline-content-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--tech-near-black);
+      margin-bottom: 4px;
+    }
+
+    .timeline-content-desc {
+      font-size: 15px;
+      color: var(--tech-slate);
+      line-height: 1.4;
+    }
+
+    /* ── Variant C: Circular/Cyclical Process ── */
+    /* CUSTOMIZATION: Change the cycle step labels, colors, and center text for any feedback loop or iterative process -->
+    .cycle-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin-bottom: 24px;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .cycle-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 480px;
+      height: 400px;
+      margin: 0 auto;
+    }
+
+    .cycle-center {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--corp-navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--corp-white);
+      z-index: 2;
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .cycle-center-icon { font-size: 28px; margin-bottom: 4px; }
+    .cycle-center-text {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .cycle-ring {
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      border: 3px dashed rgba(59,130,246,0.25);
+    }
+
+    .cycle-node {
+      position: absolute;
+      width: 120px;
+      text-align: center;
+    }
+
+    .cycle-node-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 8px;
+      box-shadow: var(--shadow-card);
+      color: var(--corp-white);
+    }
+
+    .cycle-node-label {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--corp-navy);
+      line-height: 1.2;
+    }
+
+    .cycle-node-sublabel {
+      font-size: 12px;
+      color: var(--tech-slate);
+      margin-top: 2px;
+    }
+
+    /* Position nodes around the circle */
+    .cycle-node.pos-top { top: -30px; left: 50%; transform: translateX(-50%); }
+    .cycle-node.pos-top-right { top: 50px; right: -40px; }
+    .cycle-node.pos-bottom-right { bottom: 50px; right: -40px; }
+    .cycle-node.pos-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
+    .cycle-node.pos-bottom-left { bottom: 50px; left: -40px; }
+    .cycle-node.pos-top-left { top: 50px; left: -40px; }
+
+    .cycle-arrow {
+      position: absolute;
+      color: var(--corp-steel);
+      font-size: 20px;
+      opacity: 0.6;
+    }
+
+    .cycle-arrow.a1 { top: 20px; right: 60px; transform: rotate(45deg); }
+    .cycle-arrow.a2 { top: 50%; right: -10px; transform: rotate(90deg); }
+    .cycle-arrow.a3 { bottom: 20px; right: 60px; transform: rotate(135deg); }
+    .cycle-arrow.a4 { bottom: 20px; left: 60px; transform: rotate(225deg); }
+    .cycle-arrow.a5 { top: 50%; left: -10px; transform: rotate(270deg); }
+    .cycle-arrow.a6 { top: 20px; left: 60px; transform: rotate(315deg); }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Horizontal 5-step ML Pipeline (Corporate) -->
+      <!-- CUSTOMIZATION: Replace step names, icons, and descriptions for any sequential process -->
+      <section data-background-color="#f1f5f9">
+        <div class="pipeline-title">Our ML pipeline transforms raw data into deployed predictions in five stages</div>
+        <div class="pipeline-flow">
+          <div class="pipeline-node">
+            <div class="pipeline-icon-ring">
+              &#128451;
+              <span class="pipeline-step-number">1</span>
+            </div>
+            <div class="pipeline-node-label">Ingest</div>
+            <div class="pipeline-node-desc">Extract from APIs, databases, and streaming sources</div>
+          </div>
+          <div class="pipeline-arrow"><div class="pipeline-arrow-line"></div></div>
+          <div class="pipeline-node">
+            <div class="pipeline-icon-ring" style="background: var(--tech-cyan);">
+              &#9881;
+              <span class="pipeline-step-number">2</span>
+            </div>
+            <div class="pipeline-node-label">Clean</div>
+            <div class="pipeline-node-desc">Validate schemas, handle nulls, normalize values</div>
+          </div>
+          <div class="pipeline-arrow"><div class="pipeline-arrow-line"></div></div>
+          <div class="pipeline-node">
+            <div class="pipeline-icon-ring" style="background: var(--creative-violet);">
+              &#129504;
+              <span class="pipeline-step-number">3</span>
+            </div>
+            <div class="pipeline-node-label">Train</div>
+            <div class="pipeline-node-desc">Feature engineering, model selection, hyperparameter tuning</div>
+          </div>
+          <div class="pipeline-arrow"><div class="pipeline-arrow-line"></div></div>
+          <div class="pipeline-node">
+            <div class="pipeline-icon-ring" style="background: var(--creative-gold);">
+              &#128202;
+              <span class="pipeline-step-number">4</span>
+            </div>
+            <div class="pipeline-node-label">Evaluate</div>
+            <div class="pipeline-node-desc">Cross-validation, holdout testing, fairness audit</div>
+          </div>
+          <div class="pipeline-arrow"><div class="pipeline-arrow-line"></div></div>
+          <div class="pipeline-node">
+            <div class="pipeline-icon-ring" style="background: var(--corp-emerald);">
+              &#128640;
+              <span class="pipeline-step-number">5</span>
+            </div>
+            <div class="pipeline-node-label">Deploy</div>
+            <div class="pipeline-node-desc">Containerize, serve via API, monitor in production</div>
+          </div>
+        </div>
+        <aside class="notes">Walk through each stage left to right. Stage 1 ingests data from our three primary sources — the product database, the event stream, and third-party enrichment APIs. Stage 2 applies Great Expectations validation suites and dbt transformations. Stage 3 is where the data science team does their core work: feature engineering and model training using our standardized experiment tracking in MLflow. Stage 4 runs automated evaluation including cross-validation, holdout set testing, and our fairness audit checklist. Stage 5 packages the model into a Docker container and deploys it behind our model serving gateway. The full pipeline runs in under 90 minutes for a typical model refresh.</aside>
+      </section>
+
+      <!-- Variant B: Vertical Timeline — Data Science Team Growth -->
+      <!-- CUSTOMIZATION: Replace dates, milestone titles, and descriptions for any chronological narrative -->
+      <section data-background-color="#f1f5f9">
+        <div class="vertical-title">From solo analyst to 12-person data science team in three years</div>
+        <div class="vertical-timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Q1 '23</div>
+            <div class="timeline-content">
+              <div class="timeline-content-title">First Data Analyst Hired</div>
+              <div class="timeline-content-desc">SQL dashboards, ad-hoc reporting for product team</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Q3 '23</div>
+            <div class="timeline-content">
+              <div class="timeline-content-title">ML Proof of Concept</div>
+              <div class="timeline-content-desc">Churn prediction model achieves 0.89 AUC, saving $240K in Q4</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot highlight"></div>
+            <div class="timeline-date highlight">Q1 '24</div>
+            <div class="timeline-content">
+              <div class="timeline-content-title">DS Team Formed (4 people)</div>
+              <div class="timeline-content-desc">Dedicated data engineer, 2 data scientists, analytics lead</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Q3 '24</div>
+            <div class="timeline-content">
+              <div class="timeline-content-title">MLOps Platform Launch</div>
+              <div class="timeline-content-desc">Automated training, model registry, A/B testing framework</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot highlight"></div>
+            <div class="timeline-date highlight">Q1 '25</div>
+            <div class="timeline-content">
+              <div class="timeline-content-title">12-Person Team, $2.8M Revenue Impact</div>
+              <div class="timeline-content-desc">6 models in production, NPS +14 from AI-powered features</div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">This timeline tells the story of our data science organization's growth. We started with a single analyst doing SQL queries and dashboards in Q1 2023. The inflection point was Q3 2023 when that analyst built a churn prediction model as a proof of concept — it saved us $240K in one quarter, which made the business case for building a dedicated team. By Q1 2024 we had four people, and we used Q3 2024 to build out our MLOps platform so we could scale. Today, we're at 12 people with six models in production driving $2.8 million in measurable revenue impact. The key lesson: start with one high-impact proof of concept before asking for headcount.</aside>
+      </section>
+
+      <!-- Variant C: Circular/Cyclical Process — MLOps Feedback Loop -->
+      <!-- CUSTOMIZATION: Change the cycle node labels, center text, and colors for any iterative or feedback-loop process -->
+      <section data-background-color="#ffffff">
+        <div class="cycle-title">Continuous ML requires a closed feedback loop across six stages</div>
+        <div class="cycle-container">
+          <div class="cycle-ring"></div>
+          <div class="cycle-center">
+            <div class="cycle-center-icon">&#9850;</div>
+            <div class="cycle-center-text">MLOps<br>Cycle</div>
+          </div>
+
+          <div class="cycle-node pos-top">
+            <div class="cycle-node-badge" style="background: var(--corp-steel);">&#128202;</div>
+            <div class="cycle-node-label">Monitor</div>
+            <div class="cycle-node-sublabel">Drift detection</div>
+          </div>
+
+          <div class="cycle-node pos-top-right">
+            <div class="cycle-node-badge" style="background: var(--tech-cyan);">&#128269;</div>
+            <div class="cycle-node-label">Analyze</div>
+            <div class="cycle-node-sublabel">Root cause</div>
+          </div>
+
+          <div class="cycle-node pos-bottom-right">
+            <div class="cycle-node-badge" style="background: var(--corp-emerald);">&#128295;</div>
+            <div class="cycle-node-label">Retrain</div>
+            <div class="cycle-node-sublabel">Updated data</div>
+          </div>
+
+          <div class="cycle-node pos-bottom">
+            <div class="cycle-node-badge" style="background: var(--creative-gold);">&#9989;</div>
+            <div class="cycle-node-label">Validate</div>
+            <div class="cycle-node-sublabel">A/B testing</div>
+          </div>
+
+          <div class="cycle-node pos-bottom-left">
+            <div class="cycle-node-badge" style="background: var(--creative-violet);">&#128640;</div>
+            <div class="cycle-node-label">Deploy</div>
+            <div class="cycle-node-sublabel">Blue-green</div>
+          </div>
+
+          <div class="cycle-node pos-top-left">
+            <div class="cycle-node-badge" style="background: var(--corp-rose);">&#128172;</div>
+            <div class="cycle-node-label">Feedback</div>
+            <div class="cycle-node-sublabel">User signals</div>
+          </div>
+
+          <div class="cycle-arrow a1">&#10148;</div>
+          <div class="cycle-arrow a2">&#10148;</div>
+          <div class="cycle-arrow a3">&#10148;</div>
+          <div class="cycle-arrow a4">&#10148;</div>
+          <div class="cycle-arrow a5">&#10148;</div>
+          <div class="cycle-arrow a6">&#10148;</div>
+        </div>
+        <aside class="notes">MLOps is not a pipeline — it is a cycle. Starting at the top: we Monitor production models for data drift and performance degradation using Evidently. When we detect issues, we Analyze root causes — is it a data quality problem, a schema change, or genuine distribution shift? That analysis triggers a Retrain phase where we pull updated data and run our training pipeline. Before anything goes live, we Validate with shadow-mode A/B tests. We Deploy using blue-green deployments so we can roll back instantly. And crucially, we close the loop with Feedback — capturing user signals like click-through rates and conversion to inform the next monitoring cycle. The teams that skip this last step end up retraining on stale assumptions.</aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

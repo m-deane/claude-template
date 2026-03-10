@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Architecture/Pipeline — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Horizontal Data Pipeline Flow — Technical Palette ===== */
+    .slide-arch-horizontal {
+      background: var(--tech-nearblack) !important;
+      padding: 40px var(--slide-padding) var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-arch-horizontal h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 32px 0;
+    }
+
+    .slide-arch-horizontal .pipeline-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+    }
+
+    .slide-arch-horizontal .pipeline-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      min-width: 100px;
+    }
+
+    .slide-arch-horizontal .node-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      background: var(--tech-charcoal);
+      border: 2px solid rgba(6, 182, 212, 0.25);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.08);
+      transition: border-color 0.2s;
+    }
+
+    .slide-arch-horizontal .node-icon.highlight-node {
+      border-color: var(--tech-cyan);
+      box-shadow: 0 0 24px rgba(6, 182, 212, 0.2);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .slide-arch-horizontal .node-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--corp-white);
+      text-align: center;
+      margin: 0;
+      max-width: 90px;
+      line-height: 1.3;
+    }
+
+    .slide-arch-horizontal .node-tech {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--tech-slate);
+      text-align: center;
+      margin: 0;
+    }
+
+    .slide-arch-horizontal .pipeline-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      margin-bottom: 36px;
+    }
+
+    .slide-arch-horizontal .arrow-line {
+      width: 28px;
+      height: 2px;
+      background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.6));
+    }
+
+    .slide-arch-horizontal .arrow-head {
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid rgba(6, 182, 212, 0.6);
+    }
+
+    /* ===== Variant B: Vertical Stack — ML System Layers ===== */
+    .slide-arch-vertical {
+      background: var(--corp-white) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+    }
+
+    .slide-arch-vertical h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0 0 28px 0;
+    }
+
+    .slide-arch-vertical .stack-container {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
+
+    .slide-arch-vertical .layer-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+      max-width: 520px;
+    }
+
+    .slide-arch-vertical .layer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 24px;
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .slide-arch-vertical .layer:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 12px;
+      background: #cbd5e1;
+      z-index: 1;
+    }
+
+    .slide-arch-vertical .layer-6 { background: #ecfdf5; border: 1px solid #a7f3d0; }
+    .slide-arch-vertical .layer-5 { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .slide-arch-vertical .layer-4 { background: #faf5ff; border: 1px solid #d8b4fe; }
+    .slide-arch-vertical .layer-3 { background: #fefce8; border: 1px solid #fde68a; }
+    .slide-arch-vertical .layer-2 { background: #fff7ed; border: 1px solid #fed7aa; }
+    .slide-arch-vertical .layer-1 { background: var(--corp-light); border: 1px solid #cbd5e1; }
+
+    .slide-arch-vertical .layer-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--corp-white);
+      box-shadow: var(--shadow-card);
+    }
+
+    .slide-arch-vertical .layer-content {
+      flex: 1;
+    }
+
+    .slide-arch-vertical .layer-name {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: var(--corp-navy);
+      margin: 0;
+    }
+
+    .slide-arch-vertical .layer-desc {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--tech-slate);
+      margin: 2px 0 0 0;
+    }
+
+    .slide-arch-vertical .stack-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 8px;
+    }
+
+    .slide-arch-vertical .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .slide-arch-vertical .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .slide-arch-vertical .legend-dot.app { background: #10b981; }
+    .slide-arch-vertical .legend-dot.ml { background: #8b5cf6; }
+    .slide-arch-vertical .legend-dot.infra { background: #f59e0b; }
+
+    .slide-arch-vertical .legend-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--tech-slate);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .slide-arch-vertical .legend-title {
+      font-weight: 700;
+      color: var(--corp-navy);
+    }
+
+    /* ===== Variant C: Hub-and-Spoke Architecture ===== */
+    .slide-arch-hub {
+      background: var(--tech-nearblack) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      height: 100%;
+    }
+
+    .slide-arch-hub h2 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--corp-white);
+      margin: 0 0 32px 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .slide-arch-hub .hub-diagram {
+      position: relative;
+      width: 560px;
+      height: 400px;
+    }
+
+    .slide-arch-hub .hub-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(6, 182, 212, 0.05));
+      border: 2px solid var(--tech-cyan);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .slide-arch-hub .hub-icon {
+      font-size: 28px;
+    }
+
+    .slide-arch-hub .hub-label {
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--corp-white);
+      text-align: center;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .slide-arch-hub .spoke-node {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .slide-arch-hub .spoke-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      background: var(--tech-charcoal);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .slide-arch-hub .spoke-icon {
+      font-size: 22px;
+    }
+
+    .slide-arch-hub .spoke-name {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--corp-white);
+      text-align: center;
+      margin: 0;
+      max-width: 100px;
+      line-height: 1.2;
+    }
+
+    .slide-arch-hub .spoke-tech {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--tech-slate);
+      text-align: center;
+      margin: 0;
+    }
+
+    /* Spoke positions (6 spokes around center) */
+    .slide-arch-hub .spoke-top {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .slide-arch-hub .spoke-top-right {
+      top: 50px;
+      right: 20px;
+    }
+    .slide-arch-hub .spoke-bottom-right {
+      bottom: 50px;
+      right: 20px;
+    }
+    .slide-arch-hub .spoke-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .slide-arch-hub .spoke-bottom-left {
+      bottom: 50px;
+      left: 20px;
+    }
+    .slide-arch-hub .spoke-top-left {
+      top: 50px;
+      left: 20px;
+    }
+
+    /* Spoke connector lines */
+    .slide-arch-hub .spoke-line {
+      position: absolute;
+      background: rgba(6, 182, 212, 0.2);
+      z-index: 1;
+    }
+
+    .slide-arch-hub .line-top {
+      top: 85px;
+      left: 50%;
+      width: 2px;
+      height: 70px;
+      transform: translateX(-50%);
+    }
+
+    .slide-arch-hub .line-top-right {
+      top: 120px;
+      right: 100px;
+      width: 80px;
+      height: 2px;
+      transform: rotate(-30deg);
+      transform-origin: right center;
+    }
+
+    .slide-arch-hub .line-bottom-right {
+      bottom: 120px;
+      right: 100px;
+      width: 80px;
+      height: 2px;
+      transform: rotate(30deg);
+      transform-origin: right center;
+    }
+
+    .slide-arch-hub .line-bottom {
+      bottom: 85px;
+      left: 50%;
+      width: 2px;
+      height: 70px;
+      transform: translateX(-50%);
+    }
+
+    .slide-arch-hub .line-bottom-left {
+      bottom: 120px;
+      left: 100px;
+      width: 80px;
+      height: 2px;
+      transform: rotate(-30deg);
+      transform-origin: left center;
+    }
+
+    .slide-arch-hub .line-top-left {
+      top: 120px;
+      left: 100px;
+      width: 80px;
+      height: 2px;
+      transform: rotate(30deg);
+      transform-origin: left center;
+    }
+
+    /* Radial background ring */
+    .slide-arch-hub .hub-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      border: 1px dashed rgba(6, 182, 212, 0.12);
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Horizontal data pipeline flow — Technical palette -->
+      <!-- CUSTOMIZATION: Change .node-icon emoji/content for icons, .node-label for step names, .node-tech for technology labels, add .highlight-node class to emphasize a stage -->
+      <section class="slide-arch-horizontal">
+        <h2>End-to-end ML pipeline processes raw data to production predictions in under 90 seconds</h2>
+        <div class="pipeline-flow">
+          <div class="pipeline-node">
+            <div class="node-icon">&#128450;</div>
+            <p class="node-label">Data Sources</p>
+            <p class="node-tech">S3, Kafka</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon">&#128229;</div>
+            <p class="node-label">Ingestion</p>
+            <p class="node-tech">Spark Streaming</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon">&#9881;</div>
+            <p class="node-label">Processing</p>
+            <p class="node-tech">dbt, Airflow</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon highlight-node">&#128202;</div>
+            <p class="node-label">Feature Store</p>
+            <p class="node-tech">Feast</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon">&#129504;</div>
+            <p class="node-label">Model</p>
+            <p class="node-tech">XGBoost</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon">&#128640;</div>
+            <p class="node-label">Serving</p>
+            <p class="node-tech">FastAPI</p>
+          </div>
+          <div class="pipeline-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+          <div class="pipeline-node">
+            <div class="node-icon">&#128200;</div>
+            <p class="node-label">Monitoring</p>
+            <p class="node-tech">Grafana</p>
+          </div>
+        </div>
+        <aside class="notes">
+          This diagram shows our complete ML pipeline from data sources to monitoring. Data arrives from S3 and Kafka into our Spark Streaming ingestion layer. From there, dbt and Airflow handle transformation and orchestration. The feature store — which I highlighted because it was the biggest architectural win — uses Feast to ensure consistent features between training and serving. XGBoost handles the modeling, served via FastAPI with sub-25-millisecond latency. Finally, Grafana monitors prediction drift and system health. The entire pipeline from raw event to production prediction runs in under 90 seconds.
+        </aside>
+      </section>
+
+      <!-- Variant B: Vertical stack showing ML system layers — Corporate palette -->
+      <!-- CUSTOMIZATION: Change .layer-name and .layer-desc for layer names and technologies, .layer-icon emoji for visual markers, .layer-N class and colors for each tier, .legend items for groupings -->
+      <section class="slide-arch-vertical">
+        <h2>Six-layer architecture separates concerns and enables independent scaling</h2>
+        <div class="stack-container">
+          <div class="layer-stack">
+            <div class="layer layer-6">
+              <div class="layer-icon">&#128200;</div>
+              <div class="layer-content">
+                <p class="layer-name">Monitoring &amp; Observability</p>
+                <p class="layer-desc">Prometheus, Grafana, Evidently AI</p>
+              </div>
+            </div>
+            <div class="layer layer-5">
+              <div class="layer-icon">&#128640;</div>
+              <div class="layer-content">
+                <p class="layer-name">Model Deployment</p>
+                <p class="layer-desc">KServe, Seldon Core, A/B testing</p>
+              </div>
+            </div>
+            <div class="layer layer-4">
+              <div class="layer-icon">&#129504;</div>
+              <div class="layer-content">
+                <p class="layer-name">Training &amp; Experimentation</p>
+                <p class="layer-desc">MLflow, Optuna, Ray Train</p>
+              </div>
+            </div>
+            <div class="layer layer-3">
+              <div class="layer-icon">&#128202;</div>
+              <div class="layer-content">
+                <p class="layer-name">Feature Engineering</p>
+                <p class="layer-desc">Feast, Tecton, dbt transformations</p>
+              </div>
+            </div>
+            <div class="layer layer-2">
+              <div class="layer-icon">&#128450;</div>
+              <div class="layer-content">
+                <p class="layer-name">Data Platform</p>
+                <p class="layer-desc">Snowflake, Delta Lake, Kafka</p>
+              </div>
+            </div>
+            <div class="layer layer-1">
+              <div class="layer-icon">&#9729;</div>
+              <div class="layer-content">
+                <p class="layer-name">Infrastructure</p>
+                <p class="layer-desc">Kubernetes, GPU clusters, Terraform</p>
+              </div>
+            </div>
+          </div>
+          <div class="stack-legend">
+            <div class="legend-item">
+              <span class="legend-dot app"></span>
+              <p class="legend-text"><span class="legend-title">Application Layer</span><br>Monitoring and deployment handle production concerns independently.</p>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot ml"></span>
+              <p class="legend-text"><span class="legend-title">ML Layer</span><br>Training and feature engineering are decoupled so teams iterate without coordination.</p>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot infra"></span>
+              <p class="legend-text"><span class="legend-title">Foundation Layer</span><br>Data platform and infrastructure scale horizontally without affecting upper layers.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This vertical stack shows how we organized our ML system into six layers, each with clear responsibilities. Starting from the bottom: Infrastructure runs on Kubernetes with dedicated GPU clusters managed via Terraform. The data platform uses Snowflake for batch and Kafka for streaming. Feature engineering sits on top with Feast and dbt. Training and experimentation use MLflow for tracking and Optuna for hyperparameter optimization. Model deployment uses KServe with built-in A/B testing. And monitoring at the top uses Evidently AI for drift detection alongside standard Prometheus/Grafana. The key insight is that each layer can scale and evolve independently — our infrastructure team can upgrade the GPU cluster without touching the feature engineering layer, and the ML team can experiment with new models without involving DevOps.
+        </aside>
+      </section>
+
+      <!-- Variant C: Hub-and-spoke architecture — Technical palette -->
+      <!-- CUSTOMIZATION: Change .hub-label and .hub-icon for center service, .spoke-name and .spoke-icon for connected services, .spoke-tech for technology labels, adjust spoke positions using CSS classes -->
+      <section class="slide-arch-hub">
+        <h2>ML platform serves as the central hub connecting six domain services</h2>
+        <div class="hub-diagram">
+          <div class="hub-ring"></div>
+
+          <div class="spoke-line line-top"></div>
+          <div class="spoke-line line-top-right"></div>
+          <div class="spoke-line line-bottom-right"></div>
+          <div class="spoke-line line-bottom"></div>
+          <div class="spoke-line line-bottom-left"></div>
+          <div class="spoke-line line-top-left"></div>
+
+          <div class="hub-center">
+            <span class="hub-icon">&#129302;</span>
+            <p class="hub-label">ML Platform</p>
+          </div>
+
+          <div class="spoke-node spoke-top">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#128450;</span>
+              <span class="spoke-name">Data Lake</span>
+            </div>
+            <p class="spoke-tech">Delta Lake</p>
+          </div>
+
+          <div class="spoke-node spoke-top-right">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#128176;</span>
+              <span class="spoke-name">Fraud</span>
+            </div>
+            <p class="spoke-tech">Real-time</p>
+          </div>
+
+          <div class="spoke-node spoke-bottom-right">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#128172;</span>
+              <span class="spoke-name">NLP</span>
+            </div>
+            <p class="spoke-tech">Transformers</p>
+          </div>
+
+          <div class="spoke-node spoke-bottom">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#128200;</span>
+              <span class="spoke-name">Analytics</span>
+            </div>
+            <p class="spoke-tech">Looker</p>
+          </div>
+
+          <div class="spoke-node spoke-bottom-left">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#127919;</span>
+              <span class="spoke-name">RecSys</span>
+            </div>
+            <p class="spoke-tech">Embeddings</p>
+          </div>
+
+          <div class="spoke-node spoke-top-left">
+            <div class="spoke-box">
+              <span class="spoke-icon">&#128064;</span>
+              <span class="spoke-name">Vision</span>
+            </div>
+            <p class="spoke-tech">YOLO v8</p>
+          </div>
+        </div>
+        <aside class="notes">
+          This hub-and-spoke diagram shows how our ML Platform sits at the center, providing shared capabilities to six domain-specific services. The Data Lake feeds training data into the platform. The Fraud detection team uses real-time inference for transaction scoring. NLP handles customer support ticket classification using Transformers. Analytics consumes model outputs through Looker dashboards. The Recommendation System uses embedding-based similarity from the platform. And Computer Vision uses YOLO v8 for product image classification. The ML Platform provides shared infrastructure — feature storage, model registry, experiment tracking, and serving — so that each domain team focuses on their specific use case rather than rebuilding ML infrastructure from scratch. This architecture lets us support six use cases with a platform team of four engineers.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

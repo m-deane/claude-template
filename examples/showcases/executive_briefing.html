@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building a Data Science Practice — Executive Briefing</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================
+       DESIGN SYSTEM — Corporate/Professional Palette
+       Navy #0f172a | Steel Blue #3b82f6 | Light Gray #f1f5f9
+       White #ffffff | Emerald #10b981 | Rose #f43f5e
+    ===================================================== */
+    :root {
+      --color-navy:      #0f172a;
+      --color-blue:      #3b82f6;
+      --color-gray:      #f1f5f9;
+      --color-white:     #ffffff;
+      --color-emerald:   #10b981;
+      --color-rose:      #f43f5e;
+      --color-slate:     #64748b;
+      --color-slate-300: #cbd5e1;
+      --color-slate-700: #334155;
+      --color-blue-900:  #1e3a8a;
+      --color-blue-50:   #eff6ff;
+      --color-emerald-50:#ecfdf5;
+      --color-rose-50:   #fff1f2;
+
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body:    'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --text-hero:    72px;
+      --text-title:   44px;
+      --text-heading: 32px;
+      --text-body:    24px;
+      --text-caption: 18px;
+
+      --slide-padding: 60px;
+      --element-gap:   24px;
+
+      --shadow-card:     0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+    }
+
+    /* ---- GLOBAL BASE ---- */
+    .reveal {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--color-navy);
+      background: var(--color-gray);
+    }
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-navy);
+      text-transform: none;
+      margin: 0 0 var(--element-gap) 0;
+      line-height: 1.15;
+    }
+    .reveal h1 { font-size: var(--text-title); }
+    .reveal h2 { font-size: var(--text-heading); }
+    .reveal h3 { font-size: 26px; font-weight: 600; }
+    .reveal p { font-size: var(--text-body); line-height: 1.5; margin: 0 0 16px 0; }
+    .reveal section { padding: var(--slide-padding); box-sizing: border-box; text-align: left; }
+
+    /* ---- UTILITY CLASSES ---- */
+    .accent-bar { width: 64px; height: 4px; background: var(--color-blue); margin-bottom: 32px; border-radius: 2px; }
+    .accent-bar-emerald { width: 64px; height: 4px; background: var(--color-emerald); margin-bottom: 32px; border-radius: 2px; }
+
+    .kpi-grid { display: grid; gap: 24px; margin-top: 32px; }
+    .kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .kpi-card {
+      background: var(--color-white);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+    }
+    .kpi-card.blue::before { background: var(--color-blue); }
+    .kpi-card.emerald::before { background: var(--color-emerald); }
+    .kpi-card.rose::before { background: var(--color-rose); }
+    .kpi-card.navy::before { background: var(--color-navy); }
+
+    .kpi-number {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+      font-family: var(--font-heading);
+    }
+    .kpi-label {
+      font-size: var(--text-caption);
+      color: var(--color-slate);
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .slide-note {
+      font-size: var(--text-caption);
+      color: var(--color-slate);
+      margin-top: 24px;
+      font-style: italic;
+    }
+
+    /* ---- SLIDE TYPE: TITLE ---- */
+    .slide-title {
+      background: linear-gradient(135deg, var(--color-navy) 0%, #1e3a5f 50%, var(--color-blue-900) 100%);
+      color: var(--color-white) !important;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .slide-title h1 {
+      color: var(--color-white) !important;
+      font-size: 52px;
+      max-width: 80%;
+      line-height: 1.12;
+      font-weight: 800;
+    }
+    .slide-title .subtitle {
+      font-size: var(--text-body);
+      color: rgba(255,255,255,0.70);
+      margin-top: 12px;
+      max-width: 70%;
+      line-height: 1.5;
+    }
+    .slide-title .meta {
+      margin-top: 56px;
+      font-size: var(--text-caption);
+      color: rgba(255,255,255,0.50);
+    }
+    .slide-title .accent-bar {
+      background: var(--color-blue);
+      margin-bottom: 28px;
+    }
+    .slide-title .badge {
+      display: inline-block;
+      background: rgba(59,130,246,0.25);
+      border: 1px solid rgba(59,130,246,0.4);
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* ---- SLIDE TYPE: STAT/BIG NUMBER ---- */
+    .slide-stat {
+      background: var(--color-navy) !important;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .slide-stat .big-number {
+      font-size: 120px;
+      font-weight: 900;
+      color: var(--color-blue);
+      line-height: 1;
+      margin-bottom: 16px;
+      font-family: var(--font-heading);
+    }
+    .slide-stat .big-number .pct { font-size: 72px; }
+    .slide-stat h2 {
+      color: var(--color-white) !important;
+      font-size: 36px;
+      max-width: 700px;
+      line-height: 1.3;
+    }
+    .slide-stat .context {
+      font-size: 20px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 20px;
+      max-width: 600px;
+    }
+
+    /* ---- SLIDE TYPE: SECTION DIVIDER ---- */
+    .slide-section {
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .slide-section-blue { background: var(--color-blue) !important; }
+    .slide-section-emerald { background: var(--color-emerald) !important; }
+    .slide-section-navy { background: var(--color-navy) !important; }
+
+    .slide-section .section-num {
+      font-size: 96px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.12);
+      line-height: 1;
+      margin-bottom: -12px;
+      font-family: var(--font-heading);
+    }
+    .slide-section h2 {
+      color: var(--color-white) !important;
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .slide-section p {
+      color: rgba(255,255,255,0.75);
+      font-size: 22px;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    /* ---- SLIDE TYPE: DASHBOARD/MULTI-KPI ---- */
+    .slide-dashboard {
+      background: var(--color-white) !important;
+    }
+    .slide-dashboard h2 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+    .slide-dashboard .subtitle-line {
+      font-size: var(--text-caption);
+      color: var(--color-slate);
+      margin-bottom: 28px;
+    }
+
+    /* ---- SLIDE TYPE: BEFORE/AFTER ---- */
+    .slide-beforeafter {
+      background: var(--color-white) !important;
+    }
+    .ba-container {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      gap: 0;
+      align-items: stretch;
+      margin-top: 24px;
+    }
+    .ba-panel {
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .ba-before {
+      background: var(--color-rose-50);
+      border: 2px solid rgba(244,63,94,0.15);
+    }
+    .ba-after {
+      background: var(--color-emerald-50);
+      border: 2px solid rgba(16,185,129,0.15);
+    }
+    .ba-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: var(--color-slate);
+    }
+    .ba-panel h3 {
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .ba-before h3 { color: var(--color-rose); }
+    .ba-after h3 { color: var(--color-emerald); }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      font-size: 20px;
+    }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-row .metric-label { color: var(--color-slate-700); font-weight: 500; }
+    .metric-row .metric-value { font-weight: 700; font-family: var(--font-mono); font-size: 20px; }
+    .ba-before .metric-value { color: var(--color-rose); }
+    .ba-after .metric-value { color: var(--color-emerald); }
+
+    /* ---- SLIDE TYPE: COMPARISON ---- */
+    .slide-comparison {
+      background: var(--color-white) !important;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 24px;
+    }
+    .comparison-col {
+      border-radius: 12px;
+      padding: 32px;
+      position: relative;
+    }
+    .comparison-col.without {
+      background: var(--color-gray);
+      border: 2px solid var(--color-slate-300);
+    }
+    .comparison-col.with {
+      background: linear-gradient(135deg, var(--color-navy) 0%, #1e3a5f 100%);
+      color: var(--color-white);
+      box-shadow: var(--shadow-elevated);
+    }
+    .comparison-col h3 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(0,0,0,0.08);
+    }
+    .comparison-col.with h3 {
+      color: var(--color-blue);
+      border-bottom-color: rgba(255,255,255,0.15);
+    }
+    .comparison-col.without h3 { color: var(--color-slate); }
+
+    .comp-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 19px;
+      line-height: 1.4;
+    }
+    .comp-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .comp-icon.x { background: rgba(244,63,94,0.15); color: var(--color-rose); }
+    .comp-icon.check { background: rgba(16,185,129,0.25); color: var(--color-emerald); }
+    .comparison-col.with .comp-item { color: rgba(255,255,255,0.9); }
+    .comparison-badge {
+      position: absolute;
+      top: -12px;
+      right: 24px;
+      background: var(--color-emerald);
+      color: var(--color-white);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 14px;
+      border-radius: 12px;
+    }
+
+    /* ---- SLIDE TYPE: TIMELINE ---- */
+    .slide-timeline {
+      background: var(--color-white) !important;
+    }
+    .timeline-container {
+      display: flex;
+      gap: 0;
+      margin-top: 32px;
+      position: relative;
+    }
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 40px;
+      right: 40px;
+      height: 4px;
+      background: var(--color-slate-300);
+      border-radius: 2px;
+    }
+    .timeline-phase {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      padding: 0 8px;
+    }
+    .timeline-dot {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--color-white);
+      position: relative;
+      z-index: 2;
+      box-shadow: var(--shadow-card);
+    }
+    .timeline-phase:nth-child(1) .timeline-dot { background: var(--color-blue); }
+    .timeline-phase:nth-child(2) .timeline-dot { background: var(--color-navy); }
+    .timeline-phase:nth-child(3) .timeline-dot { background: var(--color-emerald); }
+    .timeline-phase:nth-child(4) .timeline-dot { background: var(--color-blue-900); }
+
+    .timeline-label {
+      font-size: var(--text-caption);
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: 8px;
+    }
+    .timeline-months {
+      font-size: 14px;
+      color: var(--color-slate);
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+    }
+    .timeline-details {
+      font-size: 16px;
+      color: var(--color-slate-700);
+      line-height: 1.4;
+    }
+
+    /* ---- SLIDE TYPE: CTA ---- */
+    .slide-cta {
+      background: linear-gradient(135deg, var(--color-navy) 0%, #1e3a5f 60%, var(--color-blue-900) 100%);
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .slide-cta h2 {
+      color: var(--color-white) !important;
+      font-size: 40px;
+      font-weight: 800;
+      max-width: 85%;
+      line-height: 1.2;
+      margin-bottom: 32px;
+    }
+    .cta-box {
+      background: rgba(59,130,246,0.15);
+      border: 2px solid rgba(59,130,246,0.3);
+      border-radius: 16px;
+      padding: 32px 40px;
+      margin-bottom: 32px;
+      max-width: 700px;
+    }
+    .cta-ask {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-blue);
+      margin-bottom: 12px;
+    }
+    .cta-details {
+      font-size: 20px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.5;
+    }
+    .cta-roi {
+      display: flex;
+      gap: 48px;
+      margin-top: 32px;
+    }
+    .cta-roi-item {
+      text-align: left;
+    }
+    .cta-roi-number {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--color-emerald);
+      font-family: var(--font-heading);
+    }
+    .cta-roi-label {
+      font-size: 16px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 4px;
+    }
+    .cta-contact {
+      margin-top: 40px;
+      font-size: var(--text-caption);
+      color: rgba(255,255,255,0.40);
+    }
+
+    /* ---- VISUAL BAR CHART (CSS-ONLY) ---- */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      height: 180px;
+      margin-top: 16px;
+      padding: 0 16px;
+    }
+    .bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar {
+      width: 100%;
+      max-width: 80px;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      min-height: 20px;
+      transition: height 0.5s ease;
+    }
+    .bar .bar-value {
+      position: absolute;
+      top: -24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--color-navy);
+    }
+    .bar-label {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--color-slate);
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* ---- PRINT-PDF OVERRIDES ---- */
+    @media print {
+      .reveal section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ============================================================
+           SLIDE 1: TITLE
+      ============================================================ -->
+      <section class="slide-title">
+        <div class="badge">Executive Briefing</div>
+        <div class="accent-bar"></div>
+        <h1>Building a Data Science Practice</h1>
+        <p class="subtitle">A dedicated data science team will generate $15M+ in annual value by unlocking revenue growth, operational efficiency, and strategic competitive advantage.</p>
+        <p class="meta">Presented to the Executive Leadership Team &nbsp;|&nbsp; March 2026</p>
+
+        <aside class="notes">
+          Thank you all for making time this morning. I know we have a packed agenda, so I'll be direct about what I'm here to discuss — and what I'm asking for. We're sitting on an extraordinary asset: petabytes of customer data, operational data, market data — and right now, we're barely scratching the surface. Today I want to walk you through why building a dedicated data science team isn't just a nice-to-have. It's a strategic imperative. A dedicated data science team will generate fifteen million dollars or more in annual value by unlocking revenue growth, operational efficiency, and strategic competitive advantage. [PAUSE] That's the thesis. Let me show you the evidence.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 2: STATISTICS / BIG NUMBER — Market Context
+      ============================================================ -->
+      <section class="slide-stat">
+        <div class="big-number">73<span class="pct">%</span></div>
+        <h2>of Fortune 500 companies now have dedicated data science teams</h2>
+        <p class="context">McKinsey Global Survey on AI, 2025 — Up from 47% in 2021</p>
+
+        <aside class="notes">
+          Let's start with context. Seventy-three percent of Fortune 500 companies now have a dedicated data science function. Not an analytics team doing Excel work — a data science team building machine learning models. [PAUSE] That's up from 47 percent just four years ago. What changed? These companies realized something fundamental: the data they were collecting wasn't just for reporting. It was for predicting. For optimizing. For automating. And here's the question that should concern all of us: where do we fall in that remaining 27 percent? Because that group is shrinking fast — and the cost of joining late gets higher every quarter. Our competitors aren't waiting. Let me show you what they're doing.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 3: SECTION DIVIDER — Pillar 1: Revenue Impact
+      ============================================================ -->
+      <section class="slide-section slide-section-blue">
+        <div class="section-num">01</div>
+        <h2>Revenue Impact</h2>
+        <p>ML-driven pricing, churn prediction, and upsell recommendations that directly hit the top line</p>
+
+        <aside class="notes">
+          Let's talk about money first — specifically, the revenue we're leaving on the table. I've organized this business case into three pillars, and the first is the most immediate and the most measurable: direct revenue impact. What does a data science team do for your top line? Three things: it optimizes pricing in real time, it predicts which customers are about to leave before they actually leave, and it identifies upsell opportunities your sales team simply cannot see on their own. Every dollar I'm about to show you is modeled on our actual customer data and our actual revenue base — not hypothetical projections from a consulting deck. Let me show you the numbers.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 4: DASHBOARD / MULTI-KPI — Revenue Metrics
+      ============================================================ -->
+      <section class="slide-dashboard">
+        <h2>ML models unlock $8.2M in revenue within the first 18 months</h2>
+        <p class="subtitle-line">Modeled on our current customer base of 42,000 accounts and $380M annual revenue</p>
+
+        <div class="kpi-grid kpi-grid-3">
+          <div class="kpi-card blue">
+            <div class="kpi-number" style="color: var(--color-blue);">$3.8M</div>
+            <div class="kpi-label">Churn Reduction<br><span style="font-size:14px; color: var(--color-slate);">Reduce annual churn from 14% to 9.5%</span></div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-number" style="color: var(--color-emerald);">$2.7M</div>
+            <div class="kpi-label">Dynamic Pricing Uplift<br><span style="font-size:14px; color: var(--color-slate);">2.1% margin improvement across product lines</span></div>
+          </div>
+          <div class="kpi-card rose">
+            <div class="kpi-number" style="color: var(--color-rose);">$1.7M</div>
+            <div class="kpi-label">Upsell/Cross-sell<br><span style="font-size:14px; color: var(--color-slate);">ML-targeted recommendations, 23% conversion lift</span></div>
+          </div>
+        </div>
+
+        <!-- CSS bar chart showing revenue impact by quarter -->
+        <div style="margin-top: 28px; display: flex; gap: 32px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <div style="font-size: 16px; font-weight: 600; color: var(--color-slate); margin-bottom: 12px;">Projected cumulative impact by quarter</div>
+            <div class="bar-chart">
+              <div class="bar-group">
+                <div class="bar" style="height: 15%; background: var(--color-blue);"><div class="bar-value">$0.4M</div></div>
+                <div class="bar-label">Q2</div>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 30%; background: var(--color-blue);"><div class="bar-value">$1.6M</div></div>
+                <div class="bar-label">Q3</div>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 55%; background: var(--color-blue);"><div class="bar-value">$4.1M</div></div>
+                <div class="bar-label">Q4</div>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 75%; background: var(--color-blue);"><div class="bar-value">$6.0M</div></div>
+                <div class="bar-label">Q5</div>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 100%; background: var(--color-emerald);"><div class="bar-value" style="color: var(--color-emerald);">$8.2M</div></div>
+                <div class="bar-label">Q6</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          Here's the revenue dashboard, and I want you to focus on the total first: eight point two million dollars in revenue impact within 18 months. [PAUSE] Let me walk you through each stream. Churn reduction is the biggest lever at 3.8 million. Right now we lose 14 percent of customers annually. A churn prediction model — similar to what Spotify uses to retain subscribers — can flag at-risk accounts 90 days out. Our retention team gets a prioritized list every Monday morning. We conservatively model reducing churn to 9.5 percent. Next, dynamic pricing. A 2.1 percent margin improvement doesn't sound dramatic until you apply it across our entire product line. That's 2.7 million. And upsell recommendations? When Netflix-style recommendation engines are applied to B2B sales, conversion rates jump. We're modeling a 23 percent lift. Now — what if I told you this is just the first pillar?
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 5: SECTION DIVIDER — Pillar 2: Operational Efficiency
+      ============================================================ -->
+      <section class="slide-section slide-section-emerald">
+        <div class="section-num">02</div>
+        <h2>Operational Efficiency</h2>
+        <p>Process automation, anomaly detection, and demand forecasting that cut costs and accelerate decisions</p>
+
+        <aside class="notes">
+          The second pillar is about the bottom line — operational efficiency. Revenue is exciting, but what I find even more compelling is how data science fundamentally changes how your operations actually run day to day. We're talking about processes that currently require teams of people doing manual, repetitive work that a well-trained model can do in seconds — with higher accuracy. But let me ask you a question: how many hours a week does your operations team spend on tasks a well-trained algorithm could handle? [PAUSE] The answer, based on our internal audit last quarter, is over 2,400 person-hours per month. That's the equivalent of fifteen full-time employees doing work that machines are better at. Let me show you the before and after.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 6: BEFORE / AFTER — Manual vs. Automated
+      ============================================================ -->
+      <section class="slide-beforeafter">
+        <h2>Automated ML pipelines replace 2,400 manual hours per month</h2>
+
+        <div class="ba-container">
+          <!-- BEFORE -->
+          <div class="ba-panel ba-before">
+            <h3>Today: Manual Processes</h3>
+            <div class="metric-row">
+              <span class="metric-label">Demand forecasting</span>
+              <span class="metric-value">72 hrs/wk</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Anomaly detection</span>
+              <span class="metric-value">Reactive</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Report generation</span>
+              <span class="metric-value">5 days</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Forecast accuracy</span>
+              <span class="metric-value">62%</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Annual cost</span>
+              <span class="metric-value">$4.2M</span>
+            </div>
+          </div>
+
+          <!-- ARROW -->
+          <div class="ba-arrow">&#10132;</div>
+
+          <!-- AFTER -->
+          <div class="ba-panel ba-after">
+            <h3>With ML Pipeline</h3>
+            <div class="metric-row">
+              <span class="metric-label">Demand forecasting</span>
+              <span class="metric-value">8 hrs/wk</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Anomaly detection</span>
+              <span class="metric-value">Real-time</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Report generation</span>
+              <span class="metric-value">4 hours</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Forecast accuracy</span>
+              <span class="metric-value">91%</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Annual cost</span>
+              <span class="metric-value">$1.4M</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="slide-note">$2.8M annual savings + 89% reduction in manual forecasting labor &nbsp;|&nbsp; Based on Walmart and Amazon operations benchmarks</p>
+
+        <aside class="notes">
+          This is the slide I want you to photograph with your phone. Left side: what we do today. Right side: what a data science team delivers. Look at demand forecasting — 72 hours a week of manual spreadsheet work collapses to eight hours of model oversight. Anomaly detection goes from reactive — meaning we find problems after customers complain — to real-time alerts that catch issues before they hit production. And forecast accuracy? We jump from 62 percent to 91 percent. [PAUSE] Walmart's demand forecasting team saved them over 200 million dollars a year by getting forecast accuracy above 90 percent. We're not Walmart, but the proportional savings are real. We model this at 2.8 million in annual savings. That's not theoretical — it's based on the specific processes we audited in Q4.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 7: SECTION DIVIDER — Pillar 3: Strategic Advantage
+      ============================================================ -->
+      <section class="slide-section slide-section-navy">
+        <div class="section-num">03</div>
+        <h2>Strategic Advantage</h2>
+        <p>Competitive differentiation, data-informed decisions, and the ability to attract world-class talent</p>
+
+        <aside class="notes">
+          The third pillar is the hardest to put a dollar figure on, but it may be the most important of all. Strategic advantage. Revenue and efficiency are about optimizing what we already do. Strategic advantage is about being able to do things our competitors simply cannot — and that gap compounds over time. And here's the question I want you to sit with: when your competitor can predict market shifts 90 days before you can, how long before your market share starts eroding? [PAUSE] That's not hypothetical. Our two largest competitors both hired data science leads in the last 18 months. Let me show you exactly where we stand versus the competitive landscape right now.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 8: COMPARISON — Us vs. Competitors
+      ============================================================ -->
+      <section class="slide-comparison">
+        <h2>Without data science, we cede strategic ground every quarter</h2>
+
+        <div class="comparison-grid">
+          <div class="comparison-col without">
+            <h3>Our Current State</h3>
+            <div class="comp-item">
+              <div class="comp-icon x">&#10005;</div>
+              <span>Pricing decisions based on annual reviews and gut feel</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon x">&#10005;</div>
+              <span>Customer churn discovered at renewal time</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon x">&#10005;</div>
+              <span>Market trends analyzed quarterly in static reports</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon x">&#10005;</div>
+              <span>Top ML talent goes to competitors with established DS teams</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon x">&#10005;</div>
+              <span>Product roadmap driven by loudest customer voice</span>
+            </div>
+          </div>
+          <div class="comparison-col with">
+            <div class="comparison-badge">Target State</div>
+            <h3>With a Data Science Team</h3>
+            <div class="comp-item">
+              <div class="comp-icon check">&#10003;</div>
+              <span>Real-time pricing optimization reacting to market signals</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon check">&#10003;</div>
+              <span>90-day churn prediction with proactive retention plays</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon check">&#10003;</div>
+              <span>Continuous market intelligence with predictive dashboards</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon check">&#10003;</div>
+              <span>DS team attracts top-tier engineering and analytics talent</span>
+            </div>
+            <div class="comp-item">
+              <div class="comp-icon check">&#10003;</div>
+              <span>Product decisions backed by usage data and predictive models</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          This comparison should make the strategic gap visceral. On the left: where we are today. Pricing reviews happen once a year. We find out about churn at renewal time — which means we've already lost. Our market analysis is a quarterly PowerPoint deck that's stale before it's presented. And here's one that should worry all of us: the best machine learning engineers in the market aren't even considering us because we don't have a data science practice. They go to companies that already have one. [PAUSE] On the right: our target state. Real-time pricing. Predictive churn. Continuous intelligence. And a talent flywheel where having a DS team attracts more top talent. Stitch Fix built their entire competitive moat on this principle — their data science team IS their strategic advantage.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 9: TIMELINE — 18-Month Buildout Roadmap
+      ============================================================ -->
+      <section class="slide-timeline">
+        <h2>We can deliver first production models in 6 months and full capability by month 18</h2>
+        <div style="font-size: var(--text-caption); color: var(--color-slate); margin-top: -16px;">18-month phased buildout — de-risked with value delivery at every stage</div>
+
+        <div class="timeline-container">
+          <div class="timeline-phase">
+            <div class="timeline-dot">P1</div>
+            <div class="timeline-label">Foundation</div>
+            <div class="timeline-months">Months 1-6</div>
+            <div class="timeline-details">
+              4 hires: DS Lead, 2 ML Engineers, 1 Data Engineer<br><br>
+              First model: churn prediction<br>
+              Infrastructure: cloud ML platform
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-dot">P2</div>
+            <div class="timeline-label">Scale</div>
+            <div class="timeline-months">Months 7-12</div>
+            <div class="timeline-details">
+              +4 hires: 2 DS, 1 MLOps, 1 Analyst<br><br>
+              Models: pricing, demand forecast<br>
+              First ROI milestone: $2M+
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-dot">P3</div>
+            <div class="timeline-label">Optimize</div>
+            <div class="timeline-months">Months 13-18</div>
+            <div class="timeline-details">
+              +4 hires: specialized roles<br><br>
+              Full model suite in production<br>
+              Target: $8M+ annual run rate
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-dot">&#8734;</div>
+            <div class="timeline-label">Steady State</div>
+            <div class="timeline-months">Month 18+</div>
+            <div class="timeline-details">
+              12-person team at full capacity<br><br>
+              Continuous model improvement<br>
+              Target: $15M+ annual value
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          Here's the roadmap, and I want to emphasize something critical: this is not a "spend for two years and hope it works" plan. Every phase delivers measurable value. [PAUSE] Phase 1 is six months. We hire four people — a data science lead, two ML engineers, and a data engineer. In that phase, we build infrastructure and ship our first production model: churn prediction. That single model starts generating value in month four. Phase 2, we scale to eight people and deploy pricing optimization and demand forecasting. By month 12, we've crossed the 2 million dollar ROI threshold. Phase 3 brings us to full strength at 12 people with the complete model suite in production. And at steady state? Fifteen million dollars or more in annual value. The math is straightforward: every phase pays for the next phase before it starts. This is a self-funding investment.
+        </aside>
+      </section>
+
+      <!-- ============================================================
+           SLIDE 10: CTA — Closing Ask
+      ============================================================ -->
+      <section class="slide-cta">
+        <div class="accent-bar" style="background: var(--color-emerald);"></div>
+        <h2>Approve $2.4M seed investment for Phase 1:<br>6 months, 4 hires, first model in production</h2>
+
+        <div class="cta-box">
+          <div class="cta-ask">The Ask: $2.4M for Phase 1</div>
+          <div class="cta-details">
+            $1.6M personnel (4 senior hires for 6 months)<br>
+            $500K cloud infrastructure and tooling<br>
+            $300K recruiting, onboarding, and training
+          </div>
+        </div>
+
+        <div class="cta-roi">
+          <div class="cta-roi-item">
+            <div class="cta-roi-number">6.3x</div>
+            <div class="cta-roi-label">ROI within 18 months</div>
+          </div>
+          <div class="cta-roi-item">
+            <div class="cta-roi-number">$15M+</div>
+            <div class="cta-roi-label">Annual value at steady state</div>
+          </div>
+          <div class="cta-roi-item">
+            <div class="cta-roi-number">4 mo</div>
+            <div class="cta-roi-label">Time to first production model</div>
+          </div>
+        </div>
+
+        <p class="cta-contact">Next step: 30-minute deep dive with CFO and CTO to review detailed financial model</p>
+
+        <aside class="notes">
+          So here's my ask. [PAUSE] Two point four million dollars to fund Phase 1. That covers four senior hires for six months, cloud infrastructure, and recruiting costs. I'll be specific about what you get for that investment: a 6.3x return on investment within 18 months. Fifteen million dollars or more in annual value at steady state. And the first production model — churn prediction — live and generating value within four months. [PAUSE] Let me bring this full circle. A dedicated data science team will generate fifteen million dollars or more in annual value by unlocking revenue growth, operational efficiency, and strategic competitive advantage. That's not a projection built on hope. It's modeled on our actual data, our actual customers, and benchmarks from companies that have walked this path before us. The next step is a 30-minute session with Sarah and Marcus to walk through the detailed financial model. I'd like to schedule that for this week. Who's ready to move forward?
+        </aside>
+      </section>
+
+    </div><!-- end .slides -->
+  </div><!-- end .reveal -->
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      width: 1280,
+      height: 720,
+      margin: 0,
+      center: false,
+      plugins: [ RevealNotes ]
+    });
+  </script>
+</body>
+</html>

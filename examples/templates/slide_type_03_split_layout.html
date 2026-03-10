@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Content + Image (Split Layout) — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Creative palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Left text + right gradient panel (Corporate) ===== */
+    .slide-split-corp {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      height: 100%;
+    }
+
+    .slide-split-corp .text-panel {
+      width: 50%;
+      padding: var(--slide-padding);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--corp-white);
+    }
+
+    .slide-split-corp .text-panel h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-navy);
+      line-height: 1.25;
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-split-corp .key-insight {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+
+    .slide-split-corp .insight-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--corp-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .slide-split-corp .insight-text {
+      font-family: var(--font-body);
+      font-size: 20px;
+      color: var(--tech-charcoal);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .slide-split-corp .insight-text strong {
+      color: var(--corp-navy);
+    }
+
+    .slide-split-corp .visual-panel {
+      width: 50%;
+      background: linear-gradient(135deg, var(--corp-navy) 0%, var(--corp-blue) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--slide-padding);
+      position: relative;
+    }
+
+    /* CSS pipeline diagram */
+    .pipeline-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .pipeline-step {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+    }
+
+    .pipeline-step::after {
+      content: '';
+      position: absolute;
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .pipeline-step:last-child::after {
+      display: none;
+    }
+
+    .pipeline-step .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--corp-blue);
+      color: var(--corp-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .pipeline-step .step-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--corp-white);
+      font-weight: 500;
+    }
+
+    .pipeline-step.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--corp-emerald);
+    }
+
+    .pipeline-step.active .step-num {
+      background: var(--corp-emerald);
+    }
+
+    /* ===== Variant B: Left data viz + right explanation (Technical) ===== */
+    .slide-split-tech {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      height: 100%;
+    }
+
+    .slide-split-tech .viz-panel {
+      width: 50%;
+      background: var(--tech-nearblack);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--slide-padding);
+    }
+
+    .slide-split-tech .explain-panel {
+      width: 50%;
+      background: var(--corp-white);
+      padding: var(--slide-padding);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-split-tech .explain-panel h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--tech-charcoal);
+      line-height: 1.25;
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-split-tech .explain-panel p {
+      font-family: var(--font-body);
+      font-size: 20px;
+      color: var(--tech-slate);
+      line-height: 1.6;
+      margin: 0 0 20px 0;
+    }
+
+    .slide-split-tech .stat-callout {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .slide-split-tech .stat-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 800;
+      color: var(--tech-cyan);
+    }
+
+    .slide-split-tech .stat-label {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+    }
+
+    /* CSS confusion matrix */
+    .confusion-matrix {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 4px;
+      width: 280px;
+    }
+
+    .confusion-matrix .corner {
+      background: transparent;
+    }
+
+    .confusion-matrix .header {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-slate);
+      text-align: center;
+      padding: 8px;
+    }
+
+    .confusion-matrix .row-header {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--tech-slate);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 12px;
+    }
+
+    .confusion-matrix .cell {
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      min-height: 100px;
+    }
+
+    .confusion-matrix .cell .cell-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--corp-white);
+    }
+
+    .confusion-matrix .cell .cell-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 4px;
+    }
+
+    .confusion-matrix .tp { background: rgba(6, 182, 212, 0.8); }
+    .confusion-matrix .fp { background: rgba(244, 63, 94, 0.4); }
+    .confusion-matrix .fn { background: rgba(244, 63, 94, 0.4); }
+    .confusion-matrix .tn { background: rgba(6, 182, 212, 0.5); }
+
+    .matrix-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--tech-cyan);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* ===== Variant C: Right text + left geometric pattern ===== */
+    .slide-split-geo {
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      height: 100%;
+    }
+
+    .slide-split-geo .geo-panel {
+      width: 45%;
+      background: linear-gradient(160deg, var(--creative-purple) 0%, var(--creative-violet) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Geometric pattern using CSS */
+    .geo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(3, 80px);
+      gap: 12px;
+      transform: rotate(-12deg);
+    }
+
+    .geo-grid .geo-cell {
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .geo-grid .geo-cell:nth-child(1) { background: rgba(255,255,255,0.15); }
+    .geo-grid .geo-cell:nth-child(2) { background: rgba(255,255,255,0.08); border-radius: 50%; }
+    .geo-grid .geo-cell:nth-child(3) { background: rgba(245,158,11,0.3); }
+    .geo-grid .geo-cell:nth-child(4) { background: rgba(255,255,255,0.05); border-radius: 50%; }
+    .geo-grid .geo-cell:nth-child(5) { background: rgba(245,158,11,0.5); }
+    .geo-grid .geo-cell:nth-child(6) { background: rgba(255,255,255,0.12); }
+    .geo-grid .geo-cell:nth-child(7) { background: rgba(255,255,255,0.1); }
+    .geo-grid .geo-cell:nth-child(8) { background: rgba(255,255,255,0.06); }
+    .geo-grid .geo-cell:nth-child(9) { background: rgba(245,158,11,0.2); border-radius: 50%; }
+
+    .slide-split-geo .content-panel {
+      width: 55%;
+      background: var(--corp-white);
+      padding: var(--slide-padding);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-split-geo .content-panel .topic-tag {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--creative-violet);
+      margin: 0 0 12px 0;
+    }
+
+    .slide-split-geo .content-panel h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-heading);
+      font-weight: 700;
+      color: var(--creative-purple);
+      line-height: 1.25;
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-split-geo .comparison-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    .slide-split-geo .comparison-table th {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--tech-slate);
+      text-align: left;
+      padding: 0 12px 8px 12px;
+    }
+
+    .slide-split-geo .comparison-table td {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      color: var(--tech-charcoal);
+      padding: 12px;
+      background: var(--creative-warm);
+      line-height: 1.4;
+    }
+
+    .slide-split-geo .comparison-table td:first-child {
+      border-radius: 8px 0 0 8px;
+      font-weight: 600;
+      color: var(--creative-purple);
+    }
+
+    .slide-split-geo .comparison-table td:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .slide-split-geo .comparison-table .winner {
+      background: rgba(139, 92, 246, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Left text + right CSS gradient panel (Corporate) -->
+      <!-- CUSTOMIZATION: Change h2 for assertion title, key-insight items for content points, pipeline-step labels for diagram -->
+      <section class="slide-split-corp">
+        <div class="text-panel">
+          <h2>Automated pipelines reduced model deployment time from weeks to hours</h2>
+          <div class="key-insight">
+            <div class="insight-icon">&#9889;</div>
+            <p class="insight-text"><strong>Before:</strong> Manual handoff between data scientists and engineers averaged 14 days per model iteration</p>
+          </div>
+          <div class="key-insight">
+            <div class="insight-icon">&#10004;</div>
+            <p class="insight-text"><strong>After:</strong> CI/CD pipeline with automated testing deploys validated models in under 4 hours</p>
+          </div>
+          <div class="key-insight">
+            <div class="insight-icon">&#128200;</div>
+            <p class="insight-text"><strong>Impact:</strong> 6x faster iteration cycles enabled rapid A/B testing of model variants</p>
+          </div>
+        </div>
+        <div class="visual-panel">
+          <div class="pipeline-diagram">
+            <div class="pipeline-step">
+              <div class="step-num">1</div>
+              <span class="step-label">Data Validation</span>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">2</div>
+              <span class="step-label">Feature Transform</span>
+            </div>
+            <div class="pipeline-step active">
+              <div class="step-num">3</div>
+              <span class="step-label">Model Training</span>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">4</div>
+              <span class="step-label">Evaluation Gate</span>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-num">5</div>
+              <span class="step-label">Canary Deploy</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This slide illustrates the before-and-after of our deployment workflow. On the left, three key metrics that demonstrate the transformation. On the right, the five-stage pipeline we built. The green stage — model training — is where most of the automation pays off. Each stage has automated quality gates that catch issues before they reach production.
+        </aside>
+      </section>
+
+      <!-- Variant B: Left CSS data visualization + right explanation (Technical) -->
+      <!-- CUSTOMIZATION: Change confusion matrix values, h2 assertion, stat-callout values, and explanation text -->
+      <section class="slide-split-tech">
+        <div class="viz-panel">
+          <div class="matrix-title">Confusion Matrix — Fraud Detection Model v3.2</div>
+          <div class="confusion-matrix">
+            <div class="corner"></div>
+            <div class="header">Pred: Fraud</div>
+            <div class="header">Pred: Legit</div>
+            <div class="row-header">Actual: Fraud</div>
+            <div class="cell tp">
+              <span class="cell-value">847</span>
+              <span class="cell-label">TP</span>
+            </div>
+            <div class="cell fn">
+              <span class="cell-value">53</span>
+              <span class="cell-label">FN</span>
+            </div>
+            <div class="row-header">Actual: Legit</div>
+            <div class="cell fp">
+              <span class="cell-value">124</span>
+              <span class="cell-label">FP</span>
+            </div>
+            <div class="cell tn">
+              <span class="cell-value">8,976</span>
+              <span class="cell-label">TN</span>
+            </div>
+          </div>
+        </div>
+        <div class="explain-panel">
+          <h2>Model v3.2 catches 94% of fraudulent transactions while keeping false positives below 1.4%</h2>
+          <p>By rebalancing the training set with SMOTE and tuning the classification threshold to 0.42, we achieved a recall of 0.941 without significantly degrading precision.</p>
+          <div class="stat-callout">
+            <span class="stat-value">94.1%</span>
+            <span class="stat-label">Recall (sensitivity)</span>
+          </div>
+          <div class="stat-callout">
+            <span class="stat-value">87.2%</span>
+            <span class="stat-label">Precision</span>
+          </div>
+        </div>
+        <aside class="notes">
+          The confusion matrix on the left tells the story clearly. Out of 900 actual fraud cases, our model correctly flagged 847 — that's a recall of 94.1%. The 53 missed cases is our primary area for improvement. On the false positive side, only 124 out of over 9,000 legitimate transactions were incorrectly flagged. This 1.4% false positive rate is well within our operational tolerance — the fraud review team can handle that volume without customer experience degradation.
+        </aside>
+      </section>
+
+      <!-- Variant C: Right text + left geometric pattern panel -->
+      <!-- CUSTOMIZATION: Change topic-tag, h2, comparison-table rows, and geo-panel gradient colors -->
+      <section class="slide-split-geo">
+        <div class="geo-panel">
+          <div class="geo-grid">
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+            <div class="geo-cell"></div>
+          </div>
+        </div>
+        <div class="content-panel">
+          <p class="topic-tag">Model Comparison</p>
+          <h2>Gradient boosting consistently outperforms neural networks on tabular datasets under 100K rows</h2>
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>AUC-ROC</th>
+                <th>Train Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="winner">
+                <td>XGBoost</td>
+                <td>0.934</td>
+                <td>12 min</td>
+              </tr>
+              <tr>
+                <td>LightGBM</td>
+                <td>0.929</td>
+                <td>8 min</td>
+              </tr>
+              <tr>
+                <td>MLP (3-layer)</td>
+                <td>0.891</td>
+                <td>47 min</td>
+              </tr>
+              <tr>
+                <td>TabNet</td>
+                <td>0.903</td>
+                <td>62 min</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="notes">
+          This comparison table summarizes our benchmark across four model families. XGBoost led on AUC-ROC at 0.934, trained in just 12 minutes. The neural approaches — MLP and TabNet — both underperformed on this dataset size. This aligns with recent research: for structured tabular data with fewer than 100,000 rows, tree-based methods still reign. We chose XGBoost as our production model for this reason.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

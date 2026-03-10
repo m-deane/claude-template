@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Closing/CTA — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate Palette */
+      --corp-navy: #0f172a;
+      --corp-steel: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical Palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-near-black: #0f172a;
+
+      /* Sales Palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+
+      /* Creative Palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+    }
+
+    .reveal .slides section {
+      padding: var(--slide-padding);
+      font-family: var(--font-body);
+    }
+
+    /* ── Variant A: Clean Corporate CTA with Next Steps ── */
+    /* CUSTOMIZATION: Replace next-step items, contact information, and CTA text for any closing slide -->
+    .cta-corp-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .cta-corp-heading {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 800;
+      color: var(--corp-navy);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .cta-corp-subheading {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--tech-slate);
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+
+    .cta-next-steps {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .cta-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--corp-white);
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: var(--shadow-card);
+      min-width: 220px;
+    }
+
+    .cta-step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--corp-steel);
+      color: var(--corp-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .cta-step-text {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--corp-navy);
+      text-align: left;
+    }
+
+    .cta-contact-row {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      padding: 20px 32px;
+      background: var(--corp-white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .cta-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-caption);
+      color: var(--tech-slate);
+    }
+
+    .cta-contact-icon { font-size: 18px; }
+
+    .cta-contact-value {
+      font-weight: 600;
+      color: var(--corp-navy);
+    }
+
+    /* ── Variant B: Bold Statement on Dark Gradient ── */
+    /* CUSTOMIZATION: Change the headline, subtitle, and button text/styling for any high-impact closing -->
+    .cta-bold-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      padding: 40px;
+    }
+
+    .cta-bold-headline {
+      font-family: var(--font-heading);
+      font-size: 52px;
+      font-weight: 900;
+      color: var(--corp-white);
+      line-height: 1.15;
+      max-width: 750px;
+      margin-bottom: 20px;
+    }
+
+    .cta-bold-highlight {
+      background: linear-gradient(135deg, var(--tech-cyan), var(--creative-violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cta-bold-subtitle {
+      font-size: var(--text-body);
+      color: rgba(255,255,255,0.6);
+      max-width: 550px;
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
+
+    .cta-bold-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, var(--corp-steel), var(--creative-violet));
+      color: var(--corp-white);
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(59,130,246,0.4);
+      letter-spacing: 0.5px;
+      margin-bottom: 32px;
+    }
+
+    .cta-bold-button-arrow { font-size: 22px; }
+
+    .cta-bold-meta {
+      display: flex;
+      gap: 40px;
+      font-size: var(--text-caption);
+      color: rgba(255,255,255,0.4);
+    }
+
+    .cta-bold-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Variant C: Summary + CTA Split Layout ── */
+    /* CUSTOMIZATION: Replace takeaway items, CTA heading, action items, and contact details for any summary/closing -->
+    .cta-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: 100%;
+      margin: -60px;
+    }
+
+    .cta-split-left {
+      background: var(--corp-white);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cta-split-right {
+      background: var(--sales-blue);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: var(--corp-white);
+    }
+
+    .cta-split-label {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .cta-split-label.left-label { color: var(--tech-slate); }
+    .cta-split-label.right-label { color: rgba(255,255,255,0.7); }
+
+    .cta-split-heading {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      line-height: 1.3;
+    }
+
+    .cta-split-heading.left-heading { color: var(--corp-navy); }
+    .cta-split-heading.right-heading { color: var(--corp-white); }
+
+    .takeaway-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .takeaway-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--corp-light);
+      font-size: 16px;
+      color: var(--corp-navy);
+      line-height: 1.4;
+    }
+
+    .takeaway-item:last-child { border-bottom: none; }
+
+    .takeaway-icon {
+      color: var(--corp-emerald);
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .action-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 28px;
+    }
+
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .action-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .cta-split-contact {
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .cta-split-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 6px;
+    }
+
+    .cta-split-contact-value { color: var(--corp-white); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Clean Corporate CTA with Next Steps -->
+      <!-- CUSTOMIZATION: Replace the headline, next-step cards, and contact info for any professional closing slide -->
+      <section data-background-color="#f1f5f9">
+        <div class="cta-corp-container">
+          <div class="cta-corp-heading">Ready to Build Your ML Platform?</div>
+          <div class="cta-corp-subheading">Three concrete steps to move from exploration to production-grade machine learning</div>
+
+          <div class="cta-next-steps">
+            <div class="cta-step">
+              <div class="cta-step-number">1</div>
+              <div class="cta-step-text">Schedule a<br>technical assessment</div>
+            </div>
+            <div class="cta-step">
+              <div class="cta-step-number">2</div>
+              <div class="cta-step-text">Identify your first<br>high-impact use case</div>
+            </div>
+            <div class="cta-step">
+              <div class="cta-step-number">3</div>
+              <div class="cta-step-text">Launch a 4-week<br>proof of concept</div>
+            </div>
+          </div>
+
+          <div class="cta-contact-row">
+            <div class="cta-contact-item">
+              <span class="cta-contact-icon">&#9993;</span>
+              <span class="cta-contact-value">ds-team@company.com</span>
+            </div>
+            <div class="cta-contact-item">
+              <span class="cta-contact-icon">&#128279;</span>
+              <span class="cta-contact-value">company.com/ml-platform</span>
+            </div>
+            <div class="cta-contact-item">
+              <span class="cta-contact-icon">&#128197;</span>
+              <span class="cta-contact-value">Book time: cal.com/ds-team</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">Here is my ask. Step one: let us schedule a 60-minute technical assessment where we evaluate your current data maturity and identify gaps. Step two: together we pick one use case — ideally something with clear revenue impact and available data. Step three: we run a focused 4-week proof of concept. In past engagements, this POC typically delivers enough measurable value to justify the full platform investment. I have put our team email, the platform documentation, and a direct booking link on screen. I am also happy to take questions now and follow up with a detailed proposal afterward.</aside>
+      </section>
+
+      <!-- Variant B: Bold Statement on Dark Gradient with Action Button -->
+      <!-- CUSTOMIZATION: Change the headline, highlight text, subtitle, button text, and meta info for any bold closing -->
+      <section data-background="linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)">
+        <div class="cta-bold-container">
+          <div class="cta-bold-headline">
+            The companies that invest in<br>
+            <span class="cta-bold-highlight">data science now</span><br>
+            will define the next decade
+          </div>
+          <div class="cta-bold-subtitle">
+            Every quarter you delay costs 6-12 months of competitive advantage. Your data is already generating insights — you just need the infrastructure to capture them.
+          </div>
+          <div class="cta-bold-button">
+            Start Your ML Journey
+            <span class="cta-bold-button-arrow">&#8594;</span>
+          </div>
+          <div class="cta-bold-meta">
+            <div class="cta-bold-meta-item">
+              <span>&#128197;</span>
+              <span>4-week POC available</span>
+            </div>
+            <div class="cta-bold-meta-item">
+              <span>&#128176;</span>
+              <span>Average 3.2x ROI in Year 1</span>
+            </div>
+            <div class="cta-bold-meta-item">
+              <span>&#9993;</span>
+              <span>ds-team@company.com</span>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">I want to leave you with this thought. The data you are generating right now — every customer interaction, every operational signal, every market indicator — contains patterns that could be driving revenue and cutting costs today. But data has a shelf life. The models you could train on last year's data would have been more valuable last year. Every quarter of delay is not just lost opportunity — it is giving your competitors who are already investing in ML a compounding advantage. The good news: you do not need to boil the ocean. Start with a 4-week proof of concept on a single high-impact use case. Our average client sees a 3.2x return on their ML investment within the first year. Let us talk about what that first use case looks like for you.</aside>
+      </section>
+
+      <!-- Variant C: Summary + CTA Split Layout -->
+      <!-- CUSTOMIZATION: Replace takeaway items on the left and action items/contact on the right for any summary + call-to-action closing -->
+      <section>
+        <div class="cta-split-grid">
+          <div class="cta-split-left">
+            <div class="cta-split-label left-label">Key Takeaways</div>
+            <div class="cta-split-heading left-heading">What we covered today</div>
+            <ul class="takeaway-list">
+              <li class="takeaway-item">
+                <span class="takeaway-icon">&#10003;</span>
+                <span>Gradient boosting outperforms deep learning on tabular data under 10K rows by 7+ AUC points</span>
+              </li>
+              <li class="takeaway-item">
+                <span class="takeaway-icon">&#10003;</span>
+                <span>Automated pipelines reduced data prep from 14 hours to 45 minutes, freeing 28 analyst-hours weekly</span>
+              </li>
+              <li class="takeaway-item">
+                <span class="takeaway-icon">&#10003;</span>
+                <span>Our ML platform delivers 94.1% accuracy, 47ms latency, and $2.4M in annual savings</span>
+              </li>
+              <li class="takeaway-item">
+                <span class="takeaway-icon">&#10003;</span>
+                <span>Real-time inference yields 23% higher CTR but requires MLOps operational maturity</span>
+              </li>
+            </ul>
+          </div>
+          <div class="cta-split-right">
+            <div class="cta-split-label right-label">Next Steps</div>
+            <div class="cta-split-heading right-heading">How to get started</div>
+            <ul class="action-list">
+              <li class="action-item">
+                <span class="action-number">1</span>
+                <span>Review the technical appendix (sent to your inbox)</span>
+              </li>
+              <li class="action-item">
+                <span class="action-number">2</span>
+                <span>Identify 2-3 candidate use cases with your team</span>
+              </li>
+              <li class="action-item">
+                <span class="action-number">3</span>
+                <span>Schedule a 30-min scoping call by Friday</span>
+              </li>
+              <li class="action-item">
+                <span class="action-number">4</span>
+                <span>Kick off 4-week proof of concept in Q2</span>
+              </li>
+            </ul>
+            <div class="cta-split-contact">
+              <div class="cta-split-contact-item">
+                <span>&#9993;</span>
+                <span class="cta-split-contact-value">ds-team@company.com</span>
+              </div>
+              <div class="cta-split-contact-item">
+                <span>&#128222;</span>
+                <span class="cta-split-contact-value">Schedule: cal.com/ds-team</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">Let me bring it all together. On the left, the four key things I hope you take away from this presentation. First, the right algorithm choice matters enormously — gradient boosting is still king for tabular data. Second, automation pays for itself quickly — we freed 28 hours per week. Third, our platform metrics speak for themselves — high accuracy, low latency, real dollar savings. Fourth, real-time inference is powerful but demands operational maturity. On the right, your action items. I am sending the technical appendix to everyone in the room. I would like each team to identify 2-3 candidate ML use cases by next week. Then let us schedule a 30-minute scoping call to narrow it down. Our target is to kick off a proof of concept at the start of Q2. My email and scheduling link are right there. Thank you for your time — I am happy to take questions.</aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

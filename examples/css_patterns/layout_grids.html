@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layout Grid Patterns — Presentation Design System</title>
+  <style>
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+
+      --page-bg: #f8fafc;
+      --page-border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--page-bg);
+      color: #0f172a;
+      line-height: 1.6;
+    }
+
+    /* ---- Page chrome ---- */
+    .page-header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 64px;
+      border-bottom: 4px solid #10b981;
+    }
+    .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+    .page-header p { font-size: 17px; color: #94a3b8; max-width: 680px; }
+    .page-header .meta { margin-top: 20px; display: flex; gap: 16px; font-size: 14px; }
+    .page-header .meta span { background: rgba(255,255,255,0.08); padding: 4px 12px; border-radius: 4px; color: #64748b; }
+
+    .section-header {
+      padding: 48px 64px 24px;
+      border-bottom: 1px solid var(--page-border);
+      margin-bottom: 40px;
+    }
+    .section-header h2 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+    .section-header p { font-size: 15px; color: #64748b; }
+
+    .layout-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      padding: 0 64px 64px;
+    }
+
+    /* ---- Layout card wrapper ---- */
+    .layout-card {
+      background: #fff;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    .layout-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--page-border);
+      gap: 24px;
+    }
+    .layout-card-header .lc-name { font-size: 18px; font-weight: 700; color: #0f172a; }
+    .layout-card-header .lc-desc { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .use-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .use-tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- Slide preview area ---- */
+    .slide-preview {
+      /* Simulates a 16:9 slide at reference width */
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--page-border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ---- Generic placeholder blocks ---- */
+    .ph {
+      background: #dbeafe;
+      border: 2px dashed #93c5fd;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1d4ed8;
+      text-align: center;
+    }
+    .ph.dark { background: #1e293b; border-color: #475569; color: #94a3b8; }
+    .ph.accent { background: #3b82f6; border: none; color: #fff; }
+    .ph.emerald { background: #10b981; border: none; color: #fff; }
+    .ph.slate { background: #64748b; border: none; color: #fff; }
+    .ph.light { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+
+    /* ---- Content cells ---- */
+    .slide-inner {
+      width: 100%;
+      padding: 5%;
+      display: flex;
+    }
+
+    /* ---- Code section ---- */
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.7;
+      padding: 20px 24px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* =========================================================
+       LAYOUT 1: 2-column equal
+       ========================================================= */
+    .layout-2col-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 2: 2-column asymmetric 60/40
+       ========================================================= */
+    .layout-2col-6040 {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 4%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 3: 2-column asymmetric 70/30
+       ========================================================= */
+    .layout-2col-7030 {
+      display: grid;
+      grid-template-columns: 7fr 3fr;
+      gap: 4%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 4: 3-column equal
+       ========================================================= */
+    .layout-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 5: 2x2 grid (dashboard)
+       ========================================================= */
+    .layout-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 3%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 6: 3x1 horizontal cards
+       ========================================================= */
+    .layout-3x1 {
+      display: flex;
+      gap: 3%;
+      width: 100%;
+      padding: 6%;
+      align-items: stretch;
+    }
+    .layout-3x1 .ph-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8%;
+    }
+
+    /* =========================================================
+       LAYOUT 7: 1x3 vertical stack
+       ========================================================= */
+    .layout-1x3 {
+      display: flex;
+      flex-direction: column;
+      gap: 3%;
+      width: 100%;
+      padding: 6%;
+    }
+
+    /* =========================================================
+       LAYOUT 8: Sidebar + main
+       ========================================================= */
+    .layout-sidebar {
+      display: grid;
+      grid-template-columns: 1fr 2.5fr;
+      gap: 0;
+      width: 100%;
+    }
+    .sidebar-nav {
+      background: #0f172a;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      gap: 12%;
+    }
+    .sidebar-main {
+      padding: 6%;
+      display: flex;
+      flex-direction: column;
+      gap: 6%;
+      background: #fff;
+    }
+    .nav-item {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 6% 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .nav-item.active { color: #3b82f6; }
+
+    /* =========================================================
+       LAYOUT 9: Full-width + inset card
+       ========================================================= */
+    .layout-fullwidth-inset {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #3b82f6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .inset-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 5% 6%;
+      width: 70%;
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Layout Grid Patterns</h1>
+  <p>CSS Grid and Flexbox layout templates for reveal.js slides. Each pattern is designed for 16:9 aspect ratio with 60px minimum padding and 30%+ whitespace.</p>
+  <div class="meta">
+    <span>9 layout patterns</span>
+    <span>CSS Grid + Flexbox</span>
+    <span>16:9 optimised</span>
+  </div>
+</header>
+
+<div class="section-header">
+  <h2>All Layout Patterns</h2>
+  <p>Live previews simulate a slide viewport. Dashed blue borders indicate content placeholder zones.</p>
+</div>
+
+<div class="layout-entries">
+
+  <!-- ============================================================
+       LAYOUT 1: 2-column equal
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">2-Column Equal Split (50 / 50)</div>
+        <div class="lc-desc">Symmetric comparison: before/after, option A vs B, two independent metrics side by side</div>
+        <div class="use-tags">
+          <span class="use-tag">Comparison</span>
+          <span class="use-tag">Before / After</span>
+          <span class="use-tag">Pros / Cons</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-2col-equal">
+        <div class="ph" style="min-height:120px;">
+          Left column<br>Content / Chart / Text
+        </div>
+        <div class="ph" style="min-height:120px;">
+          Right column<br>Content / Chart / Text
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 2-Column Equal Split */
+.slide-split-equal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--element-gap);   /* 24px */
+  padding: var(--slide-padding); /* 60px */
+  height: 100%;
+  align-content: center;
+}
+
+/* Usage in reveal.js */
+&lt;section class="slide-split-equal"&gt;
+  &lt;div class="col-left"&gt; ... &lt;/div&gt;
+  &lt;div class="col-right"&gt; ... &lt;/div&gt;
+&lt;/section&gt;</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 2: 2-column 60/40
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">2-Column Asymmetric — 60 / 40</div>
+        <div class="lc-desc">Dominant content on the left, supporting visual or metric panel on the right. The natural eye-reading split.</div>
+        <div class="use-tags">
+          <span class="use-tag">Content + Image</span>
+          <span class="use-tag">Text + Chart</span>
+          <span class="use-tag">Assertion + Evidence</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-2col-6040">
+        <div class="ph" style="min-height:130px; flex-direction:column; align-items:flex-start; justify-content:flex-start; padding:16px; gap:10px;">
+          <div style="font-size:13px;font-weight:700;color:#1e40af;border-bottom:2px solid #3b82f6;padding-bottom:6px;width:100%;">Headline assertion (full sentence)</div>
+          <div style="font-size:11px;color:#3b82f6;margin-top:4px;">Supporting point 1</div>
+          <div style="font-size:11px;color:#3b82f6;">Supporting point 2</div>
+          <div style="font-size:11px;color:#3b82f6;">Supporting point 3</div>
+        </div>
+        <div class="ph accent" style="min-height:130px;">
+          Visual / Chart<br>panel
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 2-Column Asymmetric 60/40 */
+.slide-split-6040 {
+  display: grid;
+  grid-template-columns: 3fr 2fr;   /* 60% / 40% */
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+  align-content: center;
+}
+
+/* Reversed (visual on left, content on right) */
+.slide-split-6040.reversed {
+  grid-template-columns: 2fr 3fr;
+}
+
+/* Full-height right panel (image/gradient fills edge-to-edge) */
+.slide-split-6040 .panel-full-height {
+  margin: calc(-1 * var(--slide-padding));
+  margin-left: 0;
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 3: 2-column 70/30
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">2-Column Asymmetric — 70 / 30</div>
+        <div class="lc-desc">Main content dominates; narrow right panel for KPIs, context, or supporting metadata</div>
+        <div class="use-tags">
+          <span class="use-tag">Chart + KPI panel</span>
+          <span class="use-tag">Content + Sidebar</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-2col-7030">
+        <div class="ph" style="min-height:130px;">
+          Main content area — chart or diagram (70%)
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8%;min-height:130px;">
+          <div class="ph emerald" style="flex:1;">KPI 1<br>94.2%</div>
+          <div class="ph slate" style="flex:1;">KPI 2<br>2.4M</div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 2-Column Asymmetric 70/30 */
+.slide-split-7030 {
+  display: grid;
+  grid-template-columns: 7fr 3fr;   /* 70% / 30% */
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+  align-content: center;
+}
+
+/* Right panel: stack of KPI cards */
+.kpi-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--element-gap);
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 4: 3-column equal
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">3-Column Equal (Pillars / Features / Icons)</div>
+        <div class="lc-desc">Three equal units — ideal for the Rule of Three: three pillars, three benefits, three steps</div>
+        <div class="use-tags">
+          <span class="use-tag">Icon Grid</span>
+          <span class="use-tag">3 Pillars</span>
+          <span class="use-tag">Feature List</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-3col">
+        <div class="ph" style="min-height:120px; flex-direction:column; gap:8%;">
+          <div style="width:40px;height:40px;border-radius:8px;background:#3b82f6;margin:0 auto;"></div>
+          Pillar 1
+        </div>
+        <div class="ph" style="min-height:120px; flex-direction:column; gap:8%;">
+          <div style="width:40px;height:40px;border-radius:8px;background:#3b82f6;margin:0 auto;"></div>
+          Pillar 2
+        </div>
+        <div class="ph" style="min-height:120px; flex-direction:column; gap:8%;">
+          <div style="width:40px;height:40px;border-radius:8px;background:#3b82f6;margin:0 auto;"></div>
+          Pillar 3
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 3-Column Equal */
+.slide-three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+  align-content: center;
+}
+
+/* Each pillar card */
+.pillar-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 5: 2x2 dashboard grid
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">2x2 Grid — Dashboard / Quadrant</div>
+        <div class="lc-desc">Four equal cells for multi-metric dashboards, 2x2 comparisons, or four-quadrant analysis</div>
+        <div class="use-tags">
+          <span class="use-tag">Dashboard</span>
+          <span class="use-tag">4-Quadrant</span>
+          <span class="use-tag">KPI Overview</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-2x2">
+        <div class="ph" style="min-height:80px;">
+          Metric A<br><strong>94.2%</strong>
+        </div>
+        <div class="ph accent" style="min-height:80px;">
+          Metric B<br><strong>2.4M/s</strong>
+        </div>
+        <div class="ph light" style="min-height:80px;">
+          Metric C<br><strong>47ms</strong>
+        </div>
+        <div class="ph emerald" style="min-height:80px;">
+          Metric D<br><strong>99.97%</strong>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 2x2 Dashboard Grid */
+.slide-dashboard-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+}
+
+/* KPI card within each cell */
+.kpi-cell {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+}
+
+.kpi-value {
+  font-size: var(--text-hero); /* 72px */
+  font-weight: 800;
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: var(--text-caption); /* 18px */
+  color: #64748b;
+  margin-top: 8px;
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 6: 3x1 horizontal cards
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">3x1 Horizontal Cards (Process Steps)</div>
+        <div class="lc-desc">Three full-height cards side by side — for numbered steps, timeline stages, or feature tiers</div>
+        <div class="use-tags">
+          <span class="use-tag">Process Steps</span>
+          <span class="use-tag">Timeline</span>
+          <span class="use-tag">Tiers</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-3x1">
+        <div class="ph" style="min-height:130px; flex-direction:column; gap:8%; justify-content:flex-start; padding:12px;">
+          <div style="font-size:18px;font-weight:800;color:#1e40af;">01</div>
+          <div style="font-size:12px;font-weight:700;">Data Ingestion</div>
+          <div style="font-size:11px;color:#3b82f6;">847K rows ingested from 6 source systems via Kafka</div>
+        </div>
+        <div class="ph accent" style="min-height:130px; flex-direction:column; gap:8%; justify-content:flex-start; padding:12px;">
+          <div style="font-size:18px;font-weight:800;">02</div>
+          <div style="font-size:12px;font-weight:700;">Feature Engineering</div>
+          <div style="font-size:11px;opacity:0.8;">213 features computed — 45 selected via SHAP</div>
+        </div>
+        <div class="ph" style="min-height:130px; flex-direction:column; gap:8%; justify-content:flex-start; padding:12px;">
+          <div style="font-size:18px;font-weight:800;color:#1e40af;">03</div>
+          <div style="font-size:12px;font-weight:700;">Model Training</div>
+          <div style="font-size:11px;color:#3b82f6;">XGBoost — 94.2% F1, 47ms inference</div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 3x1 Horizontal Cards */
+.slide-three-cards {
+  display: flex;
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+  align-items: stretch;
+}
+
+.step-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.step-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+/* Active step — highlight the current stage */
+.step-card.active {
+  background: #3b82f6;
+  color: #fff;
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 7: 1x3 vertical stack
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">1x3 Vertical Stack (Priority List)</div>
+        <div class="lc-desc">Three stacked rows — for ranked items, priority order, or sequential findings. Works as a text-light alternative to bullets.</div>
+        <div class="use-tags">
+          <span class="use-tag">Ranked List</span>
+          <span class="use-tag">Finding Summary</span>
+          <span class="use-tag">Action Items</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview">
+      <div class="layout-1x3">
+        <div class="ph" style="min-height:50px; justify-content:flex-start; padding:10px 14px; gap:10px; flex-direction:row; align-items:center;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#0f172a;">Feature drift detected in fraud_score_v2</div>
+            <div style="font-size:10px;color:#64748b;">PSI = 0.18 — retraining recommended within 72 hours</div>
+          </div>
+        </div>
+        <div class="ph" style="min-height:50px; justify-content:flex-start; padding:10px 14px; gap:10px; flex-direction:row; align-items:center;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#0f172a;">GPU utilisation averaging 41% during batch jobs</div>
+            <div style="font-size:10px;color:#64748b;">Opportunity to reduce compute costs by ~$28K/mo</div>
+          </div>
+        </div>
+        <div class="ph" style="min-height:50px; justify-content:flex-start; padding:10px 14px; gap:10px; flex-direction:row; align-items:center;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#0f172a;">Shadow model ready for A/B promotion</div>
+            <div style="font-size:10px;color:#64748b;">Staging passed — awaiting sign-off from risk team</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* 1x3 Vertical Stack */
+.slide-stack-3 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--element-gap);
+  padding: var(--slide-padding);
+  height: 100%;
+  justify-content: center;
+}
+
+.stack-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.stack-number {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.stack-title  { font-size: var(--text-body); font-weight: 700; }
+.stack-detail { font-size: var(--text-caption); color: #64748b; }</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 8: Sidebar + main
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">Sidebar Navigation + Main Content</div>
+        <div class="lc-desc">Dark left sidebar with section index; main area for primary content. Used for complex multi-topic slides or system architecture overviews.</div>
+        <div class="use-tags">
+          <span class="use-tag">Architecture Diagram</span>
+          <span class="use-tag">Section Map</span>
+          <span class="use-tag">Complex Content</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview" style="aspect-ratio: 16/9;">
+      <div class="layout-sidebar" style="width:100%;height:100%;">
+        <div class="sidebar-nav">
+          <div style="font-size:10px;font-weight:800;color:#3b82f6;letter-spacing:1px;text-transform:uppercase;">Agenda</div>
+          <div class="nav-item">01 — Problem</div>
+          <div class="nav-item active">02 — Architecture</div>
+          <div class="nav-item">03 — Results</div>
+          <div class="nav-item">04 — Next Steps</div>
+        </div>
+        <div class="sidebar-main">
+          <div class="ph" style="flex:1; min-height:80px; background:#f8fafc; border-color:#e2e8f0; color:#64748b;">
+            Main content area (charts, diagrams, key assertions)
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;">
+            <div class="ph emerald" style="height:40px; font-size:10px;">Stat A: 94.2%</div>
+            <div class="ph accent" style="height:40px; font-size:10px;">Stat B: 47ms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* Sidebar + Main Content */
+.slide-sidebar {
+  display: grid;
+  grid-template-columns: 1fr 2.5fr;   /* ~28% / 72% */
+  height: 100%;
+}
+
+.slide-sidebar .sidebar {
+  background: #0f172a;
+  padding: var(--slide-padding) 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar .nav-item {
+  font-size: var(--text-caption);
+  color: #64748b;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar .nav-item.active {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.slide-sidebar .main {
+  padding: var(--slide-padding);
+  background: #fff;
+}</div>
+  </div>
+
+  <!-- ============================================================
+       LAYOUT 9: Full-width with inset card
+       ============================================================ -->
+  <div class="layout-card">
+    <div class="layout-card-header">
+      <div>
+        <div class="lc-name">Full-Width Background with Inset Card</div>
+        <div class="lc-desc">Full-bleed gradient or image fills the slide; a frosted/semi-transparent card holds the primary message. High visual impact.</div>
+        <div class="use-tags">
+          <span class="use-tag">Title Slide</span>
+          <span class="use-tag">Quote Callout</span>
+          <span class="use-tag">Big Number</span>
+          <span class="use-tag">Section Break</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-preview" style="aspect-ratio:16/9;">
+      <div class="layout-fullwidth-inset">
+        <div class="inset-card">
+          <div style="font-size:11px;font-weight:700;color:#93c5fd;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Key Finding</div>
+          <div style="font-size:20px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:8px;">Model accuracy improved by 11.4pp after switching to XGBoost with SHAP-selected features</div>
+          <div style="font-size:11px;color:#94a3b8;">Production A/B test — 30-day evaluation period — Nov 2025</div>
+        </div>
+      </div>
+    </div>
+    <div class="code-block">/* Full-Width Background + Inset Card */
+section.slide-fullbleed {
+  position: relative;
+  background: linear-gradient(
+    135deg, #0f172a 0%, #1e3a5f 60%, #3b82f6 100%
+  ) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inset-card {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 48px 56px;
+  max-width: 70%;
+  /* Optional: backdrop-filter: blur(8px); */
+  /* (may need -webkit- prefix) */
+}
+
+.inset-card .eyebrow {
+  font-size: var(--text-caption);
+  font-weight: 700;
+  color: #93c5fd;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.inset-card .headline {
+  font-size: var(--text-heading);  /* 32px */
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.inset-card .source {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 16px;
+}</div>
+  </div>
+
+</div><!-- /layout-entries -->
+
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Type: Full-Bleed — Template Examples</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    /* Design tokens */
+    :root {
+      --font-heading: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --text-hero: 72px;
+      --text-title: 44px;
+      --text-heading: 32px;
+      --text-body: 24px;
+      --text-caption: 18px;
+      --slide-padding: 60px;
+      --element-gap: 24px;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-elevated: 0 8px 40px rgba(0,0,0,0.12);
+
+      /* Corporate palette */
+      --corp-navy: #0f172a;
+      --corp-blue: #3b82f6;
+      --corp-light: #f1f5f9;
+      --corp-white: #ffffff;
+      --corp-emerald: #10b981;
+      --corp-rose: #f43f5e;
+
+      /* Technical palette */
+      --tech-charcoal: #1e293b;
+      --tech-cyan: #06b6d4;
+      --tech-slate: #64748b;
+      --tech-nearblack: #0f172a;
+
+      /* Creative palette */
+      --creative-purple: #4c1d95;
+      --creative-violet: #8b5cf6;
+      --creative-warm: #faf5ff;
+      --creative-gold: #f59e0b;
+
+      /* Sales palette */
+      --sales-blue: #2563eb;
+      --sales-orange: #f97316;
+      --sales-white: #ffffff;
+      --sales-dark: #374151;
+    }
+
+    .reveal .slides section {
+      font-family: var(--font-body);
+      text-align: left;
+    }
+
+    /* ===== Variant A: Bold gradient with overlaid statistic ===== */
+    .slide-fullbleed-stat {
+      background: linear-gradient(135deg, var(--corp-navy) 0%, #1a365d 40%, var(--corp-blue) 100%) !important;
+      padding: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-fullbleed-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 50%);
+    }
+
+    .slide-fullbleed-stat .stat-container {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .slide-fullbleed-stat .stat-number {
+      font-family: var(--font-heading);
+      font-size: 140px;
+      font-weight: 800;
+      color: var(--corp-white);
+      line-height: 1;
+      margin: 0;
+      letter-spacing: -4px;
+    }
+
+    .slide-fullbleed-stat .stat-unit {
+      font-family: var(--font-heading);
+      font-size: var(--text-hero);
+      font-weight: 300;
+      color: var(--corp-emerald);
+    }
+
+    .slide-fullbleed-stat .stat-description {
+      font-family: var(--font-body);
+      font-size: var(--text-heading);
+      color: rgba(255, 255, 255, 0.85);
+      margin: 16px 0 0 0;
+      max-width: 600px;
+      line-height: 1.4;
+    }
+
+    .slide-fullbleed-stat .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      padding: 20px var(--slide-padding);
+      display: flex;
+      justify-content: space-between;
+      z-index: 2;
+    }
+
+    .slide-fullbleed-stat .bottom-bar .bar-item {
+      text-align: center;
+    }
+
+    .slide-fullbleed-stat .bottom-bar .bar-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-body);
+      font-weight: 700;
+      color: var(--corp-white);
+      display: block;
+    }
+
+    .slide-fullbleed-stat .bottom-bar .bar-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ===== Variant B: Dark gradient with typographic quote ===== */
+    .slide-fullbleed-quote {
+      background: linear-gradient(160deg, var(--tech-nearblack) 0%, var(--tech-charcoal) 60%, #2d3748 100%) !important;
+      padding: var(--slide-padding) 80px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-fullbleed-quote::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.05) 100%);
+    }
+
+    .slide-fullbleed-quote .quote-mark {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 180px;
+      color: var(--tech-cyan);
+      opacity: 0.2;
+      line-height: 0.5;
+      margin: 0 0 -20px -10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-fullbleed-quote blockquote {
+      font-family: var(--font-heading);
+      font-size: var(--text-title);
+      font-weight: 300;
+      color: var(--corp-white);
+      line-height: 1.4;
+      margin: 0;
+      max-width: 80%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-fullbleed-quote blockquote em {
+      font-style: normal;
+      color: var(--tech-cyan);
+      font-weight: 600;
+    }
+
+    .slide-fullbleed-quote .quote-source {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-fullbleed-quote .source-line {
+      width: 40px;
+      height: 2px;
+      background: var(--tech-cyan);
+    }
+
+    .slide-fullbleed-quote .source-text {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--tech-slate);
+    }
+
+    /* ===== Variant C: Gradient mesh with centered heading ===== */
+    .slide-fullbleed-mesh {
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(76, 29, 149, 0.6) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(139, 92, 246, 0.5) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(245, 158, 11, 0.3) 0%, transparent 50%),
+        linear-gradient(180deg, #1a0533 0%, #2d1b69 100%) !important;
+      padding: var(--slide-padding) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      height: 100%;
+      text-align: center;
+      position: relative;
+    }
+
+    .slide-fullbleed-mesh .overline {
+      font-family: var(--font-body);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--creative-gold);
+      margin: 0 0 var(--element-gap) 0;
+    }
+
+    .slide-fullbleed-mesh h2 {
+      font-family: var(--font-heading);
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--corp-white);
+      line-height: 1.15;
+      margin: 0 0 var(--element-gap) 0;
+      max-width: 800px;
+    }
+
+    .slide-fullbleed-mesh .underline-accent {
+      width: 120px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--creative-violet), var(--creative-gold));
+      margin: 0 auto var(--element-gap);
+      border-radius: 2px;
+    }
+
+    .slide-fullbleed-mesh .mesh-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 600px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .slide-fullbleed-mesh .tag-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .slide-fullbleed-mesh .tag {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--creative-warm);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Variant A: Bold gradient with overlaid statistic and semi-transparent bar -->
+      <!-- CUSTOMIZATION: Change stat-number, stat-unit, stat-description, and bottom-bar items; adjust gradient in .slide-fullbleed-stat -->
+      <section class="slide-fullbleed-stat">
+        <div class="stat-container">
+          <p class="stat-number">2.7<span class="stat-unit">M</span></p>
+          <p class="stat-description">predictions served per day with 99.97% uptime and sub-50ms latency at the 95th percentile</p>
+        </div>
+        <div class="bottom-bar">
+          <div class="bar-item">
+            <span class="bar-value">12 models</span>
+            <span class="bar-label">In production</span>
+          </div>
+          <div class="bar-item">
+            <span class="bar-value">47ms</span>
+            <span class="bar-label">p95 latency</span>
+          </div>
+          <div class="bar-item">
+            <span class="bar-value">99.97%</span>
+            <span class="bar-label">Availability</span>
+          </div>
+          <div class="bar-item">
+            <span class="bar-value">$4.2M</span>
+            <span class="bar-label">Annual savings</span>
+          </div>
+        </div>
+        <aside class="notes">
+          Let this number sink in — 2.7 million predictions every single day. Our platform now serves twelve production models across fraud detection, recommendation, and pricing optimization. The bottom bar shows the metrics that matter most to our infrastructure team. That 47-millisecond p95 latency means users never notice the ML happening behind the scenes. And the 4.2 million in annual savings? That's the difference between our automated system and the manual processes it replaced.
+        </aside>
+      </section>
+
+      <!-- Variant B: Dark gradient with large typographic quote -->
+      <!-- CUSTOMIZATION: Change blockquote text (use <em> for highlighted phrases), source-text for attribution -->
+      <section class="slide-fullbleed-quote">
+        <div class="quote-mark">&ldquo;</div>
+        <blockquote>The best models are not the most complex — they are the ones your team can <em>deploy, monitor, and iterate on</em> within a single sprint.</blockquote>
+        <div class="quote-source">
+          <div class="source-line"></div>
+          <span class="source-text">Lessons from 3 years of production ML at scale</span>
+        </div>
+        <aside class="notes">
+          I want to pause on this insight because it captures what we learned the hard way. We spent months building a sophisticated ensemble model that scored two points higher on AUC — but it took six weeks to deploy and was nearly impossible to debug in production. The simpler model we shipped instead has been iterated on fourteen times in the same period. Velocity beats marginal accuracy gains, every time.
+        </aside>
+      </section>
+
+      <!-- Variant C: Gradient mesh background with centered heading -->
+      <!-- CUSTOMIZATION: Change overline, h2, mesh-subtitle, and tag labels; adjust gradient colors in .slide-fullbleed-mesh background -->
+      <section class="slide-fullbleed-mesh">
+        <p class="overline">The Future of ML Engineering</p>
+        <h2>Foundation Models Will Transform How We Build Domain-Specific AI Systems</h2>
+        <div class="underline-accent"></div>
+        <p class="mesh-subtitle">Fine-tuning pre-trained models on proprietary data achieves 90% of custom model performance at 10% of the cost and timeline</p>
+        <div class="tag-row">
+          <span class="tag">transfer-learning</span>
+          <span class="tag">fine-tuning</span>
+          <span class="tag">LLMs</span>
+          <span class="tag">domain-adaptation</span>
+        </div>
+        <aside class="notes">
+          This is the big-picture takeaway. Foundation models are changing the economics of AI development. Where we used to spend months collecting labeled data and training from scratch, we can now fine-tune a pre-trained model on a few thousand domain examples and get 90% of the way there. The tags at the bottom represent the key techniques — and in the next section, I'll walk through a concrete example of how we applied this at our company.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      showNotes: false,
+      pdfMaxPagesPerSlide: 1,
+      pdfSeparateFragments: false,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      plugins: [RevealNotes]
+    });
+  </script>
+</body>
+</html>

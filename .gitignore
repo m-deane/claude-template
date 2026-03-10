@@ -1,18 +1,15 @@
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
 
-# Testing
-coverage/
-
-# Next.js
+# Build output
 .next/
 out/
 build/
-
-# Production
 dist/
+
+# PPTX output files
+*.pptx
+~$*.pptx
 
 # Misc
 .DS_Store
@@ -30,18 +27,8 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Vercel
-.vercel
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Prisma
-prisma/migrations/
