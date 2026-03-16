@@ -93,11 +93,15 @@ Available types: `cut`, `crossfade`, `fade_black`, `fade_white`, `zoom_in`, `zoo
 
 ### Stabilization Options
 
-| Option | Description |
-|--------|-------------|
-| `--stabilize` | Enable stabilization for shaky clips |
-| `--stabilize-all` | Force stabilization on all clips |
-| `--stable-threshold FLOAT` | Shake score threshold for auto-stabilization (0-100) |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--stabilize` | off | Enable stabilization for shaky clips |
+| `--stabilize-all` | off | Force stabilization on all clips |
+| `--stable-threshold FLOAT` | `15.0` | Shake score threshold for auto-stabilization (0-100) |
+| `--stab-strength CHOICE` | `adaptive` | `off` · `light` · `adaptive` · `full` — off skips entirely, light always applies mild correction, adaptive uses threshold logic, full always applies full correction |
+| `--smooth-radius INT` | `50` | Optical-flow smoothing window radius (5–120) |
+| `--border-crop FLOAT` | `0.05` | Border crop fraction after stabilization (0.0–0.15) |
+| `--max-corners INT` | `200` | Feature tracking points for optical flow (50–500) |
 
 ### Speed & Text Options
 
@@ -178,11 +182,25 @@ drone-reel split [OPTIONS]
 | `--no-filter` | | off | Skip quality filtering — export all detected scenes |
 | `--scene-threshold FLOAT` | | `27.0` | Detection sensitivity (1–100, lower = more boundaries) |
 | `--enhanced` | | off | Enhanced detection with subject tracking. Slower. |
+| `--analysis-scale FLOAT` | | `0.5` | Frame downscale factor for analysis (0.1–1.0, lower = faster) |
+| `--motion-energy-method CHOICE` | | `mean` | Aggregate per-frame motion scores: `mean` · `median` · `p95` |
+| `--prefer-motion-type TEXT` | | `none` | Comma-separated motion types to float to front e.g. `flyover,pan_right` |
 | `--preview` | | off | Print scene table without exporting |
 | `--json` | | off | Write `manifest.json` with per-clip metadata |
 | `--overwrite` | | off | Overwrite existing clips |
 
-> **Tip for long clips:** Use `--scene-threshold 7–12` when targeting `--min-duration 11+`. The default threshold produces many short scenes; a higher threshold merges them into longer coherent segments.
+### Scene Filtering Options
+
+Fine-tune which scenes pass the quality filter (applied before `--no-filter` override):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--brightness-range TEXT` | `30-245` | Brightness bounds `MIN-MAX` — scenes outside range filtered |
+| `--motion-threshold FLOAT` | — | Minimum motion energy required (0–100) |
+| `--shake-tolerance FLOAT` | — | Maximum allowed shake score (0–100) |
+| `--subject-confidence FLOAT` | — | Minimum subject detection confidence (0.0–1.0) |
+
+> **Tip for long clips:** Use `--scene-threshold 7–12` when targeting `--min-duration 11+`. The default threshold produces many short scenes; a lower threshold merges them into longer coherent segments.
 
 ### Motion Correction Options
 
@@ -191,6 +209,38 @@ drone-reel split [OPTIONS]
 | `--auto-speed` | off | Auto-correct pan/tilt speed — slows fast pans (0.65–0.80×), speeds up sluggish ones (1.25×), corrects tilts/flyovers/FPV |
 | `--stabilize` | off | Adaptive optical-flow stabilization (skips stable clips) |
 | `--stabilize-all` | off | Force full stabilization on every clip |
+
+#### Auto-speed tuning (requires `--auto-speed`)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--speed-correction-profile CHOICE` | `normal` | `aggressive` · `normal` · `smooth` · `cinematic` — preset speed factors |
+| `--pan-speed-high FLOAT` | — | Speed factor override for high-energy pans, energy > 70 (0.1–1.5) |
+| `--pan-speed-mid FLOAT` | — | Speed factor override for mid-energy pans, energy 55–70 (0.1–1.5) |
+| `--tilt-speed FLOAT` | — | Speed factor override for fast tilts (0.1–1.5) |
+| `--fpv-speed FLOAT` | — | Speed factor override for FPV shots (0.1–1.5) |
+| `--correct-orbit` | off | Apply gentle 0.85× correction to orbit shots |
+| `--ease-speed-ramps` | off | Ease in/out of speed corrections (15% ramp-in · 70% constant · 15% ramp-out) |
+| `--vertical-drift-damping FLOAT` | `0.0` | Extra slowdown on tilt-down to reduce vertical drift (0.0–1.0) |
+
+Speed profile comparison:
+
+| Profile | PAN high | PAN mid | TILT | FPV | FLYOVER |
+|---------|----------|---------|------|-----|---------|
+| `aggressive` | 0.55× | 0.70× | 0.60× | 0.65× | 0.60× |
+| `normal` | 0.65× | 0.80× | 0.70× | 0.75× | 0.70× |
+| `cinematic` | 0.60× | 0.75× | 0.65× | 0.70× | 0.65× |
+| `smooth` | 0.75× | 0.85× | 0.80× | 0.80× | 0.80× |
+
+#### Stabilization tuning
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--stable-threshold FLOAT` | `15.0` | Shake score threshold for adaptive stabilization (0–100) |
+| `--stab-strength CHOICE` | `adaptive` | `off` · `light` · `adaptive` · `full` |
+| `--smooth-radius INT` | `50` | Optical-flow smoothing window radius (5–120) |
+| `--border-crop FLOAT` | `0.05` | Border crop fraction after stabilization (0.0–0.15) |
+| `--max-corners INT` | `200` | Feature tracking points (50–500) |
 
 ### Post-Processing Options
 

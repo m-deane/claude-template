@@ -94,6 +94,10 @@ Platform options: `instagram_reels` `instagram_feed` `tiktok` `youtube_shorts` `
 | `--stabilize` | off | Adaptive stabilization (auto-detects shaky clips) |
 | `--stabilize-all` | off | Force stabilization on every clip |
 | `--stable-threshold FLOAT` | `15.0` | Shake score threshold — lower stabilizes more clips |
+| `--stab-strength` | `adaptive` | `off` `light` `adaptive` `full` — off skips entirely, light always applies mild correction, full always applies full correction |
+| `--smooth-radius INT` | `50` | 5–120 · Optical-flow smoothing window (larger = smoother, slower) |
+| `--border-crop FLOAT` | `0.05` | 0.0–0.15 · Border crop fraction after stabilization |
+| `--max-corners INT` | `200` | 50–500 · Feature tracking points (more = more accurate, slower) |
 
 #### Motion & speed
 
@@ -196,8 +200,22 @@ drone-reel split -i video.mp4 -o ./highlights/
 | `--no-filter` | off | flag | Skip quality filtering — export all detected scenes |
 | `--scene-threshold FLOAT` | `27.0` | 1–100 | Detection sensitivity (lower = more scene boundaries) |
 | `--enhanced` | off | flag | Enhanced detection with subject tracking (slower) |
+| `--analysis-scale FLOAT` | `0.5` | 0.1–1.0 | Frame downscale factor for analysis (lower = faster) |
+| `--motion-energy-method` | `mean` | `mean` `median` `p95` | How to aggregate per-frame motion scores |
+| `--prefer-motion-type TEXT` | `none` | | Comma-separated motion types to float to front e.g. `flyover,pan_right` |
 
 > **Tip:** For clips ≥ 11s use `--scene-threshold 7–12` to merge micro-cuts into longer coherent scenes. At the default of 27 most footage produces very short scenes.
+
+#### Scene filtering
+
+Fine-tune which scenes pass the quality filter:
+
+| Flag | Default | Range | Description |
+|------|---------|-------|-------------|
+| `--brightness-range TEXT` | `30-245` | | Allowed brightness bounds `MIN-MAX` — scenes outside range are filtered |
+| `--motion-threshold FLOAT` | — | 0–100 | Minimum motion energy required |
+| `--shake-tolerance FLOAT` | — | 0–100 | Maximum allowed shake score |
+| `--subject-confidence FLOAT` | — | 0.0–1.0 | Minimum subject detection confidence |
 
 #### Motion correction
 
@@ -207,7 +225,7 @@ drone-reel split -i video.mp4 -o ./highlights/
 | `--stabilize` | off | Adaptive shake stabilization (skips stable clips) |
 | `--stabilize-all` | off | Force optical-flow stabilization on every clip |
 
-Auto-speed correction table:
+Auto-speed correction table (`normal` profile):
 
 | Motion type | Energy | Speed factor |
 |-------------|--------|-------------|
@@ -218,6 +236,37 @@ Auto-speed correction table:
 | FLYOVER / APPROACH | > 70 | **0.70×** slow down |
 | FPV | > 50 | **0.75×** slow down |
 | STATIC / ORBIT / REVEAL | any | no change |
+
+Auto-speed tuning (`--auto-speed` must be set):
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--speed-correction-profile` | `normal` | `aggressive` `normal` `smooth` `cinematic` — preset speed factors for all motion types |
+| `--pan-speed-high FLOAT` | — | 0.1–1.5 · Override profile speed for high-energy pans (energy > 70) |
+| `--pan-speed-mid FLOAT` | — | 0.1–1.5 · Override profile speed for mid-energy pans (energy 55–70) |
+| `--tilt-speed FLOAT` | — | 0.1–1.5 · Override profile speed for fast tilts |
+| `--fpv-speed FLOAT` | — | 0.1–1.5 · Override profile speed for FPV shots |
+| `--correct-orbit` | off | flag · Apply gentle 0.85× correction to orbit shots |
+| `--ease-speed-ramps` | off | flag · Ease in/out of speed corrections (15% ramp-in · 70% constant · 15% ramp-out) |
+| `--vertical-drift-damping FLOAT` | `0.0` | 0.0–1.0 · Extra slowdown on tilt-down clips to reduce vertical drift |
+
+Speed profile comparison:
+
+| Profile | PAN high | PAN mid | TILT | FPV | FLYOVER |
+|---------|----------|---------|------|-----|---------|
+| `aggressive` | 0.55× | 0.70× | 0.60× | 0.65× | 0.60× |
+| `normal` | 0.65× | 0.80× | 0.70× | 0.75× | 0.70× |
+| `cinematic` | 0.60× | 0.75× | 0.65× | 0.70× | 0.65× |
+| `smooth` | 0.75× | 0.85× | 0.80× | 0.80× | 0.80× |
+
+Stabilization tuning:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--stab-strength` | `adaptive` | `off` `light` `adaptive` `full` — off skips entirely, light always applies mild correction, full always applies full correction |
+| `--smooth-radius INT` | `50` | 5–120 · Optical-flow smoothing window |
+| `--border-crop FLOAT` | `0.05` | 0.0–0.15 · Border crop fraction after stabilization |
+| `--max-corners INT` | `200` | 50–500 · Feature tracking points |
 
 #### Color grading (same as `create`)
 
@@ -319,9 +368,9 @@ ffmpeg -i source.MP4 -vf scale=1280:720 -r 30 \
   -c:v libx264 -preset ultrafast -crf 26 -an proxy.mp4
 ```
 
-**Stabilizer** adds ~30–60s per clip depending on resolution. Use `--stabilize` (adaptive) rather than `--stabilize-all` if only some clips are shaky.
+**Stabilizer** adds ~30–60s per clip depending on resolution. Use `--stabilize` (adaptive) rather than `--stabilize-all` if only some clips are shaky. Use `--stab-strength light` for a faster, gentler pass.
 
-**Auto-speed** (`--auto-speed`) runs optical-flow analysis per clip to measure motion energy, then applies constant-speed time-transform. Adds a few seconds per clip.
+**Auto-speed** (`--auto-speed`) runs optical-flow analysis per clip to measure motion energy, then applies constant-speed time-transform. Adds a few seconds per clip. Use `--ease-speed-ramps` for smoother transitions in/out of corrections.
 
 ---
 
