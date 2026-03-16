@@ -7,7 +7,6 @@ narrative patterns optimized for social media engagement.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 
@@ -348,7 +347,7 @@ class NarrativeSequencer:
         scenes: list[SceneInfo],
         target_duration: float = 30.0,
         hook_duration: float = 3.0,
-        beat_info: Optional[BeatInfo] = None,
+        beat_info: BeatInfo | None = None,
     ) -> list[SceneInfo]:
         """
         Arrange scenes into narrative arc.
@@ -482,7 +481,7 @@ class NarrativeSequencer:
         available_scenes: list[SceneInfo],
         energy_level: str,
         section_duration: float,
-        beat_info: Optional[BeatInfo],
+        beat_info: BeatInfo | None,
         section_start: float,
     ) -> SceneInfo:
         """

@@ -1,9 +1,9 @@
 """Configuration management for drone reel processing."""
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from drone_reel.core.color_grader import ColorPreset
 from drone_reel.core.reframer import AspectRatio, ReframeMode
@@ -93,7 +93,7 @@ def get_config_path() -> Path:
     return config_dir / "config.json"
 
 
-def load_config(config_path: Optional[Path] = None) -> Config:
+def load_config(config_path: Path | None = None) -> Config:
     """
     Load configuration from file.
 
@@ -117,7 +117,7 @@ def load_config(config_path: Optional[Path] = None) -> Config:
         return Config()
 
 
-def save_config(config: Config, config_path: Optional[Path] = None) -> Path:
+def save_config(config: Config, config_path: Path | None = None) -> Path:
     """
     Save configuration to file.
 

@@ -302,7 +302,6 @@ class TestSubjectDetection:
 
     def test_calculate_hook_potential_tiers(self, detector):
         """Test hook potential tier classification."""
-        from drone_reel.core.scene_detector import HookPotential
 
         # Create varied frame with high entropy (uniqueness)
         frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
@@ -324,6 +323,7 @@ class TestSubjectDetection:
     def test_enhanced_scene_info_new_fields(self):
         """Test that EnhancedSceneInfo has hook potential fields."""
         from pathlib import Path
+
         from drone_reel.core.scene_detector import EnhancedSceneInfo, HookPotential, MotionType
 
         scene = EnhancedSceneInfo(

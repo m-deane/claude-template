@@ -6,8 +6,8 @@ Tests diversity-aware scene selection and motion continuity optimization.
 
 from pathlib import Path
 
-import pytest
 import numpy as np
+import pytest
 
 from drone_reel.core.scene_detector import SceneInfo
 from drone_reel.core.sequence_optimizer import (

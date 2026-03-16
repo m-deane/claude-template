@@ -1,19 +1,18 @@
 """Tests for reframe_selector module."""
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from drone_reel.core.reframe_selector import ReframeSelector, KenBurnsConfig
-from drone_reel.core.reframer import ReframeMode, AspectRatio, ReframeSettings
+from drone_reel.core.reframe_selector import KenBurnsConfig, ReframeSelector
+from drone_reel.core.reframer import AspectRatio, ReframeMode
 from drone_reel.core.scene_detector import (
     EnhancedSceneInfo,
     HookPotential,
     MotionType,
     SceneInfo,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

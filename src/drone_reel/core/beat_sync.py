@@ -8,7 +8,6 @@ structure for synchronizing video cuts with music.
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import librosa
 import numpy as np
@@ -64,7 +63,7 @@ class CutPoint:
     is_downbeat: bool
     beat_index: int
     is_phrase_boundary: bool = False
-    transition_rec: Optional[TransitionRecommendation] = None
+    transition_rec: TransitionRecommendation | None = None
 
 
 class BeatSync:

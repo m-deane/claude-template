@@ -1,7 +1,6 @@
 """Transition presets for different video styles."""
 
 import random
-from typing import Optional
 
 from drone_reel.core.video_processor import TransitionType
 
@@ -76,7 +75,7 @@ def get_transitions_for_energy(
 def get_random_transitions(
     count: int,
     style: str = "dynamic",
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> list[TransitionType]:
     """
     Get random transitions from a style preset.

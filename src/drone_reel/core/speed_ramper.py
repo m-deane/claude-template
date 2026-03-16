@@ -276,9 +276,7 @@ class SpeedRamper:
 
         return ramped_clip
 
-    def apply_multiple_ramps(
-        self, clip: VideoFileClip, ramps: list[SpeedRamp]
-    ) -> VideoFileClip:
+    def apply_multiple_ramps(self, clip: VideoFileClip, ramps: list[SpeedRamp]) -> VideoFileClip:
         """
         Apply multiple speed ramps to a video clip.
 
@@ -413,7 +411,6 @@ class SpeedRamper:
         ramps = []
 
         # Filter beat times within clip duration
-        valid_beats = beat_times[beat_times < clip_duration]
         valid_drops = drop_times[drop_times < clip_duration]
 
         # Strategy: Slow down before drops, speed up after
@@ -468,9 +465,7 @@ class SpeedRamper:
 
         return ramps
 
-    def apply_ramp_to_segment(
-        self, segment: ClipSegment, ramp: SpeedRamp
-    ) -> ClipSegment:
+    def apply_ramp_to_segment(self, segment: ClipSegment, ramp: SpeedRamp) -> ClipSegment:
         """
         Apply speed ramp information to a ClipSegment.
 
@@ -490,9 +485,7 @@ class SpeedRamper:
         # In production, you'd extend ClipSegment to store ramps
         return segment
 
-    def calculate_ramped_duration(
-        self, original_duration: float, ramps: list[SpeedRamp]
-    ) -> float:
+    def calculate_ramped_duration(self, original_duration: float, ramps: list[SpeedRamp]) -> float:
         """
         Calculate the resulting duration after applying speed ramps.
 
@@ -531,21 +524,62 @@ class SpeedRamper:
         return new_duration
 
 
+_SPEED_CORRECTION_PROFILES: dict[str, dict[str, float]] = {
+    "normal": {
+        "pan_high": 0.65,
+        "pan_mid": 0.80,
+        "tilt_high": 0.70,
+        "fpv": 0.75,
+        "flyover": 0.70,
+    },
+    "aggressive": {
+        "pan_high": 0.55,
+        "pan_mid": 0.70,
+        "tilt_high": 0.60,
+        "fpv": 0.65,
+        "flyover": 0.60,
+    },
+    "smooth": {
+        "pan_high": 0.75,
+        "pan_mid": 0.85,
+        "tilt_high": 0.80,
+        "fpv": 0.80,
+        "flyover": 0.80,
+    },
+    "cinematic": {
+        "pan_high": 0.60,
+        "pan_mid": 0.75,
+        "tilt_high": 0.65,
+        "fpv": 0.70,
+        "flyover": 0.65,
+    },
+}
+
+
 def auto_pan_speed_ramp(
     scene: SceneInfo,
     clip_duration: float,
     motion_energy: float | None = None,
     motion_type: MotionType | None = None,
+    *,
+    speed_correction_profile: str = "normal",
+    pan_speed_high: float | None = None,
+    pan_speed_mid: float | None = None,
+    tilt_speed: float | None = None,
+    fpv_speed: float | None = None,
+    correct_orbit: bool = False,
+    ease_speed_ramps: bool = False,
+    vertical_drift_damping: float = 0.0,
 ) -> list[SpeedRamp]:
     """
     Design a full-clip constant-speed ramp to correct panning speed issues.
 
     Slows down uncomfortably fast pans/tilts/FPV moves and gently speeds up
     sluggish pans so every clip plays at a cinematically comfortable pace.
-    Returns a single full-clip SpeedRamp, or an empty list when no adjustment
-    is needed (STATIC, ORBIT, REVEAL, UNKNOWN, or short clips).
+    Returns a single full-clip SpeedRamp (or 3 segments when ease_speed_ramps=True),
+    or an empty list when no adjustment is needed.
 
-    Speed correction matrix:
+    Speed correction matrix (using "normal" profile defaults):
         PAN_LEFT / PAN_RIGHT:
             energy > 70  →  0.65× (too fast — strong slow-down)
             55 < energy ≤ 70  →  0.80× (fast — light slow-down)
@@ -559,7 +593,9 @@ def auto_pan_speed_ramp(
             energy > 70  →  0.70×
         FPV:
             energy > 50  →  0.75×
-        STATIC, ORBIT_CW, ORBIT_CCW, REVEAL, UNKNOWN  →  no change
+        ORBIT_CW / ORBIT_CCW:
+            correct_orbit=True  →  0.85×
+        STATIC, REVEAL, UNKNOWN  →  no change
 
     Args:
         scene: Scene whose motion_type / score may inform the decision.
@@ -569,9 +605,22 @@ def auto_pan_speed_ramp(
         motion_type: Detected camera motion type.  When None the function
             inspects ``scene`` for a ``motion_type`` attribute; if still
             unavailable it returns an empty list.
+        speed_correction_profile: Preset profile ("normal", "aggressive", "smooth",
+            "cinematic") that sets all speed thresholds at once.
+        pan_speed_high: Override speed factor for PAN with energy >70 (beats profile).
+        pan_speed_mid: Override speed factor for PAN with energy 55-70 (beats profile).
+        tilt_speed: Override speed factor for TILT with energy >65 (beats profile).
+        fpv_speed: Override speed factor for FPV with energy >50 (beats profile).
+        correct_orbit: When True, apply 0.85× correction to ORBIT motion types.
+        ease_speed_ramps: When True, split the correction into 3 segments with a gentle
+            linear ease in (first 15%) and ease out (final 15%) around the constant
+            middle (70%), rather than a single hard constant-speed ramp.
+        vertical_drift_damping: For TILT_DOWN clips, apply an additional proportional
+            speed reduction on top of tilt correction (0.0–1.0 scale).
+            new_speed = tilt_speed × (1 - vertical_drift_damping × 0.15).
 
     Returns:
-        List with a single full-clip SpeedRamp, or [] when no adjustment needed.
+        List with one or three SpeedRamp segments, or [] when no adjustment needed.
     """
     if clip_duration < 1.0:
         return []
@@ -588,39 +637,100 @@ def auto_pan_speed_ramp(
     if motion_energy is None:
         motion_energy = scene.score  # rough proxy
 
+    # Resolve profile thresholds
+    if speed_correction_profile not in _SPEED_CORRECTION_PROFILES:
+        raise ValueError(
+            f"speed_correction_profile must be one of "
+            f"{list(_SPEED_CORRECTION_PROFILES.keys())}, got {speed_correction_profile!r}"
+        )
+    profile = _SPEED_CORRECTION_PROFILES[speed_correction_profile]
+
+    # Merge individual overrides on top of profile
+    effective_pan_high = pan_speed_high if pan_speed_high is not None else profile["pan_high"]
+    effective_pan_mid = pan_speed_mid if pan_speed_mid is not None else profile["pan_mid"]
+    effective_tilt = tilt_speed if tilt_speed is not None else profile["tilt_high"]
+    effective_fpv = fpv_speed if fpv_speed is not None else profile["fpv"]
+    effective_flyover = profile["flyover"]
+
     # Determine speed multiplier based on motion type + energy
     speed: float | None = None
 
     if motion_type in (MotionType.PAN_LEFT, MotionType.PAN_RIGHT):
         if motion_energy > 70:
-            speed = 0.65
+            speed = effective_pan_high
         elif motion_energy > 55:
-            speed = 0.80
+            speed = effective_pan_mid
         elif 5 < motion_energy < 20:
             speed = 1.25
     elif motion_type in (MotionType.TILT_UP, MotionType.TILT_DOWN):
         if motion_energy > 65:
-            speed = 0.70
+            speed = effective_tilt
+            if motion_type is MotionType.TILT_DOWN and vertical_drift_damping > 0.0:
+                speed = speed * (1.0 - vertical_drift_damping * 0.15)
     elif motion_type is MotionType.FLYOVER:
         if motion_energy > 70:
-            speed = 0.70
+            speed = effective_flyover
     elif motion_type is MotionType.APPROACH:
         if motion_energy > 70:
-            speed = 0.70
+            speed = effective_flyover
     elif motion_type is MotionType.FPV:
         if motion_energy > 50:
-            speed = 0.75
-    # STATIC, ORBIT_CW, ORBIT_CCW, REVEAL, UNKNOWN → no adjustment
+            speed = effective_fpv
+    elif motion_type in (MotionType.ORBIT_CW, MotionType.ORBIT_CCW):
+        if correct_orbit:
+            speed = 0.85
+    # STATIC, REVEAL, UNKNOWN → no adjustment
 
     if speed is None:
         return []
 
-    return [
+    if not ease_speed_ramps:
+        return [
+            SpeedRamp(
+                start_time=0.0,
+                end_time=clip_duration,
+                start_speed=speed,
+                end_speed=speed,
+                easing="ease_in_out",
+            )
+        ]
+
+    # ease_speed_ramps=True: split into 3 segments
+    # First 15%: linear ramp 1.0 → target
+    # Middle 70%: constant at target
+    # Final 15%: linear ramp target → 1.0
+    # For very short clips, ensure each segment has a minimum valid duration.
+    ease_fraction = 0.15
+    ease_in_end = max(clip_duration * ease_fraction, 0.01)
+    main_end = max(clip_duration * (1.0 - ease_fraction), ease_in_end + 0.01)
+    # Clamp to clip bounds
+    ease_in_end = min(ease_in_end, clip_duration - 0.02)
+    main_end = min(main_end, clip_duration - 0.01)
+
+    ramps = [
+        # Ease-in: ramp from 1.0 to target speed
         SpeedRamp(
             start_time=0.0,
-            end_time=clip_duration,
+            end_time=ease_in_end,
+            start_speed=1.0,
+            end_speed=speed,
+            easing="linear",
+        ),
+        # Middle: constant at target speed
+        SpeedRamp(
+            start_time=ease_in_end,
+            end_time=main_end,
             start_speed=speed,
             end_speed=speed,
-            easing="ease_in_out",
-        )
+            easing="linear",
+        ),
+        # Ease-out: ramp from target speed to 1.0
+        SpeedRamp(
+            start_time=main_end,
+            end_time=clip_duration,
+            start_speed=speed,
+            end_speed=1.0,
+            easing="linear",
+        ),
     ]
+    return ramps

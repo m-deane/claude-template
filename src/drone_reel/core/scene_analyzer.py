@@ -9,9 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import cv2
 import numpy as np
-from pathlib import Path
 
-from drone_reel.core.scene_detector import SceneInfo, EnhancedSceneInfo, MotionType
+from drone_reel.core.scene_detector import MotionType, SceneInfo
 
 
 def classify_motion_type(
@@ -53,17 +52,12 @@ def classify_motion_type(
     if consistency < 0.15 and motion_energy > 40:
         return MotionType.FPV, (avg_dx, avg_dy)
 
-    # Calculate dominant angle
-    angle_rad = np.arctan2(avg_dy, avg_dx)
-    angle_deg = np.degrees(angle_rad)
-
     # Check for rotational motion (orbit) by analyzing flow field variance
     # Orbits have consistent magnitude but varying direction across the frame
     dx_values = [v[0] for v in flow_vectors]
     if len(dx_values) >= 3:
         direction_changes = sum(
-            1 for i in range(1, len(dx_values))
-            if (dx_values[i] > 0) != (dx_values[i-1] > 0)
+            1 for i in range(1, len(dx_values)) if (dx_values[i] > 0) != (dx_values[i - 1] > 0)
         )
         if direction_changes >= len(dx_values) * 0.4:
             # Frequent direction reversals suggest orbit or reveal
@@ -103,7 +97,11 @@ def classify_motion_type(
 def analyze_scene_motion(
     scene: SceneInfo,
     include_sharpness: bool = False,
-) -> tuple[float, float, float, MotionType, tuple[float, float]] | tuple[float, float, float, MotionType, tuple[float, float], float]:
+    motion_energy_method: str = "mean",
+) -> (
+    tuple[float, float, float, MotionType, tuple[float, float]]
+    | tuple[float, float, float, MotionType, tuple[float, float], float]
+):
     """
     Analyze motion energy, brightness, shake score, and motion type for a scene.
 
@@ -117,6 +115,10 @@ def analyze_scene_motion(
     Args:
         scene: Scene to analyze
         include_sharpness: If True, also compute and return sharpness
+        motion_energy_method: How to aggregate per-frame motion scores.
+            "mean" (default): np.mean — standard average energy.
+            "median": np.median — robust to outlier frames.
+            "p95": np.percentile(scores, 95) — catches peak motion in mixed clips.
 
     Returns:
         If include_sharpness=False:
@@ -169,9 +171,16 @@ def analyze_scene_motion(
 
             if prev_gray is not None:
                 flow = cv2.calcOpticalFlowFarneback(
-                    prev_gray, gray_small, None,
-                    pyr_scale=0.5, levels=2, winsize=15,
-                    iterations=2, poly_n=5, poly_sigma=1.1, flags=0
+                    prev_gray,
+                    gray_small,
+                    None,
+                    pyr_scale=0.5,
+                    levels=2,
+                    winsize=15,
+                    iterations=2,
+                    poly_n=5,
+                    poly_sigma=1.1,
+                    flags=0,
                 )
                 magnitude = cv2.magnitude(flow[..., 0], flow[..., 1])
                 motion_score = min(float(magnitude.mean()) / 3.0 * 100, 100.0)
@@ -188,8 +197,8 @@ def analyze_scene_motion(
 
                 if prev_mean_flow is not None:
                     direction_change = np.sqrt(
-                        (mean_flow[0] - prev_mean_flow[0])**2 +
-                        (mean_flow[1] - prev_mean_flow[1])**2
+                        (mean_flow[0] - prev_mean_flow[0]) ** 2
+                        + (mean_flow[1] - prev_mean_flow[1]) ** 2
                     )
                     flow_variances.append(flow_std + direction_change * 2)
 
@@ -199,7 +208,15 @@ def analyze_scene_motion(
 
         cap.release()
 
-        motion_energy = float(np.mean(motion_scores)) if motion_scores else 0.0
+        if motion_scores:
+            if motion_energy_method == "median":
+                motion_energy = float(np.median(motion_scores))
+            elif motion_energy_method == "p95":
+                motion_energy = float(np.percentile(motion_scores, 95))
+            else:  # "mean" (default)
+                motion_energy = float(np.mean(motion_scores))
+        else:
+            motion_energy = 0.0
         mean_brightness = float(np.mean(brightness_values)) if brightness_values else 127.0
 
         # Calculate shake score (0-100)
@@ -207,12 +224,17 @@ def analyze_scene_motion(
         shake_score = min(raw_shake * 5.0, 100.0)
 
         # Classify motion type from flow vectors
-        motion_type, motion_direction = classify_motion_type(
-            flow_vectors, motion_energy
-        )
+        motion_type, motion_direction = classify_motion_type(flow_vectors, motion_energy)
 
         if include_sharpness:
-            return (motion_energy, mean_brightness, shake_score, motion_type, motion_direction, sharpness)
+            return (
+                motion_energy,
+                mean_brightness,
+                shake_score,
+                motion_type,
+                motion_direction,
+                sharpness,
+            )
         return (motion_energy, mean_brightness, shake_score, motion_type, motion_direction)
     except Exception:
         if include_sharpness:
@@ -249,10 +271,15 @@ def get_scene_sharpness(scene: SceneInfo) -> float:
 def _analyze_single_scene(
     scene: SceneInfo,
     include_sharpness: bool,
+    motion_energy_method: str = "mean",
 ) -> tuple[int, dict]:
     """Analyze a single scene and return (id, result_dict). Used by batch processing."""
     scene_id = id(scene)
-    result = analyze_scene_motion(scene, include_sharpness=include_sharpness)
+    result = analyze_scene_motion(
+        scene,
+        include_sharpness=include_sharpness,
+        motion_energy_method=motion_energy_method,
+    )
     if include_sharpness:
         motion_energy, brightness, shake_score, motion_type, motion_direction, sharpness = result
         return scene_id, {
@@ -278,6 +305,7 @@ def analyze_scenes_batch(
     scenes: list[SceneInfo],
     include_sharpness: bool = False,
     max_workers: int | None = None,
+    motion_energy_method: str = "mean",
 ) -> dict[int, dict]:
     """
     Analyze a batch of scenes in parallel using ThreadPoolExecutor.
@@ -290,6 +318,10 @@ def analyze_scenes_batch(
         scenes: List of scenes to analyze
         include_sharpness: If True, include sharpness in results
         max_workers: Max threads (default: min(4, cpu_count))
+        motion_energy_method: How to aggregate per-frame motion scores.
+            "mean" (default): np.mean — standard average energy.
+            "median": np.median — robust to outlier frames.
+            "p95": np.percentile(scores, 95) — catches peak motion in mixed clips.
 
     Returns:
         Dictionary keyed by id(scene) with analysis results:
@@ -308,14 +340,18 @@ def analyze_scenes_batch(
     if len(scenes) <= 1 or max_workers <= 1:
         results = {}
         for scene in scenes:
-            scene_id, result_dict = _analyze_single_scene(scene, include_sharpness)
+            scene_id, result_dict = _analyze_single_scene(
+                scene, include_sharpness, motion_energy_method
+            )
             results[scene_id] = result_dict
         return results
 
     results = {}
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {
-            executor.submit(_analyze_single_scene, scene, include_sharpness): scene
+            executor.submit(
+                _analyze_single_scene, scene, include_sharpness, motion_energy_method
+            ): scene
             for scene in scenes
         }
         for future in futures:

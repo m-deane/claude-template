@@ -1193,7 +1193,9 @@ class TestSplitDetectionTuning:
 
             assert result.exit_code == 0
             # Verify SceneDetector was created with threshold=15
-            mock_sd.assert_called_once_with(threshold=15.0, max_scene_length=15.0, frame_skip=0)
+            mock_sd.assert_called_once_with(
+                threshold=15.0, max_scene_length=15.0, frame_skip=0, analysis_scale=0.5
+            )
 
     def test_enhanced_uses_enhanced_detection(self, tmp_path):
         """--enhanced should call detect_scenes_enhanced() instead of detect_scenes()."""
@@ -1533,7 +1535,9 @@ class TestSplitAutoSpeed:
         ):
             scene = _make_scene(0, 5, 70, video)
             mock_sd.return_value.detect_scenes.return_value = [scene]
-            mock_ab.return_value = {id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}}
+            mock_ab.return_value = {
+                id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}
+            }
             mock_filter_result = MagicMock()
             mock_filter_result.all_passing = [scene]
             mock_sf.return_value.filter_scenes.return_value = mock_filter_result
@@ -1556,9 +1560,12 @@ class TestSplitAutoSpeed:
                     main,
                     [
                         "split",
-                        "-i", str(video),
-                        "-o", str(tmp_path / "out"),
-                        "--min-score", "0",
+                        "-i",
+                        str(video),
+                        "-o",
+                        str(tmp_path / "out"),
+                        "--min-score",
+                        "0",
                         "--no-filter",
                         "--auto-speed",
                     ],
@@ -1580,7 +1587,9 @@ class TestSplitAutoSpeed:
         ):
             scene = _make_scene(0, 5, 70, video)
             mock_sd.return_value.detect_scenes.return_value = [scene]
-            mock_ab.return_value = {id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}}
+            mock_ab.return_value = {
+                id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}
+            }
             mock_filter_result = MagicMock()
             mock_filter_result.all_passing = [scene]
             mock_sf.return_value.filter_scenes.return_value = mock_filter_result
@@ -1601,9 +1610,12 @@ class TestSplitAutoSpeed:
                     main,
                     [
                         "split",
-                        "-i", str(video),
-                        "-o", str(tmp_path / "out"),
-                        "--min-score", "0",
+                        "-i",
+                        str(video),
+                        "-o",
+                        str(tmp_path / "out"),
+                        "--min-score",
+                        "0",
                         "--no-filter",
                     ],
                 )
@@ -1628,7 +1640,9 @@ class TestSplitAutoSpeed:
         ):
             scene = _make_scene(0, 5, 70, video)
             mock_sd.return_value.detect_scenes.return_value = [scene]
-            mock_ab.return_value = {id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}}
+            mock_ab.return_value = {
+                id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}
+            }
             mock_filter_result = MagicMock()
             mock_filter_result.all_passing = [scene]
             mock_sf.return_value.filter_scenes.return_value = mock_filter_result
@@ -1653,9 +1667,12 @@ class TestSplitAutoSpeed:
                     main,
                     [
                         "split",
-                        "-i", str(video),
-                        "-o", str(tmp_path / "out"),
-                        "--min-score", "0",
+                        "-i",
+                        str(video),
+                        "-o",
+                        str(tmp_path / "out"),
+                        "--min-score",
+                        "0",
                         "--no-filter",
                         "--auto-speed",
                     ],
@@ -1663,3 +1680,317 @@ class TestSplitAutoSpeed:
 
             assert result.exit_code == 0
             mock_sr.apply_multiple_ramps.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Motion correction CLI integration tests
+# ---------------------------------------------------------------------------
+
+
+def _make_auto_speed_mocks(tmp_path, extra_args=None):
+    """
+    Helper: set up mocks for an auto-speed split invocation and return
+    (result, mock_apr) after invoking the CLI.
+    """
+    from drone_reel.core.speed_ramper import SpeedRamp
+
+    video = tmp_path / "clip.mp4"
+    _create_test_video(video)
+
+    fake_ramp = SpeedRamp(start_time=0.0, end_time=5.0, start_speed=0.55, end_speed=0.55)
+
+    with (
+        patch("drone_reel.cli.SceneDetector") as mock_sd,
+        patch("drone_reel.cli.analyze_scenes_batch") as mock_ab,
+        patch("drone_reel.cli.SceneFilter") as mock_sf,
+        patch("drone_reel.cli.auto_pan_speed_ramp", return_value=[fake_ramp]) as mock_apr,
+        patch("drone_reel.cli.SpeedRamper") as mock_sr_class,
+    ):
+        scene = _make_scene(0, 5, 70, video)
+        mock_sd.return_value.detect_scenes.return_value = [scene]
+        mock_ab.return_value = {
+            id(scene): {"motion_energy": 75, "brightness": 120, "shake_score": 10}
+        }
+        mock_filter_result = MagicMock()
+        mock_filter_result.all_passing = [scene]
+        mock_sf.return_value.filter_scenes.return_value = mock_filter_result
+
+        mock_clip = MagicMock()
+        mock_clip.w = 320
+        mock_clip.h = 240
+        mock_clip.duration = 5.0
+        mock_clip.transform.return_value = mock_clip
+
+        mock_sr = MagicMock()
+        mock_sr_class.return_value = mock_sr
+        mock_sr.apply_multiple_ramps.return_value = mock_clip
+
+        with patch("drone_reel.core.video_processor.VideoProcessor") as mock_vp_class:
+            mock_vp = MagicMock()
+            mock_vp_class.return_value = mock_vp
+            mock_vp.extract_clip.return_value = mock_clip
+
+            base_args = [
+                "split",
+                "-i",
+                str(video),
+                "-o",
+                str(tmp_path / "out"),
+                "--min-score",
+                "0",
+                "--no-filter",
+                "--auto-speed",
+            ]
+            if extra_args:
+                base_args += extra_args
+
+            runner = CliRunner()
+            result = runner.invoke(main, base_args)
+
+        return result, mock_apr
+
+
+class TestMotionCorrectionCLI:
+    """CLI integration tests for motion correction flags."""
+
+    def test_speed_correction_profile_aggressive_passed_through(self, tmp_path):
+        """--speed-correction-profile aggressive is forwarded to auto_pan_speed_ramp."""
+        result, mock_apr = _make_auto_speed_mocks(
+            tmp_path, extra_args=["--speed-correction-profile", "aggressive"]
+        )
+        assert result.exit_code == 0
+        call_kwargs = mock_apr.call_args
+        assert call_kwargs.kwargs.get("speed_correction_profile") == "aggressive"
+
+    def test_pan_speed_high_override_passed_through(self, tmp_path):
+        """--pan-speed-high 0.5 is forwarded to auto_pan_speed_ramp."""
+        result, mock_apr = _make_auto_speed_mocks(tmp_path, extra_args=["--pan-speed-high", "0.5"])
+        assert result.exit_code == 0
+        call_kwargs = mock_apr.call_args
+        assert call_kwargs.kwargs.get("pan_speed_high") == pytest.approx(0.5)
+
+    def test_ease_speed_ramps_flag_passed_through(self, tmp_path):
+        """--ease-speed-ramps flag is forwarded to auto_pan_speed_ramp."""
+        result, mock_apr = _make_auto_speed_mocks(tmp_path, extra_args=["--ease-speed-ramps"])
+        assert result.exit_code == 0
+        call_kwargs = mock_apr.call_args
+        assert call_kwargs.kwargs.get("ease_speed_ramps") is True
+
+    def test_correct_orbit_flag_passed_through(self, tmp_path):
+        """--correct-orbit flag is forwarded to auto_pan_speed_ramp."""
+        result, mock_apr = _make_auto_speed_mocks(tmp_path, extra_args=["--correct-orbit"])
+        assert result.exit_code == 0
+        call_kwargs = mock_apr.call_args
+        assert call_kwargs.kwargs.get("correct_orbit") is True
+
+
+# ---------------------------------------------------------------------------
+# Stabilization enhancement tests
+# ---------------------------------------------------------------------------
+
+
+def _make_stab_mocks(tmp_path, extra_args=None):
+    """
+    Helper that invokes `split --stabilize` with optional extra args.
+
+    Returns (CliRunner result, call_args dict captured from stabilize_clip mock).
+    """
+    video = tmp_path / "clip.mp4"
+    _create_test_video(video)
+    out_dir = tmp_path / "highlights"
+
+    scenes = [_make_scene(0, 3, 65, video)]
+    captured = {}
+
+    with (
+        patch("drone_reel.cli.SceneDetector") as mock_sd,
+        patch("drone_reel.cli.analyze_scenes_batch") as mock_ab,
+        patch("drone_reel.cli.SceneFilter") as mock_sf,
+        patch("drone_reel.core.video_processor.VideoProcessor.extract_clip") as mock_ec,
+        patch("drone_reel.core.video_processor.VideoProcessor.write_clip") as mock_wc,
+        patch("drone_reel.core.stabilizer.stabilize_clip") as mock_stab,
+    ):
+        mock_sd.return_value.detect_scenes.return_value = scenes
+        analysis = {
+            id(s): {"motion_energy": 50, "brightness": 120, "shake_score": 35} for s in scenes
+        }
+        mock_ab.return_value = analysis
+
+        mock_filter_result = MagicMock()
+        mock_filter_result.all_passing = list(scenes)
+        mock_filter_result.dark_scenes_filtered = 0
+        mock_filter_result.shaky_scenes_filtered = 0
+        mock_sf.return_value.filter_scenes.return_value = mock_filter_result
+
+        mock_clip = MagicMock()
+        mock_clip.w = 320
+        mock_clip.h = 240
+        mock_clip.duration = 3.0
+        mock_ec.return_value = mock_clip
+        mock_stab.return_value = mock_clip
+
+        def create_dummy(clip, output_path):
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(b"\x00" * 1024)
+            return output_path
+
+        mock_wc.side_effect = create_dummy
+
+        runner = CliRunner()
+        args = [
+            "split",
+            "-i",
+            str(video),
+            "-o",
+            str(out_dir),
+            "--min-score",
+            "0",
+            "--stabilize",
+        ]
+        if extra_args:
+            args.extend(extra_args)
+
+        result = runner.invoke(main, args)
+        captured["call_args"] = mock_stab.call_args
+
+    return result, captured.get("call_args")
+
+
+class TestStabStrengthCLI:
+    """Tests for --stab-strength, --smooth-radius, --border-crop, --max-corners in split."""
+
+    def test_stab_strength_off_skips_stabilization(self, tmp_path):
+        """--stab-strength off must skip stabilize_clip even when --stabilize is set."""
+        video = tmp_path / "clip.mp4"
+        _create_test_video(video)
+        out_dir = tmp_path / "highlights"
+
+        scenes = [_make_scene(0, 3, 65, video)]
+
+        with (
+            patch("drone_reel.cli.SceneDetector") as mock_sd,
+            patch("drone_reel.cli.analyze_scenes_batch") as mock_ab,
+            patch("drone_reel.cli.SceneFilter") as mock_sf,
+            patch("drone_reel.core.video_processor.VideoProcessor.extract_clip") as mock_ec,
+            patch("drone_reel.core.video_processor.VideoProcessor.write_clip") as mock_wc,
+            patch("drone_reel.core.stabilizer.stabilize_clip") as mock_stab,
+        ):
+            mock_sd.return_value.detect_scenes.return_value = scenes
+            analysis = {
+                id(s): {"motion_energy": 50, "brightness": 120, "shake_score": 60} for s in scenes
+            }
+            mock_ab.return_value = analysis
+
+            mock_filter_result = MagicMock()
+            mock_filter_result.all_passing = list(scenes)
+            mock_filter_result.dark_scenes_filtered = 0
+            mock_filter_result.shaky_scenes_filtered = 0
+            mock_sf.return_value.filter_scenes.return_value = mock_filter_result
+
+            mock_clip = MagicMock()
+            mock_clip.w = 320
+            mock_clip.h = 240
+            mock_clip.duration = 3.0
+            mock_ec.return_value = mock_clip
+            mock_stab.return_value = mock_clip
+
+            def create_dummy(clip, output_path):
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_bytes(b"\x00" * 1024)
+                return output_path
+
+            mock_wc.side_effect = create_dummy
+
+            runner = CliRunner()
+            result = runner.invoke(
+                main,
+                [
+                    "split",
+                    "-i",
+                    str(video),
+                    "-o",
+                    str(out_dir),
+                    "--min-score",
+                    "0",
+                    "--stabilize",
+                    "--stab-strength",
+                    "off",
+                ],
+            )
+
+            assert result.exit_code == 0, result.output
+            # stabilize_clip must NOT have been called
+            mock_stab.assert_not_called()
+
+    def test_smooth_radius_forwarded_to_stabilize_clip(self, tmp_path):
+        """--smooth-radius value is passed as smoothing_radius to stabilize_clip."""
+        result, call_args = _make_stab_mocks(tmp_path, extra_args=["--smooth-radius", "10"])
+        assert result.exit_code == 0, result.output
+        assert call_args is not None
+        assert call_args.kwargs.get("smoothing_radius") == 10
+
+    def test_border_crop_forwarded_to_stabilize_clip(self, tmp_path):
+        """--border-crop value is passed as border_crop to stabilize_clip."""
+        result, call_args = _make_stab_mocks(tmp_path, extra_args=["--border-crop", "0.08"])
+        assert result.exit_code == 0, result.output
+        assert call_args is not None
+        assert call_args.kwargs.get("border_crop") == pytest.approx(0.08)
+
+    def test_stab_strength_full_forwarded(self, tmp_path):
+        """--stab-strength full is passed to stabilize_clip."""
+        result, call_args = _make_stab_mocks(tmp_path, extra_args=["--stab-strength", "full"])
+        assert result.exit_code == 0, result.output
+        assert call_args is not None
+        assert call_args.kwargs.get("stab_strength") == "full"
+
+    def test_stab_strength_light_forwarded(self, tmp_path):
+        """--stab-strength light is passed to stabilize_clip."""
+        result, call_args = _make_stab_mocks(tmp_path, extra_args=["--stab-strength", "light"])
+        assert result.exit_code == 0, result.output
+        assert call_args is not None
+        assert call_args.kwargs.get("stab_strength") == "light"
+
+    def test_max_corners_default_is_200(self, tmp_path):
+        """Without --max-corners, default 200 is passed to stabilize_clip."""
+        result, call_args = _make_stab_mocks(tmp_path)
+        assert result.exit_code == 0, result.output
+        assert call_args is not None
+        assert call_args.kwargs.get("max_corners") == 200
+
+    def test_smooth_radius_out_of_range_rejected(self, tmp_path):
+        """--smooth-radius outside 5-120 should be rejected by Click."""
+        video = tmp_path / "clip.mp4"
+        _create_test_video(video)
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            [
+                "split",
+                "-i",
+                str(video),
+                "-o",
+                str(tmp_path / "out"),
+                "--smooth-radius",
+                "200",
+            ],
+        )
+        assert result.exit_code != 0
+
+    def test_border_crop_out_of_range_rejected(self, tmp_path):
+        """--border-crop outside 0.0-0.15 should be rejected by Click."""
+        video = tmp_path / "clip.mp4"
+        _create_test_video(video)
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            [
+                "split",
+                "-i",
+                str(video),
+                "-o",
+                str(tmp_path / "out"),
+                "--border-crop",
+                "0.5",
+            ],
+        )
+        assert result.exit_code != 0

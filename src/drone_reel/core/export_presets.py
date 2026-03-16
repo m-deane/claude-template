@@ -8,7 +8,6 @@ and other social media platforms with proper aspect ratios, codecs, and bitrates
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from moviepy import VideoFileClip
 
@@ -41,7 +40,7 @@ class ExportPreset:
     audio_codec: str
     video_bitrate: str
     audio_bitrate: str
-    max_duration: Optional[float]  # seconds, None for unlimited
+    max_duration: float | None  # seconds, None for unlimited
     optimal_duration: tuple[float, float]  # (min, max) optimal range
     pixel_format: str = "yuv420p"
     preset: str = "medium"  # ffmpeg preset
@@ -237,7 +236,7 @@ class PlatformExporter:
         return result
 
     def get_export_params(
-        self, platform: Platform, hardware_encoder: Optional[str] = None
+        self, platform: Platform, hardware_encoder: str | None = None
     ) -> dict:
         """
         Get MoviePy/FFmpeg export parameters for platform.
@@ -303,7 +302,7 @@ class PlatformExporter:
         clip: VideoFileClip,
         output_dir: Path,
         platforms: list[Platform],
-        hardware_encoder: Optional[str] = None,
+        hardware_encoder: str | None = None,
         base_filename: str = "export",
     ) -> dict[Platform, Path]:
         """
@@ -405,7 +404,7 @@ class PlatformExporter:
         audio_codec: str = "aac",
         video_bitrate: str = "10M",
         audio_bitrate: str = "128k",
-        max_duration: Optional[float] = None,
+        max_duration: float | None = None,
         optimal_duration: tuple[float, float] = (15.0, 60.0),
     ) -> ExportPreset:
         """

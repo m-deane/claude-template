@@ -5,10 +5,10 @@ Handles automatic reframing from landscape drone footage to vertical
 9:16 format for Instagram Reels, TikTok, and YouTube Shorts.
 """
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -60,7 +60,7 @@ class ReframeSettings:
     saliency_cache_frames: int = 10  # Recompute saliency every N frames
     scene_change_threshold: float = 0.3  # Histogram diff threshold for scene change
     horizon_penalty_weight: float = 0.5  # Penalty for tilted horizons in SMART mode
-    face_cascade_path: Optional[str] = None  # Path to face cascade XML (optional)
+    face_cascade_path: str | None = None  # Path to face cascade XML (optional)
 
     # Ken Burns effect settings
     ken_burns_zoom_start: float = 1.0  # Start zoom factor (1.0 = no zoom)
@@ -89,7 +89,7 @@ class Reframer:
     panning, and rule-of-thirds based framing.
     """
 
-    def __init__(self, settings: Optional[ReframeSettings] = None):
+    def __init__(self, settings: ReframeSettings | None = None):
         """
         Initialize the reframer.
 
@@ -101,12 +101,12 @@ class Reframer:
         self._tracker_history: list[tuple[float, float]] = []
 
         # Caching for performance
-        self._saliency_cache: Optional[np.ndarray] = None
+        self._saliency_cache: np.ndarray | None = None
         self._saliency_cache_index: int = -1
-        self._prev_histogram: Optional[np.ndarray] = None
+        self._prev_histogram: np.ndarray | None = None
 
         # Face detection
-        self._face_cascade: Optional[cv2.CascadeClassifier] = None
+        self._face_cascade: cv2.CascadeClassifier | None = None
         if self.settings.mode == ReframeMode.FACE:
             cascade_path = self.settings.face_cascade_path
             if cascade_path is None:
@@ -117,14 +117,14 @@ class Reframer:
                 raise ValueError(f"Failed to load face cascade from {cascade_path}")
 
         # Optical flow for motion tracking
-        self._prev_gray: Optional[np.ndarray] = None
+        self._prev_gray: np.ndarray | None = None
 
         # Adaptive smoothing
         self._focal_velocity_history: list[float] = []
 
         # Subject tracking (CSRT/KCF/MOSSE)
-        self._subject_tracker: Optional[cv2.Tracker] = None
-        self._subject_bbox: Optional[tuple[int, int, int, int]] = None
+        self._subject_tracker: cv2.Tracker | None = None
+        self._subject_bbox: tuple[int, int, int, int] | None = None
         self._subject_tracking_initialized: bool = False
         self._frames_since_redetect: int = 0
 
@@ -497,7 +497,7 @@ class Reframer:
 
         return saliency_map
 
-    def _detect_horizon_line(self, frame: np.ndarray) -> Optional[float]:
+    def _detect_horizon_line(self, frame: np.ndarray) -> float | None:
         """
         Detect the horizon line Y-coordinate using Hough line detection.
 
@@ -542,7 +542,7 @@ class Reframer:
 
         return None
 
-    def _detect_horizon_angle(self, frame: np.ndarray) -> Optional[float]:
+    def _detect_horizon_angle(self, frame: np.ndarray) -> float | None:
         """
         Detect the tilt angle of the horizon line.
 
@@ -1139,7 +1139,7 @@ class Reframer:
         self,
         input_path: Path,
         output_path: Path,
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
     ) -> Path:
         """
         Reframe an entire video file.

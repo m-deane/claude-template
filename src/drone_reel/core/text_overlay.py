@@ -7,11 +7,10 @@ and professional templates like lower thirds and beat-synced captions.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 import cv2
 import numpy as np
-from moviepy import CompositeVideoClip, VideoFileClip
+from moviepy import VideoFileClip
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -39,7 +38,7 @@ class TextOverlay:
     font: str = "Arial-Bold"
     font_size: int = 48
     color: tuple[int, int, int] = (255, 255, 255)
-    background_color: Optional[tuple[int, int, int, int]] = None  # RGBA
+    background_color: tuple[int, int, int, int] | None = None  # RGBA
     shadow: bool = True
     shadow_color: tuple[int, int, int] = (0, 0, 0)
     shadow_offset: tuple[int, int] = (2, 2)
@@ -85,7 +84,7 @@ class TextRenderer:
         if cache_key not in self._font_cache:
             try:
                 font = ImageFont.truetype(font_name, font_size)
-            except (OSError, IOError):
+            except OSError:
                 font_candidates = [
                     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
                     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -97,7 +96,7 @@ class TextRenderer:
                     try:
                         font = ImageFont.truetype(candidate, font_size)
                         break
-                    except (OSError, IOError):
+                    except OSError:
                         continue
                 if font is None:
                     font = ImageFont.load_default()
@@ -481,7 +480,7 @@ class TextRenderer:
     def create_lower_third(
         self,
         title: str,
-        subtitle: Optional[str] = None,
+        subtitle: str | None = None,
         style: str = "modern",
     ) -> list[TextOverlay]:
         """

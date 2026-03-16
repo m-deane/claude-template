@@ -11,15 +11,14 @@ from drone_reel.core.scene_detector import (
     SceneInfo,
 )
 from drone_reel.core.scene_sequencer import (
-    SceneSequencer,
     _DYNAMIC_MOTION_TYPES,
+    SceneSequencer,
+    _composition_sort_key,
     _distribute_arc,
     _hook_sort_key,
-    _composition_sort_key,
     get_hook_priority,
     get_opening_score,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -8,7 +8,6 @@ visual quality scoring to identify the most compelling moments.
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -41,7 +40,7 @@ class SceneInfo:
     duration: float
     score: float
     source_file: Path
-    thumbnail: Optional[np.ndarray] = None
+    thumbnail: np.ndarray | None = None
 
     @property
     def midpoint(self) -> float:

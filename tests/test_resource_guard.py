@@ -1,14 +1,13 @@
 """Tests for resource preflight guard module."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from drone_reel.utils.resource_guard import (
     check_available_memory_mb,
     check_disk_space_mb,
-    estimate_render_memory_mb,
     estimate_output_size_mb,
+    estimate_render_memory_mb,
     preflight_check,
 )
 

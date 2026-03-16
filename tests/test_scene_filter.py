@@ -2,11 +2,8 @@
 
 from pathlib import Path
 
-import pytest
-
-from drone_reel.core.scene_filter import FilterResult, FilterThresholds, SceneFilter
 from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType, SceneInfo
-
+from drone_reel.core.scene_filter import FilterResult, FilterThresholds, SceneFilter
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -6,10 +6,10 @@ including warm tones, cool grades, vintage looks, and more.
 Supports LUTs, tone curves, selective color adjustments, and GPU acceleration.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -107,7 +107,7 @@ class ColorAdjustments:
     vibrance: float = 0.0  # -100 to 100
     fade: float = 0.0  # 0 to 100 (lifts blacks)
     grain: float = 0.0  # 0 to 100
-    selective_color: Optional[SelectiveColorAdjustments] = None
+    selective_color: SelectiveColorAdjustments | None = None
 
 
 @dataclass
@@ -356,9 +356,9 @@ class ColorGrader:
     def __init__(
         self,
         preset: ColorPreset = ColorPreset.NONE,
-        adjustments: Optional[ColorAdjustments] = None,
-        lut_path: Optional[Path] = None,
-        tone_curve: Optional[ToneCurve] = None,
+        adjustments: ColorAdjustments | None = None,
+        lut_path: Path | None = None,
+        tone_curve: ToneCurve | None = None,
         use_gpu: bool = False,
         intensity: float = 1.0,
         vignette_strength: float = 0.0,
@@ -411,19 +411,19 @@ class ColorGrader:
                 selective_color=self.adjustments.selective_color,
             )
 
-        self.lut: Optional[np.ndarray] = None
+        self.lut: np.ndarray | None = None
         if lut_path:
             self.lut = self.load_lut(lut_path)
 
         self.tone_curve = tone_curve
-        self._tone_curve_luts: Optional[tuple[np.ndarray, np.ndarray, np.ndarray]] = None
+        self._tone_curve_luts: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None
         if tone_curve:
             self._tone_curve_luts = self._build_tone_curve_luts(tone_curve)
 
         self.use_gpu = use_gpu and self._check_gpu_available()
         self._frame_index = 0
         self.vignette_strength = max(0.0, min(1.0, vignette_strength))
-        self._vignette_mask_cache: Optional[tuple[int, int, np.ndarray]] = None
+        self._vignette_mask_cache: tuple[int, int, np.ndarray] | None = None
         self.halation_strength = max(0.0, min(1.0, halation_strength))
         self.chromatic_aberration_strength = max(0.0, min(1.0, chromatic_aberration_strength))
         self.input_colorspace = input_colorspace.lower()
@@ -432,7 +432,7 @@ class ColorGrader:
         self.haze_strength = max(0.0, min(1.0, haze_strength))
         self.gnd_sky_strength = max(0.0, min(1.0, gnd_sky_strength))
         self._dlog_normalized = False
-        self._reference_histogram: Optional[list] = None
+        self._reference_histogram: list | None = None
 
     def _check_gpu_available(self) -> bool:
         """Check if CUDA GPU is available."""
@@ -451,7 +451,7 @@ class ColorGrader:
         Returns:
             3D LUT as numpy array with shape (size, size, size, 3)
         """
-        with open(lut_path, 'r') as f:
+        with open(lut_path) as f:
             lines = f.readlines()
 
         lut_size = None
@@ -651,7 +651,7 @@ class ColorGrader:
 
         return result
 
-    def grade_frame(self, frame: np.ndarray, frame_index: Optional[int] = None) -> np.ndarray:
+    def grade_frame(self, frame: np.ndarray, frame_index: int | None = None) -> np.ndarray:
         """
         Apply color grading to a single frame.
 
@@ -1560,7 +1560,7 @@ class ColorGrader:
         self,
         input_path: Path,
         output_path: Path,
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
         video_bitrate: str = "15M",
         audio_bitrate: str = "192k",
     ) -> Path:

@@ -5,31 +5,30 @@ Tests the complete workflow from scene detection through to final clip selection
 using synthetic test videos generated with OpenCV.
 """
 
-import tempfile
 from pathlib import Path
 
 import cv2
 import numpy as np
 import pytest
 
-from drone_reel.core.scene_detector import (
-    SceneDetector,
-    SceneInfo,
-    EnhancedSceneInfo,
-    MotionType,
-    HookPotential,
-)
+from drone_reel.core.color_grader import ColorGrader, ColorPreset
+from drone_reel.core.duration_adjuster import DurationAdjuster
+from drone_reel.core.reframe_selector import ReframeSelector
 from drone_reel.core.scene_analyzer import (
-    analyze_scenes_batch,
     analyze_scene_motion,
+    analyze_scenes_batch,
     classify_motion_type,
 )
-from drone_reel.core.scene_filter import SceneFilter, FilterThresholds
+from drone_reel.core.scene_detector import (
+    EnhancedSceneInfo,
+    HookPotential,
+    MotionType,
+    SceneDetector,
+    SceneInfo,
+)
+from drone_reel.core.scene_filter import FilterThresholds, SceneFilter
 from drone_reel.core.scene_sequencer import SceneSequencer
-from drone_reel.core.duration_adjuster import DurationAdjuster, DurationConfig
-from drone_reel.core.reframe_selector import ReframeSelector, KenBurnsConfig
 from drone_reel.core.sequence_optimizer import DiversitySelector
-from drone_reel.core.color_grader import ColorGrader, ColorPreset
 
 
 class TestSyntheticVideoGeneration:

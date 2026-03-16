@@ -9,11 +9,11 @@ import gc
 import os
 import platform
 import subprocess
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -26,8 +26,8 @@ from moviepy import (
     vfx,
 )
 
-from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType, SceneInfo
 from drone_reel.core.reframer import Reframer
+from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType, SceneInfo
 
 
 class TransitionType(Enum):
@@ -64,7 +64,7 @@ class ClipSegment:
 
     scene: SceneInfo
     start_offset: float = 0.0
-    duration: Optional[float] = None
+    duration: float | None = None
     transition_in: TransitionType = TransitionType.CUT
     transition_out: TransitionType = TransitionType.CUT
     transition_duration: float = 0.3
@@ -93,13 +93,17 @@ class VideoProcessor:
     def __init__(
         self,
         output_fps: int = 30,
-        output_codec: Optional[str] = None,
+        output_codec: str | None = None,
         output_audio_codec: str = "aac",
         preset: str = "medium",
-        threads: Optional[int] = None,
-        video_bitrate: Optional[str] = None,
+        threads: int | None = None,
+        video_bitrate: str | None = None,
         audio_bitrate: str = "192k",
         stabilize: bool = False,
+        stab_strength: str = "adaptive",
+        smooth_radius: int = 30,
+        stab_border_crop: float = 0.05,
+        stab_max_corners: int = 200,
     ):
         """
         Initialize the video processor.
@@ -113,6 +117,10 @@ class VideoProcessor:
             video_bitrate: Video bitrate (e.g., "8M", "15M", "25M")
             audio_bitrate: Audio bitrate (e.g., "128k", "192k", "320k")
             stabilize: Apply video stabilization to reduce camera shake
+            stab_strength: Stabilization mode — "off", "light", "adaptive", or "full".
+            smooth_radius: Temporal smoothing window in frames for stabilization.
+            stab_border_crop: Fraction of frame edges to crop after stabilization.
+            stab_max_corners: Max feature points for goodFeaturesToTrack.
         """
         self.output_fps = output_fps
         self.output_codec = output_codec or self._detect_best_encoder()
@@ -122,6 +130,10 @@ class VideoProcessor:
         self.video_bitrate = video_bitrate or "15M"  # Default 15 Mbps for high quality
         self.audio_bitrate = audio_bitrate
         self.stabilize = stabilize
+        self.stab_strength = stab_strength
+        self.smooth_radius = smooth_radius
+        self.stab_border_crop = stab_border_crop
+        self.stab_max_corners = stab_max_corners
         self._transition_funcs: dict[TransitionType, Callable] = {
             TransitionType.CUT: self._transition_cut,
             TransitionType.CROSSFADE: self._transition_crossfade,
@@ -197,8 +209,8 @@ class VideoProcessor:
     def extract_clip(
         self,
         segment: ClipSegment,
-        target_size: Optional[tuple[int, int]] = None,
-        reframer: Optional[Reframer] = None,
+        target_size: tuple[int, int] | None = None,
+        reframer: Reframer | None = None,
     ) -> VideoFileClip:
         """
         Extract a clip segment from its source video.
@@ -284,11 +296,16 @@ class VideoProcessor:
 
         # Build ffmpeg_params — same block as stitch_clips (lines 483-503)
         ffmpeg_params = [
-            "-pix_fmt", "yuv420p",
-            "-colorspace", "bt709",
-            "-color_primaries", "bt709",
-            "-color_trc", "bt709",
-            "-movflags", "+faststart",
+            "-pix_fmt",
+            "yuv420p",
+            "-colorspace",
+            "bt709",
+            "-color_primaries",
+            "bt709",
+            "-color_trc",
+            "bt709",
+            "-movflags",
+            "+faststart",
         ]
 
         # Add maxrate/bufsize for VBV bitrate enforcement
@@ -296,7 +313,7 @@ class VideoProcessor:
             numeric_str = self.video_bitrate.rstrip("MmKk")
             try:
                 numeric_val = float(numeric_str)
-                unit = self.video_bitrate[len(numeric_str):].upper()
+                unit = self.video_bitrate[len(numeric_str) :].upper()
                 maxrate_val = numeric_val * 1.5
                 bufsize_val = numeric_val * 2
                 maxrate_str = f"{maxrate_val:.0f}{unit}"
@@ -326,8 +343,8 @@ class VideoProcessor:
     def _extract_clip_parallel(
         self,
         segment: ClipSegment,
-        target_size: Optional[tuple[int, int]],
-        reframer: Optional[Reframer] = None,
+        target_size: tuple[int, int] | None,
+        reframer: Reframer | None = None,
     ) -> VideoFileClip:
         """
         Helper method for parallel clip extraction.
@@ -346,14 +363,14 @@ class VideoProcessor:
         self,
         segments: list[ClipSegment],
         output_path: Path,
-        audio_path: Optional[Path] = None,
-        target_size: Optional[tuple[int, int]] = None,
-        progress_callback: Optional[Callable[[float], None]] = None,
+        audio_path: Path | None = None,
+        target_size: tuple[int, int] | None = None,
+        progress_callback: Callable[[float], None] | None = None,
         parallel_extraction: bool = True,
-        reframer: Optional[Reframer] = None,
-        reframers: Optional[list[Reframer]] = None,
-        shake_scores: Optional[list[float]] = None,
-        speed_ramps: Optional[list[list]] = None,
+        reframer: Reframer | None = None,
+        reframers: list[Reframer] | None = None,
+        shake_scores: list[float] | None = None,
+        speed_ramps: list[list] | None = None,
         return_clip: bool = False,
     ) -> "Path | VideoFileClip":
         """
@@ -411,14 +428,12 @@ class VideoProcessor:
                         except Exception as e:
                             for c in clips_dict.values():
                                 try:
-                                    if hasattr(c, '_source_clip_ref') and c._source_clip_ref:
+                                    if hasattr(c, "_source_clip_ref") and c._source_clip_ref:
                                         c._source_clip_ref.close()
                                     c.close()
                                 except Exception:
                                     pass
-                            raise RuntimeError(
-                                f"Failed to extract clip {idx}: {str(e)}"
-                            ) from e
+                            raise RuntimeError(f"Failed to extract clip {idx}: {str(e)}") from e
 
                     clips = [clips_dict[i] for i in range(len(segments))]
             else:
@@ -439,6 +454,7 @@ class VideoProcessor:
             # Apply adaptive stabilization if enabled
             if self.stabilize:
                 from drone_reel.core.stabilizer import stabilize_clip
+
                 pre_stab_clips = list(clips)
                 stabilized_clips = []
                 stabilized_count = 0
@@ -449,9 +465,11 @@ class VideoProcessor:
                     try:
                         stabilized = stabilize_clip(
                             clip,
-                            smoothing_radius=15,
-                            border_crop=0.04,
+                            smoothing_radius=self.smooth_radius,
+                            border_crop=self.stab_border_crop,
                             shake_score=clip_shake,
+                            stab_strength=self.stab_strength,
+                            max_corners=self.stab_max_corners,
                         )
                         # Track whether stabilization was actually applied
                         if stabilized is clip:
@@ -480,6 +498,7 @@ class VideoProcessor:
             # Apply speed ramps if provided
             if speed_ramps:
                 from drone_reel.core.speed_ramper import SpeedRamper
+
                 ramper = SpeedRamper()
                 pre_ramp_clips = list(clips)
                 ramped_clips = []
@@ -546,11 +565,16 @@ class VideoProcessor:
 
             # Build ffmpeg_params with color space metadata, faststart, and bitrate caps
             ffmpeg_params = [
-                "-pix_fmt", "yuv420p",
-                "-colorspace", "bt709",
-                "-color_primaries", "bt709",
-                "-color_trc", "bt709",
-                "-movflags", "+faststart",
+                "-pix_fmt",
+                "yuv420p",
+                "-colorspace",
+                "bt709",
+                "-color_primaries",
+                "bt709",
+                "-color_trc",
+                "bt709",
+                "-movflags",
+                "+faststart",
             ]
 
             # Add maxrate/bufsize for VBV bitrate enforcement
@@ -558,7 +582,7 @@ class VideoProcessor:
                 numeric_str = self.video_bitrate.rstrip("MmKk")
                 try:
                     numeric_val = float(numeric_str)
-                    unit = self.video_bitrate[len(numeric_str):].upper()
+                    unit = self.video_bitrate[len(numeric_str) :].upper()
                     maxrate_val = numeric_val * 1.5
                     bufsize_val = numeric_val * 2
                     maxrate_str = f"{maxrate_val:.0f}{unit}"
@@ -595,7 +619,7 @@ class VideoProcessor:
             if not return_clip:
                 for clip in clips:
                     try:
-                        if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                        if hasattr(clip, "_source_clip_ref") and clip._source_clip_ref:
                             clip._source_clip_ref.close()
                         clip.close()
                     except Exception:
@@ -841,10 +865,11 @@ class VideoProcessor:
 
             blurred = cv2.filter2D(frame, -1, kernel)
             # Blend original and blurred based on strength for smoother falloff
-            alpha = blur_strength ** 1.5  # Ease-in curve
+            alpha = blur_strength**1.5  # Ease-in curve
             return np.clip(
                 frame.astype(np.float32) * (1 - alpha) + blurred.astype(np.float32) * alpha,
-                0, 255,
+                0,
+                255,
             ).astype(np.uint8)
 
         return clip.transform(whip_effect)
@@ -880,10 +905,10 @@ class VideoProcessor:
             result = frame.copy()
             # Shift R channel right, B channel left (frame is RGB from MoviePy)
             if shift > 0:
-                result[:, shift:, 0] = frame[:, :-shift, 0]   # R shifts right
-                result[:, :shift, 0] = frame[:, :1, 0]        # Fill left edge
-                result[:, :-shift, 2] = frame[:, shift:, 2]   # B shifts left
-                result[:, -shift:, 2] = frame[:, -1:, 2]      # Fill right edge
+                result[:, shift:, 0] = frame[:, :-shift, 0]  # R shifts right
+                result[:, :shift, 0] = frame[:, :1, 0]  # Fill left edge
+                result[:, :-shift, 2] = frame[:, shift:, 2]  # B shifts left
+                result[:, -shift:, 2] = frame[:, -1:, 2]  # Fill right edge
             return result
 
         return clip.transform(glitch_effect)
@@ -922,7 +947,7 @@ class VideoProcessor:
 
             # Build circular mask with feathered edge
             cy, cx = h / 2, w / 2
-            max_radius = np.sqrt(cx ** 2 + cy ** 2)
+            max_radius = np.sqrt(cx**2 + cy**2)
             radius = radius_frac * max_radius
 
             y_coords = np.arange(h).reshape(-1, 1)
@@ -1000,7 +1025,7 @@ class VideoProcessor:
             # Sweep position (center of the leak band)
             center = sweep
             sigma = 0.15  # Width of the leak band
-            leak_mask = np.exp(-((diag - center) ** 2) / (2 * sigma ** 2)).astype(np.float32)
+            leak_mask = np.exp(-((diag - center) ** 2) / (2 * sigma**2)).astype(np.float32)
             leak_mask *= sweep  # Overall intensity
 
             # Warm amber color (RGB: 255, 180, 60)
@@ -1042,7 +1067,7 @@ class VideoProcessor:
             scaled = cv2.resize(frame, (new_w, new_h))
             start_y = (new_h - h) // 2
             start_x = (new_w - w) // 2
-            cropped = scaled[start_y:start_y + h, start_x:start_x + w]
+            cropped = scaled[start_y : start_y + h, start_x : start_x + w]
 
             # Add subtle radial blur for motion feel
             if zoom > 1.1:
@@ -1055,8 +1080,10 @@ class VideoProcessor:
                 x_c = np.arange(w).reshape(1, -1)
                 dist = np.sqrt(((x_c - cx) / cx) ** 2 + ((y_c - cy) / cy) ** 2)
                 edge_mask = np.clip(dist - 0.5, 0, 1).astype(np.float32)[:, :, np.newaxis]
-                cropped = (cropped.astype(np.float32) * (1 - edge_mask) +
-                          blurred.astype(np.float32) * edge_mask).astype(np.uint8)
+                cropped = (
+                    cropped.astype(np.float32) * (1 - edge_mask)
+                    + blurred.astype(np.float32) * edge_mask
+                ).astype(np.uint8)
 
             return cropped
 
@@ -1270,9 +1297,9 @@ class VideoProcessor:
                 scaled = cv2.resize(frame, (new_w, new_h))
                 sy = (new_h - h) // 2
                 sx = (new_w - w) // 2
-                result += scaled[sy:sy + h, sx:sx + w].astype(np.float32)
+                result += scaled[sy : sy + h, sx : sx + w].astype(np.float32)
 
-            result /= (n_steps + 1)
+            result /= n_steps + 1
             return np.clip(result, 0, 255).astype(np.uint8)
 
         return clip.transform(vortex_effect)
@@ -1281,9 +1308,7 @@ class VideoProcessor:
         """Simple cut transition (no effect)."""
         return concatenate_videoclips([clip1, clip2])
 
-    def _transition_crossfade(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_crossfade(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Crossfade transition between clips."""
         clip1 = clip1.with_effects([vfx.CrossFadeOut(duration)])
         clip2 = clip2.with_effects([vfx.CrossFadeIn(duration)])
@@ -1292,39 +1317,29 @@ class VideoProcessor:
 
         return CompositeVideoClip([clip1, clip2])
 
-    def _transition_fade_black(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_fade_black(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Fade to black transition."""
         clip1 = clip1.with_effects([vfx.FadeOut(duration / 2)])
         clip2 = clip2.with_effects([vfx.FadeIn(duration / 2)])
         return concatenate_videoclips([clip1, clip2])
 
-    def _transition_fade_white(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_fade_white(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Fade to white transition."""
         clip1 = clip1.with_effects([vfx.FadeOut(duration / 2, final_color=(255, 255, 255))])
         clip2 = clip2.with_effects([vfx.FadeIn(duration / 2, initial_color=(255, 255, 255))])
         return concatenate_videoclips([clip1, clip2])
 
-    def _transition_zoom_in(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_zoom_in(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Zoom in transition."""
         clip1 = self._zoom_transition(clip1, duration, zoom_in=True, is_start=False)
         return concatenate_videoclips([clip1, clip2])
 
-    def _transition_zoom_out(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_zoom_out(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Zoom out transition."""
         clip2 = self._zoom_transition(clip2, duration, zoom_in=False, is_start=True)
         return concatenate_videoclips([clip1, clip2])
 
-    def _transition_slide_left(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_slide_left(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Slide left transition - clip2 slides in from right."""
         from moviepy import CompositeVideoClip
 
@@ -1343,16 +1358,18 @@ class VideoProcessor:
         clip2_sliding = clip2_trimmed.with_position(slide_position)
 
         # Composite during transition, then continue with clip2
-        transition = CompositeVideoClip([clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)).with_duration(duration)
+        transition = CompositeVideoClip(
+            [clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)
+        ).with_duration(duration)
         clip2_rest = clip2.subclipped(duration) if clip2.duration > duration else None
 
         if clip2_rest:
-            return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest])
+            return concatenate_videoclips(
+                [clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest]
+            )
         return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition])
 
-    def _transition_slide_right(
-        self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float
-    ):
+    def _transition_slide_right(self, clip1: VideoFileClip, clip2: VideoFileClip, duration: float):
         """Slide right transition - clip2 slides in from left."""
         from moviepy import CompositeVideoClip
 
@@ -1371,11 +1388,15 @@ class VideoProcessor:
         clip2_sliding = clip2_trimmed.with_position(slide_position)
 
         # Composite during transition
-        transition = CompositeVideoClip([clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)).with_duration(duration)
+        transition = CompositeVideoClip(
+            [clip1_trimmed.subclipped(clip1.duration - duration), clip2_sliding], size=(w, h)
+        ).with_duration(duration)
         clip2_rest = clip2.subclipped(duration) if clip2.duration > duration else None
 
         if clip2_rest:
-            return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest])
+            return concatenate_videoclips(
+                [clip1.subclipped(0, clip1.duration - duration), transition, clip2_rest]
+            )
         return concatenate_videoclips([clip1.subclipped(0, clip1.duration - duration), transition])
 
     def _are_motion_directions_aligned(
@@ -1469,9 +1490,7 @@ class VideoProcessor:
             Tuple of (TransitionType, duration)
         """
         # Check if scenes have enhanced motion info
-        if not isinstance(scene1, EnhancedSceneInfo) or not isinstance(
-            scene2, EnhancedSceneInfo
-        ):
+        if not isinstance(scene1, EnhancedSceneInfo) or not isinstance(scene2, EnhancedSceneInfo):
             return TransitionType.CROSSFADE, default_duration
 
         dir1 = scene1.motion_direction
@@ -1498,12 +1517,13 @@ class VideoProcessor:
             return TransitionType.CROSSFADE, 0.2
 
         # Check for horizontal pan motion - use whip pan for dramatic effect
-        from drone_reel.core.scene_detector import MotionType
 
         # Fast pan exits -> whip pan (the #1 viral transition)
-        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
-            MotionType.PAN_RIGHT, MotionType.PAN_LEFT
-        ) and mag1 > 0.03:
+        if (
+            isinstance(scene1, EnhancedSceneInfo)
+            and scene1.motion_type in (MotionType.PAN_RIGHT, MotionType.PAN_LEFT)
+            and mag1 > 0.03
+        ):
             return TransitionType.WHIP_PAN, 0.3
 
         # FPV or high-energy motion -> vortex zoom or glitch RGB
@@ -1526,7 +1546,8 @@ class VideoProcessor:
 
         # Orbit scenes -> diamond wipe (geometric match)
         if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
-            MotionType.ORBIT_CW, MotionType.ORBIT_CCW
+            MotionType.ORBIT_CW,
+            MotionType.ORBIT_CCW,
         ):
             return TransitionType.WIPE_DIAMOND, 0.4
 
@@ -1543,9 +1564,7 @@ class VideoProcessor:
             return TransitionType.FOG_PASS, 0.5
 
         # Flyover/approach exits -> hyperlapse zoom
-        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (
-            MotionType.FLYOVER,
-        ):
+        if isinstance(scene1, EnhancedSceneInfo) and scene1.motion_type in (MotionType.FLYOVER,):
             return TransitionType.HYPERLAPSE_ZOOM, 0.4
 
         # Different motion directions - diagonal wipe for visual variety
@@ -1559,7 +1578,7 @@ class VideoProcessor:
         self,
         scenes: list[SceneInfo],
         clip_durations: list[float],
-        transitions: Optional[list[TransitionType]] = None,
+        transitions: list[TransitionType] | None = None,
         transition_duration: float = 0.3,
     ) -> list[ClipSegment]:
         """

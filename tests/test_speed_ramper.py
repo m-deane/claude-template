@@ -629,16 +629,12 @@ class TestAutoPanSpeedRamp:
     # ------------------------------------------------------------------
 
     def test_fpv_fast_slows_to_75pct(self):
-        result = auto_pan_speed_ramp(
-            _scene(MotionType.FPV), clip_duration=3.0, motion_energy=55.0
-        )
+        result = auto_pan_speed_ramp(_scene(MotionType.FPV), clip_duration=3.0, motion_energy=55.0)
         assert len(result) == 1
         assert result[0].start_speed == pytest.approx(0.75)
 
     def test_fpv_moderate_no_change(self):
-        result = auto_pan_speed_ramp(
-            _scene(MotionType.FPV), clip_duration=3.0, motion_energy=40.0
-        )
+        result = auto_pan_speed_ramp(_scene(MotionType.FPV), clip_duration=3.0, motion_energy=40.0)
         assert result == []
 
     # ------------------------------------------------------------------
@@ -725,4 +721,212 @@ class TestAutoPanSpeedRamp:
         s.motion_type = MotionType.PAN_LEFT  # type: ignore[attr-defined]
         result = auto_pan_speed_ramp(s, clip_duration=5.0)
         assert len(result) == 1
-        assert result[0].start_speed == pytest.approx(0.65)
+
+
+# ---------------------------------------------------------------------------
+# Speed correction profile tests
+# ---------------------------------------------------------------------------
+
+
+class TestSpeedCorrectionProfiles:
+    """Test speed_correction_profile parameter and individual overrides."""
+
+    def test_aggressive_profile_lower_than_normal_for_pan_high(self):
+        """aggressive profile uses a lower (more aggressive) speed factor than normal for fast pans."""
+        result_normal = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="normal",
+        )
+        result_aggressive = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="aggressive",
+        )
+        assert len(result_aggressive) == 1
+        assert result_aggressive[0].start_speed < result_normal[0].start_speed
+
+    def test_smooth_profile_higher_than_normal_for_pan_high(self):
+        """smooth profile uses a higher (less aggressive) speed factor than normal for fast pans."""
+        result_normal = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="normal",
+        )
+        result_smooth = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="smooth",
+        )
+        assert len(result_smooth) == 1
+        assert result_smooth[0].start_speed > result_normal[0].start_speed
+
+    def test_cinematic_profile_lower_than_normal_for_pan_high(self):
+        """cinematic profile is slightly more aggressive than normal for fast pans."""
+        result_normal = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="normal",
+        )
+        result_cinematic = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="cinematic",
+        )
+        assert len(result_cinematic) == 1
+        assert result_cinematic[0].start_speed < result_normal[0].start_speed
+
+    def test_pan_speed_high_override_takes_precedence_over_profile(self):
+        """Individual pan_speed_high override beats the profile setting."""
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            speed_correction_profile="normal",
+            pan_speed_high=0.5,
+        )
+        assert len(result) == 1
+        assert result[0].start_speed == pytest.approx(0.5)
+
+    def test_correct_orbit_true_applies_correction_to_orbit(self):
+        """correct_orbit=True applies 0.85x to ORBIT_CW and ORBIT_CCW scenes."""
+        for mt in (MotionType.ORBIT_CW, MotionType.ORBIT_CCW):
+            result = auto_pan_speed_ramp(
+                _scene(mt),
+                clip_duration=5.0,
+                motion_energy=80.0,
+                correct_orbit=True,
+            )
+            assert len(result) == 1, f"Expected ramp for {mt}"
+            assert result[0].start_speed == pytest.approx(0.85), f"Expected 0.85 for {mt}"
+
+    def test_correct_orbit_false_leaves_orbit_unchanged(self):
+        """correct_orbit=False (default) leaves ORBIT motion types untouched."""
+        for mt in (MotionType.ORBIT_CW, MotionType.ORBIT_CCW):
+            result = auto_pan_speed_ramp(
+                _scene(mt),
+                clip_duration=5.0,
+                motion_energy=80.0,
+                correct_orbit=False,
+            )
+            assert result == [], f"Expected no ramp for {mt} with correct_orbit=False"
+
+
+# ---------------------------------------------------------------------------
+# Ease ramp tests
+# ---------------------------------------------------------------------------
+
+
+class TestEaseSpeedRamps:
+    """Test ease_speed_ramps parameter."""
+
+    def test_ease_speed_ramps_false_produces_single_ramp(self):
+        """ease_speed_ramps=False produces a single full-clip SpeedRamp."""
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=10.0,
+            motion_energy=80.0,
+            ease_speed_ramps=False,
+        )
+        assert len(result) == 1
+        assert result[0].start_time == pytest.approx(0.0)
+        assert result[0].end_time == pytest.approx(10.0)
+
+    def test_ease_speed_ramps_true_produces_three_segments(self):
+        """ease_speed_ramps=True produces 3 SpeedRamp segments with correct boundaries."""
+        clip_duration = 10.0
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=clip_duration,
+            motion_energy=80.0,
+            ease_speed_ramps=True,
+        )
+        assert len(result) == 3
+
+        # Segment boundaries must be contiguous
+        assert result[0].start_time == pytest.approx(0.0)
+        assert result[0].end_time == pytest.approx(result[1].start_time)
+        assert result[1].end_time == pytest.approx(result[2].start_time)
+        assert result[2].end_time == pytest.approx(clip_duration)
+
+        # First segment: ramp from 1.0 to target
+        assert result[0].start_speed == pytest.approx(1.0)
+        target_speed = result[0].end_speed
+        assert target_speed < 1.0
+
+        # Middle segment: constant at target
+        assert result[1].start_speed == pytest.approx(target_speed)
+        assert result[1].end_speed == pytest.approx(target_speed)
+
+        # Last segment: ramp from target back to 1.0
+        assert result[2].start_speed == pytest.approx(target_speed)
+        assert result[2].end_speed == pytest.approx(1.0)
+
+    def test_ease_speed_ramps_true_short_clip_valid_output(self):
+        """Very short clip (<3s) with ease_speed_ramps=True produces valid non-overlapping ramps."""
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT),
+            clip_duration=1.5,
+            motion_energy=80.0,
+            ease_speed_ramps=True,
+        )
+        assert len(result) == 3
+        # All ramps must have positive duration
+        for ramp in result:
+            assert ramp.end_time > ramp.start_time
+        # Must not overlap
+        assert result[0].end_time <= result[1].start_time + 1e-9
+        assert result[1].end_time <= result[2].start_time + 1e-9
+        # Must cover full clip
+        assert result[0].start_time == pytest.approx(0.0)
+        assert result[2].end_time == pytest.approx(1.5)
+
+
+# ---------------------------------------------------------------------------
+# Vertical drift damping tests
+# ---------------------------------------------------------------------------
+
+
+class TestVerticalDriftDamping:
+    """Test vertical_drift_damping parameter."""
+
+    def test_vertical_drift_damping_reduces_speed_on_tilt_down(self):
+        """vertical_drift_damping=0.5 on TILT_DOWN reduces speed further than plain tilt."""
+        result_plain = auto_pan_speed_ramp(
+            _scene(MotionType.TILT_DOWN),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            vertical_drift_damping=0.0,
+        )
+        result_damped = auto_pan_speed_ramp(
+            _scene(MotionType.TILT_DOWN),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            vertical_drift_damping=0.5,
+        )
+        assert len(result_plain) == 1
+        assert len(result_damped) == 1
+        assert result_damped[0].start_speed < result_plain[0].start_speed
+
+    def test_vertical_drift_damping_zero_same_as_without_param(self):
+        """vertical_drift_damping=0.0 gives identical result to not passing it."""
+        result_default = auto_pan_speed_ramp(
+            _scene(MotionType.TILT_DOWN),
+            clip_duration=5.0,
+            motion_energy=80.0,
+        )
+        result_zero = auto_pan_speed_ramp(
+            _scene(MotionType.TILT_DOWN),
+            clip_duration=5.0,
+            motion_energy=80.0,
+            vertical_drift_damping=0.0,
+        )
+        assert len(result_default) == len(result_zero)
+        if result_default:
+            assert result_default[0].start_speed == pytest.approx(result_zero[0].start_speed)

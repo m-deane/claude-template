@@ -1,10 +1,11 @@
 """Tests for video stabilization module."""
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock, call
 
-from drone_reel.core.stabilizer import stabilize_clip, smooth_trajectory, calculate_shake_score
+from drone_reel.core.stabilizer import calculate_shake_score, smooth_trajectory, stabilize_clip
 
 
 class TestStabilizeClip:
@@ -23,6 +24,7 @@ class TestStabilizeClip:
     @pytest.fixture
     def stable_frames(self):
         """Generate stable test frames (uint8 format)."""
+
         def get_frame(t):
             # Return consistent frames to simulate stable footage
             frame = np.ones((1080, 1920, 3), dtype=np.uint8) * 128
@@ -30,17 +32,20 @@ class TestStabilizeClip:
             frame[100:200, 100:200] = 200
             frame[500:600, 800:900] = 50
             return frame
+
         return get_frame
 
     @pytest.fixture
     def float_frames(self):
         """Generate test frames in float32 format (0-1 range)."""
+
         def get_frame(t):
             # Return frames in float format
             frame = np.ones((1080, 1920, 3), dtype=np.float32) * 0.5
             frame[100:200, 100:200] = 0.8
             frame[500:600, 800:900] = 0.2
             return frame
+
         return get_frame
 
     def test_stable_clip_returns_original(self, mock_clip):
@@ -67,12 +72,14 @@ class TestStabilizeClip:
         """Test light stabilization (shake_score 15-30) uses reduced parameters."""
         mock_clip.get_frame = MagicMock(side_effect=stable_frames)
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
 
-            result = stabilize_clip(mock_clip, shake_score=20.0, smoothing_radius=30, border_crop=0.05)
+            result = stabilize_clip(
+                mock_clip, shake_score=20.0, smoothing_radius=30, border_crop=0.05
+            )
 
             assert mock_clip.get_frame.called
 
@@ -80,16 +87,13 @@ class TestStabilizeClip:
         """Test full stabilization (shake_score > 30) uses provided parameters."""
         mock_clip.get_frame = MagicMock(side_effect=stable_frames)
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
 
             result = stabilize_clip(
-                mock_clip,
-                shake_score=50.0,
-                smoothing_radius=30,
-                border_crop=0.05
+                mock_clip, shake_score=50.0, smoothing_radius=30, border_crop=0.05
             )
 
             assert mock_clip.get_frame.called
@@ -111,15 +115,13 @@ class TestStabilizeClip:
         mock_clip.get_frame = stable_frames
         progress_callback = MagicMock()
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
 
             result = stabilize_clip(
-                mock_clip,
-                shake_score=50.0,
-                progress_callback=progress_callback
+                mock_clip, shake_score=50.0, progress_callback=progress_callback
             )
 
             # Should be called multiple times during processing
@@ -133,7 +135,7 @@ class TestStabilizeClip:
         mock_audio = MagicMock()
         mock_clip.audio = mock_audio
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             mock_stabilized.with_audio.return_value = mock_stabilized
@@ -146,12 +148,13 @@ class TestStabilizeClip:
 
     def test_uint8_frame_format_handled(self, mock_clip):
         """Test uint8 frame format (0-255) is handled correctly."""
+
         def get_uint8_frame(t):
             return np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
         mock_clip.get_frame = get_uint8_frame
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -165,7 +168,7 @@ class TestStabilizeClip:
         """Test float32 frame format (0-1) is handled correctly."""
         mock_clip.get_frame = float_frames
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -183,7 +186,7 @@ class TestStabilizeClip:
 
         mock_clip.get_frame = lambda t: test_frame
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -203,13 +206,14 @@ class TestStabilizeClip:
 
     def test_no_features_found_returns_zero_transforms(self, mock_clip):
         """Test handling when no features are found for tracking."""
+
         # Create uniform frames (no features)
         def get_uniform_frame(t):
             return np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
         mock_clip.get_frame = get_uniform_frame
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -384,7 +388,7 @@ class TestCalculateShakeScore:
         minimal_clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.float32) * 0.5
 
         # Mock optical flow to return zero flow
-        with patch('cv2.calcOpticalFlowFarneback') as mock_flow:
+        with patch("cv2.calcOpticalFlowFarneback") as mock_flow:
             mock_flow.return_value = np.zeros((180, 320, 2))
 
             score = calculate_shake_score(minimal_clip, sample_frames=2)
@@ -404,7 +408,7 @@ class TestCalculateShakeScore:
 
     def test_shake_score_scaling(self, static_clip):
         """Test shake score scales properly (multiplier of 5.0, capped at 100)."""
-        with patch('cv2.calcOpticalFlowFarneback') as mock_flow:
+        with patch("cv2.calcOpticalFlowFarneback") as mock_flow:
             # Create high flow variance
             high_flow = np.random.randn(180, 320, 2) * 10
             mock_flow.return_value = high_flow
@@ -416,7 +420,7 @@ class TestCalculateShakeScore:
 
     def test_flow_variance_contributes_to_score(self, static_clip):
         """Test that flow variance affects shake score."""
-        with patch('cv2.calcOpticalFlowFarneback') as mock_flow:
+        with patch("cv2.calcOpticalFlowFarneback") as mock_flow:
             # Test with low variance flow
             low_flow = np.ones((180, 320, 2)) * 0.1
             mock_flow.return_value = low_flow
@@ -454,7 +458,7 @@ class TestStabilizerEdgeCases:
         clip.audio = None
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -484,7 +488,7 @@ class TestStabilizerEdgeCases:
         clip.size = (1920, 1080)
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -515,7 +519,7 @@ class TestStabilizerEdgeCases:
         clip.audio = None
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -536,7 +540,7 @@ class TestStabilizerEdgeCases:
         clip.audio = None
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -555,7 +559,7 @@ class TestStabilizerEdgeCases:
         clip.audio = None
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -573,7 +577,7 @@ class TestStabilizerEdgeCases:
         clip.audio = None
         clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -604,28 +608,24 @@ class TestStabilizerIntegration:
 
         # Create frames with simulated motion
         frame_count = [0]
+
         def get_moving_frame(t):
             frame = np.ones((1080, 1920, 3), dtype=np.uint8) * 128
             # Add moving feature
             offset = int(frame_count[0] * 5) % 100
-            frame[100:300, 200+offset:400+offset] = 200
+            frame[100:300, 200 + offset : 400 + offset] = 200
             frame_count[0] += 1
             return frame
 
         clip.get_frame = get_moving_frame
 
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             mock_stabilized.with_audio.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
 
-            result = stabilize_clip(
-                clip,
-                shake_score=60.0,
-                smoothing_radius=20,
-                border_crop=0.05
-            )
+            result = stabilize_clip(clip, shake_score=60.0, smoothing_radius=20, border_crop=0.05)
 
             # Verify all steps occurred
             assert MockVideoClip.called
@@ -646,7 +646,7 @@ class TestStabilizerIntegration:
         assert result_stable is clip
 
         # Test light stabilization (15-30)
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
@@ -655,10 +655,168 @@ class TestStabilizerIntegration:
             assert MockVideoClip.called
 
         # Test full stabilization (> 30)
-        with patch('moviepy.VideoClip') as MockVideoClip:
+        with patch("moviepy.VideoClip") as MockVideoClip:
             mock_stabilized = MagicMock()
             mock_stabilized.with_fps.return_value = mock_stabilized
             MockVideoClip.return_value = mock_stabilized
 
             result_full = stabilize_clip(clip, shake_score=50.0)
             assert MockVideoClip.called
+
+
+class TestStabStrengthMode:
+    """Tests for the new stab_strength parameter."""
+
+    @pytest.fixture
+    def mock_clip(self):
+        """Create a mock MoviePy clip."""
+        clip = MagicMock()
+        clip.fps = 30
+        clip.duration = 2.0
+        clip.size = (1920, 1080)
+        clip.audio = None
+        clip.get_frame = lambda t: np.ones((1080, 1920, 3), dtype=np.uint8) * 128
+        return clip
+
+    def test_stab_strength_off_returns_clip_unchanged(self, mock_clip):
+        """stab_strength='off' must return original clip without any processing."""
+        result = stabilize_clip(mock_clip, stab_strength="off", shake_score=80.0)
+        assert result is mock_clip
+
+    def test_stab_strength_off_calls_progress_callback(self, mock_clip):
+        """stab_strength='off' still calls progress_callback with 1.0."""
+        cb = MagicMock()
+        stabilize_clip(mock_clip, stab_strength="off", shake_score=80.0, progress_callback=cb)
+        cb.assert_called_once_with(1.0)
+
+    def test_stab_strength_off_no_frame_access(self, mock_clip):
+        """stab_strength='off' must not access any frames."""
+        mock_clip.get_frame = MagicMock()
+        stabilize_clip(mock_clip, stab_strength="off", shake_score=80.0)
+        mock_clip.get_frame.assert_not_called()
+
+    def test_stab_strength_light_applies_processing(self, mock_clip):
+        """stab_strength='light' must process clip regardless of shake_score."""
+        with patch("moviepy.VideoClip") as MockVideoClip:
+            mock_stabilized = MagicMock()
+            mock_stabilized.with_fps.return_value = mock_stabilized
+            MockVideoClip.return_value = mock_stabilized
+
+            # shake_score below adaptive skip threshold — but light mode ignores it
+            stabilize_clip(mock_clip, stab_strength="light", shake_score=5.0)
+            assert MockVideoClip.called
+
+    def test_stab_strength_light_uses_reduced_smoothing(self, mock_clip):
+        """stab_strength='light' forces smoothing_radius=10 internally."""
+        captured = {}
+
+        def fake_smooth(trajectory, radius):
+            captured["radius"] = radius
+            return trajectory
+
+        with patch("drone_reel.core.stabilizer.smooth_trajectory", side_effect=fake_smooth):
+            with patch("moviepy.VideoClip") as MockVideoClip:
+                mock_stabilized = MagicMock()
+                mock_stabilized.with_fps.return_value = mock_stabilized
+                MockVideoClip.return_value = mock_stabilized
+
+                # Pass a large smoothing_radius — 'light' mode should override it to 10
+                stabilize_clip(
+                    mock_clip,
+                    stab_strength="light",
+                    shake_score=80.0,
+                    smoothing_radius=60,
+                )
+                assert captured.get("radius") == 10
+
+    def test_stab_strength_full_applies_regardless_of_low_shake(self, mock_clip):
+        """stab_strength='full' must process even very stable clips (shake_score < 15)."""
+        with patch("moviepy.VideoClip") as MockVideoClip:
+            mock_stabilized = MagicMock()
+            mock_stabilized.with_fps.return_value = mock_stabilized
+            MockVideoClip.return_value = mock_stabilized
+
+            # shake_score=5 — adaptive would skip, but full must process
+            stabilize_clip(mock_clip, stab_strength="full", shake_score=5.0)
+            assert MockVideoClip.called
+
+    def test_stab_strength_full_uses_provided_smoothing_radius(self, mock_clip):
+        """stab_strength='full' uses the caller-supplied smoothing_radius unchanged."""
+        captured = {}
+
+        def fake_smooth(trajectory, radius):
+            captured["radius"] = radius
+            return trajectory
+
+        with patch("drone_reel.core.stabilizer.smooth_trajectory", side_effect=fake_smooth):
+            with patch("moviepy.VideoClip") as MockVideoClip:
+                mock_stabilized = MagicMock()
+                mock_stabilized.with_fps.return_value = mock_stabilized
+                MockVideoClip.return_value = mock_stabilized
+
+                stabilize_clip(
+                    mock_clip,
+                    stab_strength="full",
+                    shake_score=5.0,
+                    smoothing_radius=45,
+                )
+                assert captured.get("radius") == 45
+
+    def test_stab_strength_adaptive_skips_stable_clip(self, mock_clip):
+        """stab_strength='adaptive' skips stabilization for shake_score < 15."""
+        result = stabilize_clip(mock_clip, stab_strength="adaptive", shake_score=10.0)
+        assert result is mock_clip
+
+    def test_stab_strength_adaptive_applies_for_mild_shake(self, mock_clip):
+        """stab_strength='adaptive' applies processing for shake_score 15-30."""
+        with patch("moviepy.VideoClip") as MockVideoClip:
+            mock_stabilized = MagicMock()
+            mock_stabilized.with_fps.return_value = mock_stabilized
+            MockVideoClip.return_value = mock_stabilized
+
+            stabilize_clip(mock_clip, stab_strength="adaptive", shake_score=22.0)
+            assert MockVideoClip.called
+
+    def test_max_corners_passed_to_feature_detection(self, mock_clip):
+        """max_corners parameter is used in goodFeaturesToTrack call."""
+        captured_params = {}
+
+        def fake_gftt(image, **kwargs):
+            captured_params.update(kwargs)
+            return None  # No features found — that's fine
+
+        with patch("cv2.goodFeaturesToTrack", side_effect=fake_gftt):
+            with patch("moviepy.VideoClip") as MockVideoClip:
+                mock_stabilized = MagicMock()
+                mock_stabilized.with_fps.return_value = mock_stabilized
+                MockVideoClip.return_value = mock_stabilized
+
+                stabilize_clip(
+                    mock_clip,
+                    stab_strength="full",
+                    shake_score=80.0,
+                    max_corners=75,
+                )
+                assert captured_params.get("maxCorners") == 75
+
+    def test_quality_level_passed_to_feature_detection(self, mock_clip):
+        """quality_level parameter is used in goodFeaturesToTrack call."""
+        captured_params = {}
+
+        def fake_gftt(image, **kwargs):
+            captured_params.update(kwargs)
+            return None
+
+        with patch("cv2.goodFeaturesToTrack", side_effect=fake_gftt):
+            with patch("moviepy.VideoClip") as MockVideoClip:
+                mock_stabilized = MagicMock()
+                mock_stabilized.with_fps.return_value = mock_stabilized
+                MockVideoClip.return_value = mock_stabilized
+
+                stabilize_clip(
+                    mock_clip,
+                    stab_strength="full",
+                    shake_score=80.0,
+                    quality_level=0.05,
+                )
+                assert captured_params.get("qualityLevel") == pytest.approx(0.05)

@@ -7,11 +7,10 @@ to create smooth, engaging video sequences.
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
-from drone_reel.core.scene_detector import SceneInfo, MotionType, EnhancedSceneInfo
+from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType, SceneInfo
 
 
 class DiversitySelector:

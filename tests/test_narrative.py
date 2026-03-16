@@ -2,9 +2,10 @@
 Tests for narrative arc sequencing and hook generation.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
-from pathlib import Path
 
 from drone_reel.core.beat_sync import BeatInfo
 from drone_reel.core.narrative import (

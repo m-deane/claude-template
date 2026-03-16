@@ -4,11 +4,11 @@ import numpy as np
 import pytest
 
 from drone_reel.core.color_grader import (
+    ColorAdjustments,
     ColorGrader,
     ColorPreset,
-    ColorAdjustments,
-    get_preset_names,
     create_grader_from_preset,
+    get_preset_names,
 )
 
 
@@ -884,7 +884,6 @@ class TestAutoShadowLift:
 
     def _make_lab_frame(self, dark_l: float, bright_l: float) -> np.ndarray:
         """Return a float32 LAB frame: top half dark, bottom half bright."""
-        import cv2
 
         frame = np.zeros((100, 100, 3), dtype=np.float32)
         # Top half: dark foreground

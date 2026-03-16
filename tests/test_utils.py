@@ -1,24 +1,21 @@
 """Tests for utility modules."""
 
-import tempfile
 from pathlib import Path
-
-import pytest
 
 from drone_reel.utils.config import (
     Config,
     load_config,
-    save_config,
     merge_cli_args,
+    save_config,
 )
 from drone_reel.utils.file_utils import (
-    find_video_files,
     find_audio_files,
-    is_video_file,
-    is_audio_file,
+    find_video_files,
     format_duration,
     format_file_size,
     get_unique_output_path,
+    is_audio_file,
+    is_video_file,
 )
 
 

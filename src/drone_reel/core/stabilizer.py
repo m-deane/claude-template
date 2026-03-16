@@ -7,9 +7,11 @@ camera shake while preserving intentional camera movements.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
 import cv2
 import numpy as np
-from typing import TYPE_CHECKING, Optional, Callable
 
 if TYPE_CHECKING:
     from moviepy import VideoClip
@@ -20,7 +22,10 @@ def stabilize_clip(
     smoothing_radius: int = 30,
     border_crop: float = 0.05,
     shake_score: float = 50.0,
-    progress_callback: Optional[Callable[[float], None]] = None,
+    progress_callback: Callable[[float], None] | None = None,
+    stab_strength: str = "adaptive",
+    max_corners: int = 200,
+    quality_level: float = 0.01,
 ) -> VideoClip:
     """
     Stabilize a MoviePy video clip using feature-based tracking.
@@ -29,38 +34,57 @@ def stabilize_clip(
     camera shake while preserving intentional camera movements like
     pans and tilts.
 
-    ADAPTIVE STABILIZATION: The shake_score controls whether and how
-    aggressively to stabilize:
-    - shake_score < 15: Skip stabilization (already stable)
-    - shake_score 15-30: Light stabilization (gentle smoothing)
-    - shake_score > 30: Full stabilization
+    STABILIZATION MODES (stab_strength):
+    - "off": Return clip unchanged, no processing.
+    - "light": Force light stabilization (smoothing_radius=10, border_crop=0.02).
+    - "adaptive": Auto-select based on shake_score (default):
+        - shake_score < 15: Skip (already stable)
+        - shake_score 15-30: Light stabilization
+        - shake_score > 30: Full stabilization
+    - "full": Force full stabilization regardless of shake score.
 
     Args:
         clip: MoviePy VideoClip to stabilize
         smoothing_radius: Number of frames to average for smoothing (default 30)
         border_crop: Fraction of frame to crop for stabilization margin (default 5%)
         shake_score: Shake score from motion analysis (0-100). Lower = more stable.
+            Only used in "adaptive" mode.
         progress_callback: Optional callback for progress updates (0.0 to 1.0)
+        stab_strength: Stabilization mode -- "off", "light", "adaptive", or "full".
+        max_corners: Max feature points for goodFeaturesToTrack (default 200).
+            Lower for sky/water scenes, higher for feature-rich scenes.
+        quality_level: Quality threshold for goodFeaturesToTrack (default 0.01).
 
     Returns:
-        Stabilized MoviePy VideoClip (or original if already stable)
+        Stabilized MoviePy VideoClip (or original if already stable / off)
     """
-    # Adaptive stabilization thresholds
-    STABLE_THRESHOLD = 15.0      # Below this, clip is stable - skip stabilization
-    LIGHT_STAB_THRESHOLD = 30.0  # Below this, use light stabilization
-
-    # Skip stabilization for already-stable clips
-    if shake_score < STABLE_THRESHOLD:
+    # --- Mode: off --- return immediately without processing
+    if stab_strength == "off":
         if progress_callback:
             progress_callback(1.0)
-        return clip  # Already stable, don't degrade it
+        return clip
 
-    # Adaptive parameters based on shake severity
-    if shake_score < LIGHT_STAB_THRESHOLD:
+    # --- Mode: light --- override parameters, skip adaptive threshold logic
+    if stab_strength == "light":
+        smoothing_radius = 10
+        border_crop = 0.02
+    elif stab_strength == "adaptive":
+        # Adaptive stabilization thresholds
+        stable_threshold = 15.0  # Below this, clip is stable - skip stabilization
+        light_stab_threshold = 30.0  # Below this, use light stabilization
+
+        # Skip stabilization for already-stable clips
+        if shake_score < stable_threshold:
+            if progress_callback:
+                progress_callback(1.0)
+            return clip  # Already stable, don't degrade it
+
         # Light stabilization for mildly shaky clips
-        smoothing_radius = 10  # Smaller window = less aggressive
-        border_crop = 0.02     # Minimal crop
-    # else: use the provided parameters (full stabilization)
+        if shake_score < light_stab_threshold:
+            smoothing_radius = 10
+            border_crop = 0.02
+        # else: use the provided parameters (full stabilization)
+    # stab_strength == "full": use provided smoothing_radius and border_crop as-is
 
     # Get clip properties
     fps = clip.fps
@@ -75,12 +99,12 @@ def stabilize_clip(
     prev_gray = None
 
     # Feature detection parameters
-    feature_params = dict(
-        maxCorners=200,
-        qualityLevel=0.01,
-        minDistance=30,
-        blockSize=3
-    )
+    feature_params = {
+        "maxCorners": max_corners,
+        "qualityLevel": quality_level,
+        "minDistance": 30,
+        "blockSize": 3,
+    }
 
     for i in range(n_frames):
         frame = clip.get_frame(i / fps)
@@ -99,9 +123,7 @@ def stabilize_clip(
 
             if prev_pts is not None and len(prev_pts) > 0:
                 # Track features to current frame
-                curr_pts, status, _ = cv2.calcOpticalFlowPyrLK(
-                    prev_gray, gray, prev_pts, None
-                )
+                curr_pts, status, _ = cv2.calcOpticalFlowPyrLK(prev_gray, gray, prev_pts, None)
 
                 # Filter valid points
                 valid = status.flatten() == 1
@@ -110,9 +132,7 @@ def stabilize_clip(
                     curr_valid = curr_pts[valid]
 
                     # Estimate affine transform (translation, rotation, scale)
-                    transform_matrix, _ = cv2.estimateAffinePartial2D(
-                        prev_valid, curr_valid
-                    )
+                    transform_matrix, _ = cv2.estimateAffinePartial2D(prev_valid, curr_valid)
 
                     if transform_matrix is not None:
                         # Extract translation
@@ -171,10 +191,13 @@ def stabilize_clip(
         cx, cy = w / 2, h / 2
 
         # Affine transform: rotate around center, then translate
-        transform_matrix = np.array([
-            [cos_a, -sin_a, dx + cx * (1 - cos_a) + cy * sin_a],
-            [sin_a, cos_a, dy + cx * (-sin_a) + cy * (1 - cos_a)]
-        ], dtype=np.float32)
+        transform_matrix = np.array(
+            [
+                [cos_a, -sin_a, dx + cx * (1 - cos_a) + cy * sin_a],
+                [sin_a, cos_a, dy + cx * (-sin_a) + cy * (1 - cos_a)],
+            ],
+            dtype=np.float32,
+        )
 
         # Handle both uint8 (0-255) and float (0-1) frame formats
         is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
@@ -185,8 +208,7 @@ def stabilize_clip(
 
         # Apply transform
         stabilized = cv2.warpAffine(
-            frame_uint8, transform_matrix, (w, h),
-            borderMode=cv2.BORDER_REPLICATE
+            frame_uint8, transform_matrix, (w, h), borderMode=cv2.BORDER_REPLICATE
         )
 
         # Crop borders to hide edge artifacts
@@ -251,7 +273,6 @@ def calculate_shake_score(clip: VideoClip, sample_frames: int = 10) -> float:
     Returns:
         Shake score from 0 (stable) to 100 (very shaky)
     """
-    fps = clip.fps
     duration = clip.duration
 
     if duration < 0.5:
@@ -272,9 +293,16 @@ def calculate_shake_score(clip: VideoClip, sample_frames: int = 10) -> float:
 
         if prev_gray is not None:
             flow = cv2.calcOpticalFlowFarneback(
-                prev_gray, gray, None,
-                pyr_scale=0.5, levels=2, winsize=15,
-                iterations=2, poly_n=5, poly_sigma=1.1, flags=0
+                prev_gray,
+                gray,
+                None,
+                pyr_scale=0.5,
+                levels=2,
+                winsize=15,
+                iterations=2,
+                poly_n=5,
+                poly_sigma=1.1,
+                flags=0,
             )
 
             magnitude = cv2.magnitude(flow[..., 0], flow[..., 1])
@@ -283,8 +311,8 @@ def calculate_shake_score(clip: VideoClip, sample_frames: int = 10) -> float:
 
             if prev_mean_flow is not None:
                 direction_change = np.sqrt(
-                    (mean_flow[0] - prev_mean_flow[0])**2 +
-                    (mean_flow[1] - prev_mean_flow[1])**2
+                    (mean_flow[0] - prev_mean_flow[0]) ** 2
+                    + (mean_flow[1] - prev_mean_flow[1]) ** 2
                 )
                 flow_variances.append(flow_std + direction_change * 2)
 

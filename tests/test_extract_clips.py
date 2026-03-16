@@ -1,17 +1,13 @@
 """Tests for the extract-clips CLI command."""
 
 import json
-import os
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
-import numpy as np
-import pytest
 from click.testing import CliRunner
 
 from drone_reel.cli import main
-from drone_reel.core.scene_detector import EnhancedSceneInfo, SceneInfo, MotionType, HookPotential
+from drone_reel.core.scene_detector import EnhancedSceneInfo, HookPotential, MotionType, SceneInfo
 
 
 def _make_scene(

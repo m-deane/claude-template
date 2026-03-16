@@ -4,12 +4,10 @@ Validates system resources (memory, disk space) before starting
 expensive rendering operations to prevent system crashes.
 """
 
-import os
 import platform
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 def check_available_memory_mb() -> float:

@@ -181,6 +181,43 @@ def main(ctx, version):
     help="Output resolution (hd=1080p, 2k=1440p, 4k=2160p)",
 )
 @click.option(
+    "--stab-strength",
+    "stab_strength",
+    type=click.Choice(["off", "light", "adaptive", "full"]),
+    default="adaptive",
+    help="Stabilization mode: off, light, adaptive (auto-detect), full (always apply)",
+)
+@click.option(
+    "--smooth-radius",
+    "smooth_radius",
+    type=click.IntRange(5, 120),
+    default=30,
+    help=(
+        "Temporal smoothing window in frames (5-120, default 30). "
+        "Higher = more aggressive but may blur intentional motion."
+    ),
+)
+@click.option(
+    "--border-crop",
+    "border_crop",
+    type=click.FloatRange(0.0, 0.15),
+    default=0.05,
+    help=(
+        "Fraction of frame edges to crop after stabilization (0.0-0.15, default 0.05). "
+        "Higher hides more artefacts."
+    ),
+)
+@click.option(
+    "--max-corners",
+    "max_corners",
+    type=click.IntRange(50, 500),
+    default=200,
+    help=(
+        "Feature detection density (50-500, default 200). "
+        "Lower for sky/water, higher for feature-rich scenes."
+    ),
+)
+@click.option(
     "--stabilize",
     is_flag=True,
     help="Apply adaptive video stabilization (skips stable clips)",
@@ -196,7 +233,10 @@ def main(ctx, version):
     "stable_threshold",
     type=click.FloatRange(0, 100),
     default=15.0,
-    help="Shake score threshold (0-100, default: 15). Lower = more clips get stabilized.",
+    help=(
+        "Shake score threshold (0-100, default: 15). Lower = more clips get stabilized. "
+        "See also --stab-strength for simpler control."
+    ),
 )
 @click.option(
     "--speed-ramp",
@@ -345,6 +385,10 @@ def create(
     preview: bool,
     quality: str,
     resolution: str,
+    stab_strength: str,
+    smooth_radius: int,
+    border_crop: float,
+    max_corners: int,
     stabilize: bool,
     stabilize_all: bool,
     stable_threshold: float,
@@ -840,11 +884,17 @@ def create(
             "video_bitrate": video_bitrate,
             "audio_bitrate": audio_bitrate,
             "stabilize": stabilize,
+            "stab_strength": stab_strength,
+            "smooth_radius": smooth_radius,
+            "stab_border_crop": border_crop,
+            "stab_max_corners": max_corners,
         }
 
         if stabilize:
             if stabilize_all:
                 console.print("[cyan]Stabilization:[/cyan] Full mode - stabilizing ALL clips")
+            elif stab_strength != "adaptive":
+                console.print(f"[cyan]Stabilization:[/cyan] {stab_strength} mode")
             else:
                 console.print(
                     f"[cyan]Stabilization:[/cyan] Adaptive mode (stable threshold: {stable_threshold:.0f})"
@@ -2017,6 +2067,43 @@ def extract_clips(
     help="Graduated ND sky darkening (0.0=off, 0.5=moderate, 1.0=strong)",
 )
 @click.option(
+    "--stab-strength",
+    "stab_strength",
+    type=click.Choice(["off", "light", "adaptive", "full"]),
+    default="adaptive",
+    help="Stabilization mode: off, light, adaptive (auto-detect), full (always apply)",
+)
+@click.option(
+    "--smooth-radius",
+    "smooth_radius",
+    type=click.IntRange(5, 120),
+    default=30,
+    help=(
+        "Temporal smoothing window in frames (5-120, default 30). "
+        "Higher = more aggressive but may blur intentional motion."
+    ),
+)
+@click.option(
+    "--border-crop",
+    "border_crop",
+    type=click.FloatRange(0.0, 0.15),
+    default=0.05,
+    help=(
+        "Fraction of frame edges to crop after stabilization (0.0-0.15, default 0.05). "
+        "Higher hides more artefacts."
+    ),
+)
+@click.option(
+    "--max-corners",
+    "max_corners",
+    type=click.IntRange(50, 500),
+    default=200,
+    help=(
+        "Feature detection density (50-500, default 200). "
+        "Lower for sky/water, higher for feature-rich scenes."
+    ),
+)
+@click.option(
     "--stabilize",
     is_flag=True,
     help="Apply adaptive video stabilization (skips stable clips)",
@@ -2051,6 +2138,140 @@ def extract_clips(
     is_flag=True,
     help="Auto-correct pan/tilt speed (slow down fast pans, speed up sluggish ones)",
 )
+#### Motion correction
+@click.option(
+    "--speed-correction-profile",
+    "speed_correction_profile",
+    type=click.Choice(["aggressive", "normal", "smooth", "cinematic"]),
+    default="normal",
+    help=(
+        "Speed correction preset (aggressive/normal/smooth/cinematic). "
+        "Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--pan-speed-high",
+    "pan_speed_high",
+    type=click.FloatRange(0.1, 1.5),
+    default=None,
+    help=(
+        "Manual speed factor for high-energy pans (energy>70). "
+        "Overrides profile. Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--pan-speed-mid",
+    "pan_speed_mid",
+    type=click.FloatRange(0.1, 1.5),
+    default=None,
+    help=(
+        "Manual speed factor for mid-energy pans (energy 55-70). "
+        "Overrides profile. Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--tilt-speed",
+    "tilt_speed",
+    type=click.FloatRange(0.1, 1.5),
+    default=None,
+    help=(
+        "Manual speed factor for tilt corrections (energy>65). "
+        "Overrides profile. Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--fpv-speed",
+    "fpv_speed",
+    type=click.FloatRange(0.1, 1.5),
+    default=None,
+    help=(
+        "Manual speed factor for FPV corrections (energy>50). "
+        "Overrides profile. Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--correct-orbit",
+    "correct_orbit",
+    is_flag=True,
+    help="Apply gentle 0.85× speed correction to orbit shots. Only active with --auto-speed.",
+)
+@click.option(
+    "--ease-speed-ramps",
+    "ease_speed_ramps",
+    is_flag=True,
+    help=(
+        "Ease in/out of speed corrections (smoother transitions). " "Only active with --auto-speed."
+    ),
+)
+@click.option(
+    "--vertical-drift-damping",
+    "vertical_drift_damping",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help=("Reduce vertical drift in tilt-down shots (0.0-1.0). " "Only active with --auto-speed."),
+)
+@click.option(
+    "--brightness-range",
+    "brightness_range",
+    default="30-245",
+    help=(
+        "Brightness filter bounds MIN-MAX (0-255). "
+        "E.g. '20-250' for night scenes, '50-230' for midday."
+    ),
+)
+@click.option(
+    "--motion-threshold",
+    "motion_threshold",
+    type=click.FloatRange(0, 100),
+    default=25.0,
+    help=(
+        "Minimum motion energy for non-static tier (0-100, default 25). " "Lower keeps slow pans."
+    ),
+)
+@click.option(
+    "--shake-tolerance",
+    "shake_tolerance",
+    type=click.FloatRange(0, 100),
+    default=40.0,
+    help=(
+        "Maximum shake score before filtering (0-100, default 40). "
+        "Raise if using --stabilize-all."
+    ),
+)
+@click.option(
+    "--subject-confidence",
+    "subject_confidence",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.6,
+    help=(
+        "Subject detection confidence for high-tier scenes (0-1, default 0.6). "
+        "Lower = more subject-driven selection."
+    ),
+)
+@click.option(
+    "--analysis-scale",
+    "analysis_scale",
+    type=click.FloatRange(0.25, 1.0),
+    default=0.5,
+    help=(
+        "Frame resolution for motion/composition analysis (0.25-1.0, default 0.5). "
+        "Higher = more accurate but slower."
+    ),
+)
+@click.option(
+    "--motion-energy-method",
+    "motion_energy_method",
+    type=click.Choice(["mean", "median", "p95"]),
+    default="mean",
+    help=("How to aggregate per-frame motion energy. " "'p95' catches peak motion in mixed clips."),
+)
+@click.option(
+    "--prefer-motion-type",
+    "prefer_motion_type",
+    type=click.Choice(["none", "pan", "tilt", "orbit", "static", "fpv", "flyover"]),
+    default="none",
+    help="Bias scene selection toward a preferred motion type.",
+)
 def split(
     input_path,
     output_dir,
@@ -2076,25 +2297,87 @@ def split(
     denoise,
     haze,
     gnd_sky,
+    stab_strength,
+    smooth_radius,
+    border_crop,
+    max_corners,
     stabilize,
     stabilize_all,
     letterbox,
     scene_threshold,
     enhanced,
     auto_speed,
+    speed_correction_profile,
+    pan_speed_high,
+    pan_speed_mid,
+    tilt_speed,
+    fpv_speed,
+    correct_orbit,
+    ease_speed_ramps,
+    vertical_drift_damping,
+    brightness_range,
+    motion_threshold,
+    shake_tolerance,
+    subject_confidence,
+    analysis_scale,
+    motion_energy_method,
+    prefer_motion_type,
 ):
     """Split a single video into highlight clips based on scene detection and scoring."""
     import gc
     import json as json_module
 
+    import cv2
+
     from drone_reel.core.video_processor import ClipSegment
     from drone_reel.utils.file_utils import VIDEO_EXTENSIONS, is_video_file
-    import cv2
     from drone_reel.utils.resource_guard import preflight_check
 
     # --stabilize-all implies --stabilize
     if stabilize_all:
         stabilize = True
+
+    # --stab-strength off overrides all stabilize flags
+    if stab_strength == "off":
+        stabilize = False
+        stabilize_all = False
+
+    # --- Parse --brightness-range ---
+    from drone_reel.core.scene_filter import FilterThresholds as _FilterThresholds
+
+    _br_min = 30.0
+    _br_max = 245.0
+    if brightness_range and brightness_range != "30-245":
+        _br_parts = brightness_range.split("-")
+        if len(_br_parts) != 2:
+            console.print(
+                f"[red]Error:[/red] --brightness-range must be in MIN-MAX format, "
+                f"e.g. '20-250'. Got: '{brightness_range}'"
+            )
+            raise SystemExit(1)
+        try:
+            _br_min = float(_br_parts[0])
+            _br_max = float(_br_parts[1])
+        except ValueError:
+            console.print(
+                f"[red]Error:[/red] --brightness-range values must be numbers. "
+                f"Got: '{brightness_range}'"
+            )
+            raise SystemExit(1)
+        if _br_min < 0 or _br_max > 255 or _br_min >= _br_max:
+            console.print(
+                f"[red]Error:[/red] --brightness-range must satisfy 0 <= MIN < MAX <= 255. "
+                f"Got: {_br_min}-{_br_max}"
+            )
+            raise SystemExit(1)
+
+    _filter_thresholds = _FilterThresholds(
+        min_brightness=_br_min,
+        max_brightness=_br_max,
+        min_motion_energy=motion_threshold,
+        max_shake_score=shake_tolerance,
+        subject_score_threshold=subject_confidence,
+    )
 
     # --- Validate: must be a single file ---
     if not input_path.is_file():
@@ -2194,6 +2477,7 @@ def split(
         threshold=scene_threshold,
         max_scene_length=max_duration,
         frame_skip=_auto_frame_skip,
+        analysis_scale=analysis_scale,
     )
     if _auto_frame_skip:
         console.print(
@@ -2234,7 +2518,9 @@ def split(
     console.print(f"  Detected {len(all_scenes)} scenes")
 
     # --- Motion analysis (for filtering and auto-speed correction) ---
-    analysis = analyze_scenes_batch(all_scenes, include_sharpness=True)
+    analysis = analyze_scenes_batch(
+        all_scenes, include_sharpness=True, motion_energy_method=motion_energy_method
+    )
 
     motion_map = {id(s): analysis[id(s)]["motion_energy"] for s in all_scenes}
     brightness_map = {id(s): analysis[id(s)]["brightness"] for s in all_scenes}
@@ -2257,7 +2543,7 @@ def split(
         dark_filtered = 0
         shaky_filtered = 0
     else:
-        sf = SceneFilter()
+        sf = SceneFilter(thresholds=_filter_thresholds)
         result = sf.filter_scenes(all_scenes, motion_map, brightness_map, shake_map)
         candidates = result.all_passing
         scenes_filtered = result.dark_scenes_filtered + result.shaky_scenes_filtered
@@ -2306,6 +2592,19 @@ def split(
         candidates.sort(key=lambda s: s.start_time)
     elif sort == "duration":
         candidates.sort(key=lambda s: s.duration, reverse=True)
+
+    # --- Prefer motion type: float matching scenes to the front ---
+    if prefer_motion_type != "none":
+        _pmt_upper = prefer_motion_type.upper()
+        candidates = sorted(
+            candidates,
+            key=lambda s: (
+                0
+                if getattr(s, "motion_type", None) is not None
+                and _pmt_upper in getattr(s.motion_type, "name", "").upper()
+                else 1
+            ),
+        )
 
     # --- Limit by count ---
     if count is not None:
@@ -2452,7 +2751,6 @@ def split(
         console=console,
     ) as progress:
         # Expand scenes into chunks: long scenes produce multiple clips
-        import math as _math
 
         clip_jobs: list[tuple] = []  # (scene, start_offset, chunk_dur)
         for scene in candidates:
@@ -2506,11 +2804,29 @@ def split(
                     shake = shake_map.get(id(scene), 50.0)
                     if stabilize_all:
                         shake = 100.0  # Force full stabilization
-                    clip = stabilize_clip(clip, shake_score=shake)
+                    clip = stabilize_clip(
+                        clip,
+                        shake_score=shake,
+                        stab_strength=stab_strength,
+                        smoothing_radius=smooth_radius,
+                        border_crop=border_crop,
+                        max_corners=max_corners,
+                    )
 
                 # Auto pan/tilt speed correction
                 if auto_speed:
-                    pan_ramps = auto_pan_speed_ramp(scene, clip_duration=clip.duration)
+                    pan_ramps = auto_pan_speed_ramp(
+                        scene,
+                        clip_duration=clip.duration,
+                        speed_correction_profile=speed_correction_profile,
+                        pan_speed_high=pan_speed_high,
+                        pan_speed_mid=pan_speed_mid,
+                        tilt_speed=tilt_speed,
+                        fpv_speed=fpv_speed,
+                        correct_orbit=correct_orbit,
+                        ease_speed_ramps=ease_speed_ramps,
+                        vertical_drift_damping=vertical_drift_damping,
+                    )
                     if pan_ramps:
                         clip = SpeedRamper().apply_multiple_ramps(clip, pan_ramps)
 
@@ -2657,6 +2973,10 @@ def split(
                 "color": color if has_color else None,
                 "color_intensity": color_intensity if has_color else None,
                 "stabilize": stabilize,
+                "stab_strength": stab_strength if stabilize else None,
+                "smooth_radius": smooth_radius if stabilize else None,
+                "border_crop": border_crop if stabilize else None,
+                "max_corners": max_corners if stabilize else None,
                 "letterbox": letterbox if letterbox != "off" else None,
                 "auto_speed": auto_speed,
             },

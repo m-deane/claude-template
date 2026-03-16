@@ -6,9 +6,8 @@ clip based on scene characteristics like motion type and subject score.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
-from drone_reel.core.reframer import Reframer, ReframeSettings, AspectRatio, ReframeMode
+from drone_reel.core.reframer import AspectRatio, ReframeMode, Reframer, ReframeSettings
 from drone_reel.core.scene_detector import (
     EnhancedSceneInfo,
     MotionType,
@@ -46,7 +45,7 @@ class ReframeSelector:
     def __init__(
         self,
         output_width: int = 1080,
-        kb_config: Optional[KenBurnsConfig] = None,
+        kb_config: KenBurnsConfig | None = None,
         subject_threshold: float = 40.0,
     ):
         """

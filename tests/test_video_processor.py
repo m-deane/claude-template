@@ -1,10 +1,8 @@
 """Comprehensive tests for video processor module."""
 
 import os
-import platform
 import subprocess
 import tempfile
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -758,7 +756,7 @@ class TestExceptionHandlingImprovements:
         mock_final = MagicMock()
         mock_final.duration = 6.0
         mock_final_with_audio = MagicMock()
-        mock_final_with_audio.write_videofile.side_effect = IOError("Write failed")
+        mock_final_with_audio.write_videofile.side_effect = OSError("Write failed")
         mock_final.with_audio.return_value = mock_final_with_audio
         mock_composite.return_value = mock_final
 
@@ -2185,7 +2183,7 @@ class TestPhase3Transitions:
     # Motion matching tests for new transitions
     def test_motion_match_orbit_to_diamond(self, processor):
         """Orbit motion should map to WIPE_DIAMOND."""
-        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
         scene1 = EnhancedSceneInfo(
             start_time=0, end_time=5, duration=5.0, score=80,
             source_file=Path("/tmp/v1.mp4"),
@@ -2205,7 +2203,7 @@ class TestPhase3Transitions:
 
     def test_motion_match_fpv_fast_to_vortex(self, processor):
         """Fast FPV motion should map to VORTEX_ZOOM."""
-        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
         scene1 = EnhancedSceneInfo(
             start_time=0, end_time=5, duration=5.0, score=80,
             source_file=Path("/tmp/v1.mp4"),
@@ -2225,7 +2223,7 @@ class TestPhase3Transitions:
 
     def test_motion_match_tilt_down_to_fog(self, processor):
         """Tilt down motion should map to FOG_PASS."""
-        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
         scene1 = EnhancedSceneInfo(
             start_time=0, end_time=5, duration=5.0, score=80,
             source_file=Path("/tmp/v1.mp4"),
@@ -2245,7 +2243,7 @@ class TestPhase3Transitions:
 
     def test_motion_match_pan_right_slow_to_parallax(self, processor):
         """Slow pan right should map to PARALLAX_LEFT."""
-        from drone_reel.core.scene_detector import MotionType, EnhancedSceneInfo
+        from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
         scene1 = EnhancedSceneInfo(
             start_time=0, end_time=5, duration=5.0, score=80,
             source_file=Path("/tmp/v1.mp4"),

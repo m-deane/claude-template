@@ -1,8 +1,7 @@
 """Comprehensive tests for beat synchronization module."""
 
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -11,7 +10,6 @@ from drone_reel.core.beat_sync import (
     BeatInfo,
     BeatSync,
     CutPoint,
-    TransitionRecommendation,
 )
 
 

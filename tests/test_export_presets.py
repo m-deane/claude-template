@@ -4,17 +4,16 @@ Tests for multi-platform export presets.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import numpy as np
 import pytest
 from moviepy import VideoFileClip
 
 from drone_reel.core.export_presets import (
+    PLATFORM_PRESETS,
     ExportPreset,
     Platform,
     PlatformExporter,
-    PLATFORM_PRESETS,
 )
 
 

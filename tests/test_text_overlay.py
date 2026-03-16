@@ -5,8 +5,6 @@ Tests all animation types, rendering, auto-placement, templates,
 and edge cases.
 """
 
-import tempfile
-from pathlib import Path
 
 import cv2
 import numpy as np

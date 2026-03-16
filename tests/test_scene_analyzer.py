@@ -1,18 +1,18 @@
 """Tests for scene_analyzer module."""
 
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
 
-from drone_reel.core.scene_detector import SceneInfo, MotionType
 from drone_reel.core.scene_analyzer import (
-    classify_motion_type,
     analyze_scene_motion,
-    get_scene_sharpness,
     analyze_scenes_batch,
+    classify_motion_type,
+    get_scene_sharpness,
 )
-
+from drone_reel.core.scene_detector import MotionType, SceneInfo
 
 # ---------------------------------------------------------------------------
 # Helpers

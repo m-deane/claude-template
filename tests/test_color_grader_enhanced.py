@@ -5,10 +5,7 @@ Tests LUT support, tone curves, selective color adjustments,
 GPU acceleration, and preview mode.
 """
 
-import tempfile
-from pathlib import Path
 
-import cv2
 import numpy as np
 import pytest
 

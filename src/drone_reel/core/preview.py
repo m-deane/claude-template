@@ -7,7 +7,6 @@ for rapid iteration and quality verification before full render.
 
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -44,7 +43,7 @@ class ThumbnailGenerator:
         output_path: Path,
         style: ThumbnailStyle = ThumbnailStyle.HERO,
         size: tuple[int, int] = (1080, 1920),
-        text: Optional[str] = None,
+        text: str | None = None,
     ) -> Path:
         """
         Generate thumbnail image from scenes.
@@ -116,7 +115,7 @@ class ThumbnailGenerator:
         return self.create_composite_thumbnail(scenes, grid_size, size)
 
     def _generate_text_overlay_thumbnail(
-        self, scenes: list[SceneInfo], size: tuple[int, int], text: Optional[str]
+        self, scenes: list[SceneInfo], size: tuple[int, int], text: str | None
     ) -> np.ndarray:
         """Generate thumbnail with text overlay."""
         hero = self._generate_hero_thumbnail(scenes, size)
@@ -490,7 +489,7 @@ class ThumbnailGenerator:
             try:
                 font = ImageFont.truetype(font_path, size)
                 break
-            except (OSError, IOError):
+            except OSError:
                 continue
 
         if font is None:
