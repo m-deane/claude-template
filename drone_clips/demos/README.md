@@ -40,3 +40,70 @@ Each video was created from the same 9 pre-extracted source clips (Snowdonia/Wal
 - **Cinematic aerial**: `--color drone_aerial --color-intensity 0.7 --vignette 0.4 --letterbox 2.35`
 - **Golden sunset**: `--color golden_hour --color-intensity 0.8 --vignette 0.3`
 - **Stabilized handheld**: `--stabilize-all --color film_emulation --color-intensity 0.5`
+
+---
+
+## `drone-reel split` — Single-File Highlight Extractor
+
+Splits one video into scored highlight clips. Simpler than `create` — no sequencing, beat-sync, or reframing. Run `--preview` first to inspect detected scenes before committing to the encode.
+
+### Key Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--min-duration` | 2.0s | Shortest clip to export |
+| `--max-duration` | 15.0s | Longest clip; set to 300 for no cap |
+| `--min-score` | 40.0 | Scene quality threshold (0 = export all) |
+| `--no-filter` | off | Skip quality filtering entirely |
+| `--scene-threshold` | 27.0 | Detection sensitivity — lower = more cuts |
+| `--sort` | `score` | Order: `score`, `chronological`, `duration` |
+| `--count` / `-n` | unlimited | Max clips to export |
+| `--auto-speed` | off | Auto-correct pan/tilt speed: slows fast pans (0.65–0.80×), speeds up sluggish ones (1.25×) |
+| `--enhanced` | off | Enhanced detection with subject tracking (slower) |
+| `--preview` | off | Dry-run: print scene table without encoding |
+| `--json` | off | Write `manifest.json` with per-clip metadata |
+
+All `create` visual flags work here too: `--color`, `--color-intensity`, `--vignette`, `--halation`, `--chromatic-aberration`, `--lut`, `--input-colorspace`, `--auto-wb`, `--denoise`, `--haze`, `--gnd-sky`, `--stabilize`, `--stabilize-all`, `--letterbox`.
+
+### Example Runs
+
+```bash
+# Preview — no encoding, just prints the scene table
+drone-reel split -i clip.mp4 -o ./out --preview --scene-threshold 5 --no-filter --min-score 0
+
+# Best 5–15s highlights with cinematic grading
+drone-reel split -i clip.mp4 -o ./out \
+  --min-duration 5 --max-duration 15 --min-score 0 --no-filter \
+  --color drone_aerial --color-intensity 0.65 --vignette 0.3 \
+  --auto-speed --letterbox 2.35 --quality high --json
+
+# Long highlights (11s+, no upper limit)
+# Use --scene-threshold 7-12 to merge micro-cuts into longer coherent scenes
+drone-reel split -i clip.mp4 -o ./out \
+  --min-duration 11 --max-duration 300 --min-score 0 --no-filter \
+  --scene-threshold 7 \
+  --color drone_aerial --color-intensity 0.65 --vignette 0.3 \
+  --auto-speed --letterbox 2.35 --quality high --json
+
+# DJI D-Log 4K: create 720p proxy first for practical runtimes
+ffmpeg -i DJI_SOURCE.MP4 -vf scale=1280:720 -r 30 -c:v libx264 -preset ultrafast -crf 26 -an proxy.mp4
+drone-reel split -i proxy.mp4 -o ./out \
+  --min-duration 5 --max-duration 15 --input-colorspace dlog \
+  --color drone_aerial --auto-speed --letterbox 2.35 --json
+```
+
+### `--auto-speed` Pan Speed Correction
+
+| Motion | Energy | Speed | Effect |
+|--------|--------|-------|--------|
+| PAN_LEFT / PAN_RIGHT | > 70 | **0.65×** | Uncomfortably fast → cinematic |
+| PAN_LEFT / PAN_RIGHT | 55–70 | **0.80×** | Fast → smooth |
+| PAN_LEFT / PAN_RIGHT | 5–20 | **1.25×** | Sluggish → engaging |
+| TILT_UP / TILT_DOWN | > 65 | **0.70×** | Fast tilt → graceful |
+| FLYOVER / APPROACH | > 70 | **0.70×** | Blurry speed → controlled |
+| FPV | > 50 | **0.75×** | Intense FPV → watchable |
+| STATIC / ORBIT / REVEAL | any | — | No change |
+
+### Output Naming
+
+`split_NNN_sSCORE.mp4` — e.g. `split_001_s70.mp4` = clip #1, scene score 70.

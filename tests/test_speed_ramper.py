@@ -2,15 +2,15 @@
 Tests for the speed ramping system.
 """
 
+from pathlib import Path
+from unittest.mock import Mock
+
 import numpy as np
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
 
 from drone_reel.core.beat_sync import BeatInfo
-from drone_reel.core.scene_detector import SceneInfo
-from drone_reel.core.speed_ramper import SpeedRamp, SpeedRamper
-from drone_reel.core.video_processor import ClipSegment
+from drone_reel.core.scene_detector import MotionType, SceneInfo
+from drone_reel.core.speed_ramper import SpeedRamp, SpeedRamper, auto_pan_speed_ramp
 
 
 class TestSpeedRamp:
@@ -499,3 +499,230 @@ class TestIntegration:
         # Should handle unsorted ramps
         duration = ramper.calculate_ramped_duration(10.0, ramps)
         assert duration > 0
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _scene(
+    motion_type: MotionType | None = None,
+    motion_energy: float | None = None,
+    score: float = 50.0,
+    duration: float = 5.0,
+) -> SceneInfo:
+    """Build a SceneInfo with optional extra attributes for testing."""
+    s = SceneInfo(
+        start_time=0.0,
+        end_time=duration,
+        duration=duration,
+        score=score,
+        source_file=Path("dummy.mp4"),
+    )
+    if motion_type is not None:
+        s.motion_type = motion_type  # type: ignore[attr-defined]
+    if motion_energy is not None:
+        s.motion_energy = motion_energy  # type: ignore[attr-defined]
+    return s
+
+
+class TestAutoPanSpeedRamp:
+    """Tests for auto_pan_speed_ramp() module-level function."""
+
+    # ------------------------------------------------------------------
+    # Short-clip guard
+    # ------------------------------------------------------------------
+
+    def test_clip_under_1s_returns_empty(self):
+        s = _scene(MotionType.PAN_LEFT, motion_energy=80)
+        assert auto_pan_speed_ramp(s, clip_duration=0.9) == []
+
+    def test_clip_exactly_1s_is_processed(self):
+        s = _scene(MotionType.PAN_LEFT, motion_energy=80)
+        result = auto_pan_speed_ramp(s, clip_duration=1.0)
+        assert len(result) == 1
+
+    # ------------------------------------------------------------------
+    # PAN_LEFT / PAN_RIGHT: fast → slow down
+    # ------------------------------------------------------------------
+
+    def test_pan_very_fast_slows_to_65pct(self):
+        for mt in (MotionType.PAN_LEFT, MotionType.PAN_RIGHT):
+            result = auto_pan_speed_ramp(_scene(mt), clip_duration=5.0, motion_energy=71.0)
+            assert len(result) == 1
+            assert result[0].start_speed == pytest.approx(0.65)
+            assert result[0].end_speed == pytest.approx(0.65)
+
+    def test_pan_cinematic_fast_slows_to_80pct(self):
+        for mt in (MotionType.PAN_LEFT, MotionType.PAN_RIGHT):
+            result = auto_pan_speed_ramp(_scene(mt), clip_duration=5.0, motion_energy=60.0)
+            assert len(result) == 1
+            assert result[0].start_speed == pytest.approx(0.80)
+
+    def test_pan_comfortable_speed_no_change(self):
+        """Energy 20–55: no ramp needed."""
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_RIGHT), clip_duration=5.0, motion_energy=35.0
+        )
+        assert result == []
+
+    def test_pan_sluggish_speeds_up_to_125pct(self):
+        for mt in (MotionType.PAN_LEFT, MotionType.PAN_RIGHT):
+            result = auto_pan_speed_ramp(_scene(mt), clip_duration=5.0, motion_energy=10.0)
+            assert len(result) == 1
+            assert result[0].start_speed == pytest.approx(1.25)
+
+    def test_pan_very_slow_no_change(self):
+        """Energy ≤ 5: too slow for auto-speedup."""
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT), clip_duration=5.0, motion_energy=3.0
+        )
+        assert result == []
+
+    # ------------------------------------------------------------------
+    # TILT_UP / TILT_DOWN
+    # ------------------------------------------------------------------
+
+    def test_tilt_fast_slows_to_70pct(self):
+        for mt in (MotionType.TILT_UP, MotionType.TILT_DOWN):
+            result = auto_pan_speed_ramp(_scene(mt), clip_duration=4.0, motion_energy=70.0)
+            assert len(result) == 1
+            assert result[0].start_speed == pytest.approx(0.70)
+
+    def test_tilt_moderate_no_change(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.TILT_UP), clip_duration=4.0, motion_energy=50.0
+        )
+        assert result == []
+
+    # ------------------------------------------------------------------
+    # FLYOVER
+    # ------------------------------------------------------------------
+
+    def test_flyover_fast_slows_to_70pct(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.FLYOVER), clip_duration=6.0, motion_energy=80.0
+        )
+        assert len(result) == 1
+        assert result[0].start_speed == pytest.approx(0.70)
+
+    def test_flyover_moderate_no_change(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.FLYOVER), clip_duration=6.0, motion_energy=60.0
+        )
+        assert result == []
+
+    # ------------------------------------------------------------------
+    # APPROACH
+    # ------------------------------------------------------------------
+
+    def test_approach_fast_slows_to_70pct(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.APPROACH), clip_duration=5.0, motion_energy=75.0
+        )
+        assert len(result) == 1
+        assert result[0].start_speed == pytest.approx(0.70)
+
+    # ------------------------------------------------------------------
+    # FPV
+    # ------------------------------------------------------------------
+
+    def test_fpv_fast_slows_to_75pct(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.FPV), clip_duration=3.0, motion_energy=55.0
+        )
+        assert len(result) == 1
+        assert result[0].start_speed == pytest.approx(0.75)
+
+    def test_fpv_moderate_no_change(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.FPV), clip_duration=3.0, motion_energy=40.0
+        )
+        assert result == []
+
+    # ------------------------------------------------------------------
+    # Motion types that never get adjusted
+    # ------------------------------------------------------------------
+
+    def test_static_no_change(self):
+        assert auto_pan_speed_ramp(_scene(MotionType.STATIC), 5.0, motion_energy=90.0) == []
+
+    def test_orbit_cw_no_change(self):
+        assert auto_pan_speed_ramp(_scene(MotionType.ORBIT_CW), 5.0, motion_energy=90.0) == []
+
+    def test_orbit_ccw_no_change(self):
+        assert auto_pan_speed_ramp(_scene(MotionType.ORBIT_CCW), 5.0, motion_energy=90.0) == []
+
+    def test_reveal_no_change(self):
+        assert auto_pan_speed_ramp(_scene(MotionType.REVEAL), 5.0, motion_energy=90.0) == []
+
+    def test_unknown_no_change(self):
+        assert auto_pan_speed_ramp(_scene(MotionType.UNKNOWN), 5.0, motion_energy=90.0) == []
+
+    # ------------------------------------------------------------------
+    # SpeedRamp shape: full-clip, constant-speed, ease_in_out
+    # ------------------------------------------------------------------
+
+    def test_ramp_covers_full_clip(self):
+        duration = 7.3
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT), clip_duration=duration, motion_energy=80.0
+        )
+        assert result[0].start_time == pytest.approx(0.0)
+        assert result[0].end_time == pytest.approx(duration)
+
+    def test_ramp_is_constant_speed(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT), clip_duration=5.0, motion_energy=80.0
+        )
+        assert result[0].start_speed == result[0].end_speed
+
+    def test_ramp_uses_ease_in_out(self):
+        result = auto_pan_speed_ramp(
+            _scene(MotionType.PAN_LEFT), clip_duration=5.0, motion_energy=80.0
+        )
+        assert result[0].easing == "ease_in_out"
+
+    # ------------------------------------------------------------------
+    # Parameter overrides: explicit vs scene attribute vs score fallback
+    # ------------------------------------------------------------------
+
+    def test_explicit_motion_type_overrides_scene_attr(self):
+        """Explicit motion_type param beats scene.motion_type attribute."""
+        s = _scene(MotionType.STATIC, motion_energy=80.0)  # scene says STATIC
+        result = auto_pan_speed_ramp(
+            s, clip_duration=5.0, motion_energy=80.0, motion_type=MotionType.PAN_LEFT
+        )
+        assert len(result) == 1  # PAN_LEFT wins, not STATIC
+
+    def test_explicit_energy_overrides_scene_attr(self):
+        """Explicit motion_energy param beats scene.motion_energy attribute."""
+        s = _scene(MotionType.PAN_LEFT, motion_energy=10.0)  # scene energy = sluggish
+        result = auto_pan_speed_ramp(
+            s, clip_duration=5.0, motion_energy=80.0  # explicit = too fast
+        )
+        assert result[0].start_speed == pytest.approx(0.65)
+
+    def test_missing_motion_type_no_scene_attr_returns_empty(self):
+        """No motion_type param and no scene attribute → empty."""
+        s = SceneInfo(
+            start_time=0.0, end_time=5.0, duration=5.0, score=50.0, source_file=Path("x.mp4")
+        )
+        result = auto_pan_speed_ramp(s, clip_duration=5.0, motion_energy=80.0)
+        assert result == []
+
+    def test_energy_falls_back_to_scene_score(self):
+        """When motion_energy is None and scene has no motion_energy, uses scene.score."""
+        # scene.score = 80 (> 70) → should trigger 0.65x for PAN_LEFT
+        s = SceneInfo(
+            start_time=0.0,
+            end_time=5.0,
+            duration=5.0,
+            score=80.0,
+            source_file=Path("x.mp4"),
+        )
+        s.motion_type = MotionType.PAN_LEFT  # type: ignore[attr-defined]
+        result = auto_pan_speed_ramp(s, clip_duration=5.0)
+        assert len(result) == 1
+        assert result[0].start_speed == pytest.approx(0.65)

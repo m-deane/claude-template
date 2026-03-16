@@ -4,133 +4,94 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**drone-reel** is a Python CLI tool that creates Instagram-style vertical reels from drone footage. It automatically stitches video clips with beat-synced transitions, color grading, intelligent reframing, and shake detection/stabilization.
+**drone-reel** is a Python CLI tool that creates Instagram-style vertical reels from drone footage — beat-synced transitions, color grading, intelligent reframing, shake stabilization.
 
-**Technology Stack**: Python 3.10+, MoviePy 2.x, OpenCV, librosa, PySceneDetect, Click, Rich
+**Stack** — Core: Python 3.10+, MoviePy 2.x, OpenCV, librosa, PySceneDetect | CLI/UX: Click, Rich | Dev: pytest, ruff, black
 
-## Build & Development Commands
+## Commands
 
 ```bash
-# Install in development mode
-pip install -e ".[dev]"
+pip install -e ".[dev]"                                        # install
 
-# Run the CLI
 drone-reel create --input ./clips/ --output reel.mp4 --duration 30
-drone-reel create --input ./clips/ --viral -c drone_aerial    # Quick viral preset
-drone-reel create --input ./clips/ -m track.mp3 --beat-mode downbeat
+drone-reel create --input ./clips/ --viral -c drone_aerial     # viral preset
+drone-reel split -i video.mp4 -o ./out/ --preview               # dry-run: show scenes
+drone-reel split -i video.mp4 -o ./out/ --min-duration 5 --max-duration 15 \
+  --color drone_aerial --color-intensity 0.65 --vignette 0.3 \
+  --auto-speed --letterbox 2.35 --json                           # full post-processing
+drone-reel split -i video.mp4 -o ./out/ --min-duration 11 --no-filter --auto-speed
 drone-reel analyze --input video.mp4
-drone-reel presets
-drone-reel platforms
+drone-reel presets && drone-reel platforms
 
-# Tests (coverage configured in pyproject.toml, threshold: 70%)
-pytest                                # All 1033+ tests with coverage
-pytest tests/test_scene_detector.py   # Single test file
-pytest -k "test_sharpness"            # Run specific test by name
-pytest -x                             # Stop on first failure
-
-# Linting
+pytest -x                          # stop on first failure
+pytest tests/test_scene_detector.py
+pytest -k "test_sharpness"
 ruff check src/ tests/
 black --check src/ tests/
 ```
 
-## Architecture
+## Verification (run in this order after any change)
 
-### Processing Pipeline
-
-The `create` command in `cli.py` orchestrates this pipeline:
-
-1. **SceneDetector** (`scene_detector.py`) - Detects scene boundaries via PySceneDetect ContentDetector. Scores each scene on sharpness, color variance, brightness, motion. Outputs `EnhancedSceneInfo` with `motion_type`, `hook_tier`, `subject_score`.
-
-2. **SceneFilter** (`scene_filter.py`) - Filters scenes by motion energy, brightness, shake score with progressive relaxation fallback if too few pass.
-
-3. **SceneSequencer** (`scene_sequencer.py`) - Hook-based reordering: best scene at position 0, narrative arc distribution (Hook/Build/Climax/Resolution).
-
-4. **DiversitySelector** (`sequence_optimizer.py`) - Balances quality (70%) with content diversity (30%). Enforces minimum scene counts per duration. `select_with_minimum()` applies progressive relaxation.
-
-5. **DurationAdjuster** (`duration_adjuster.py`) - Interest-adaptive clip durations based on hook tier. Auto-scales up to 2.5x if short of target.
-
-6. **BeatSync** (`beat_sync.py`) - Extracts tempo/beats/downbeats via librosa. Generates cut points aligned with musical structure. Falls back to uniform cuts when no beats detected.
-
-7. **VideoProcessor** (`video_processor.py`) - Central orchestrator: extracts clips, applies transitions, stabilization, speed ramping, stitches via `concatenate_videoclips`. Has `return_clip=True` mode for in-memory post-processing chain.
-
-8. **Stabilizer** (`stabilizer.py`) - Feature-based optical flow stabilization. Adaptive (skip stable clips) or full mode.
-
-9. **Reframer** (`reframer.py`) - Landscape-to-vertical conversion. Modes: CENTER, SMART, KEN_BURNS, PUNCH_IN, SUBJECT_TRACK.
-
-10. **ColorGrader** (`color_grader.py`) - Float32 color space with Bayer-matrix dithering. Auto shadow lift in LAB space. 11 presets including `drone_aerial`.
-
-### Post-Processing Pipeline (in `cli.py`)
-
-When caption, color grading, or silent audio is needed, `stitch_clips(return_clip=True)` returns an in-memory clip. Then applied sequentially:
-1. Silent audio injection (when no music)
-2. Caption overlay via `TextRenderer`
-3. Color grading via `grade_transform()`
-4. Single `write_videofile()` call with BT.709 + faststart + VBV params
-
-### Key Data Structures
-
-- **EnhancedSceneInfo**: Scene with start/end times, score, motion_type, hook_potential, hook_tier, subject_score
-- **MotionType**: STATIC, PAN_LEFT/RIGHT, TILT_UP/DOWN, ORBIT_CW/CCW, FLYOVER, REVEAL, FPV
-- **HookPotential**: MAXIMUM (>=80), HIGH (>=65), MEDIUM (>=45), LOW (>=25), POOR (<25)
-- **ClipSegment**: Video segment with scene reference, duration, transition settings
-- **TransitionType**: CUT, CROSSFADE, FADE_BLACK, FADE_WHITE, ZOOM_IN/OUT, SLIDE_LEFT/RIGHT
-
-## Critical MoviePy 2.x Patterns
-
-This project uses MoviePy 2.x which has breaking changes from 1.x:
-
-```python
-# Correct 2.x imports
-from moviepy import VideoFileClip, concatenate_videoclips, vfx, afx, CompositeVideoClip
-
-# Method changes (NOT the 1.x names)
-clip.subclipped(start, end)           # Not subclip()
-clip.resized(target_size)             # Not resize()
-clip.with_effects([vfx.FadeIn(d)])    # Not fadein()
-clip.with_audio(audio)                # Not set_audio()
-clip.with_start(t)                    # Not set_start()
-clip.with_duration(d)                 # Not set_duration()
-clip.with_position(pos)               # Not set_position()
-clip.transform(func)                  # (get_frame, t) -> frame
+```bash
+ruff check src/ tests/ && black --check src/ tests/ && pytest -x
 ```
 
-### MoviePy Gotchas (hard-won lessons)
+All three must pass. Coverage threshold is 70% (enforced by pytest config).
 
-1. **CompositeVideoClip.close() sets self.bg = None** (MoviePy 2.1.2 line 192). Any `finally` block that closes a CompositeVideoClip will break subsequent `get_frame()` calls. When using `return_clip=True`, the finally block must NOT close the returned clip.
+## Architecture
 
-2. **AudioClip make_frame must handle vectorized t**. MoviePy passes numpy arrays of time points, not just scalars. A naive `lambda t: [0, 0]` only produces ~3 samples for a 3-second clip. Must check `isinstance(t, np.ndarray)` and return `(N, 2)` for arrays, `(2,)` for scalars.
+Pipeline orchestrated by `cli.py` → `create` command:
 
-3. **AAC encodes pure silence to ~0 duration**. Use amplitude `1e-6` (inaudible) instead of `0` for silent audio tracks.
+`SceneDetector` → `SceneFilter` → `SceneSequencer` → `DiversitySelector` → `DurationAdjuster` → `BeatSync` → `VideoProcessor` → `Stabilizer` → `Reframer` → `ColorGrader`
+
+The `split` command runs `SceneDetector` → `SceneFilter` → per-clip post-processing (stabilize → color grade → letterbox) → `VideoProcessor.write_clip()`.
+
+When caption/grading/silent audio is needed, `stitch_clips(return_clip=True)` returns an in-memory clip; all transforms apply before a single `write_videofile()` call (BT.709 + faststart + VBV).
+
+Key files: `src/drone_reel/cli.py` (orchestration), `src/drone_reel/core/` (all pipeline modules), `src/drone_reel/utils/` (config, file utils, resource guard).
+
+## MoviePy 2.x — Don't / Do
+
+**Don't** use 1.x method names — they silently fail or error:
+```python
+# Wrong (1.x)              # Right (2.x)
+clip.subclip(s, e)         clip.subclipped(s, e)
+clip.resize(size)          clip.resized(size)
+clip.fadein(d)             clip.with_effects([vfx.FadeIn(d)])
+clip.set_audio(a)          clip.with_audio(a)
+```
+
+**Don't** call `.close()` on a `CompositeVideoClip` in a `finally` block when `return_clip=True` — it sets `self.bg = None` (MoviePy 2.1.2 line 192) and breaks subsequent `get_frame()` calls. In `return_clip` mode, skip all cleanup in the finally block.
+
+**Don't** use `lambda t: [0, 0]` for silent audio — MoviePy passes numpy arrays to `make_frame`, producing only ~3 samples per clip. Check `isinstance(t, np.ndarray)` and return `(N, 2)` for arrays or `(2,)` for scalars. Use amplitude `1e-6` not `0` (AAC encodes pure silence to ~0 duration).
 
 ## Encoding Standards
 
-All output files use these FFmpeg parameters for platform compatibility:
-- BT.709 color space: `-colorspace bt709 -color_primaries bt709 -color_trc bt709`
-- Streaming optimized: `-movflags +faststart`
-- Bitrate controlled: `-maxrate` (1.5x target) + `-bufsize` (2x target) VBV caps
-- Audio: `audio_codec="aac"`, silent stereo track injected when no music provided
-- Pixel format: `yuv420p`
+All outputs: `-colorspace bt709 -color_primaries bt709 -color_trc bt709`, `-movflags +faststart`, `-maxrate` (1.5× target) + `-bufsize` (2× target), `audio_codec="aac"`, `yuv420p`.
 
-## Configuration
+## `split` Post-Processing Pipeline
 
-User config at `~/.config/drone_reel/config.json`. CLI arguments override config values. Key defaults:
-- `scene_threshold`: 27.0 (lower = more scene cuts)
-- `min_clip_length` / `max_clip_length`: 2.0-4.0s
-- `transition_duration`: 0.3s
-- `output_fps`: 30
+Per-clip pipeline (in order): stabilize → `auto_pan_speed_ramp()` → color grade → letterbox
 
-## Memory & Performance Considerations
+**`auto_pan_speed_ramp()`** (`speed_ramper.py`): full-clip constant-speed correction based on `MotionType` + optical-flow energy:
+- PAN >70 energy → 0.65×, PAN 55–70 → 0.80×, PAN 5–20 (sluggish) → 1.25×
+- TILT >65 → 0.70×, FLYOVER/APPROACH >70 → 0.70×, FPV >50 → 0.75×
+- STATIC/ORBIT/REVEAL/UNKNOWN → no change
 
-- Stabilizer does NOT cache frames (was removed to prevent 30 GB+ memory at 4K)
-- FFmpeg threads capped at `min(cpu_count - 1, cpu_count // 2)` to allow parallel renders
-- Resource preflight guard (`utils/resource_guard.py`) checks RAM/disk before rendering
-- `gc.collect()` called between pipeline stages to free numpy arrays
-- 4K ultra renders: ~1 GB peak memory per render, ~1h for 30s
+**4K HEVC footage**: `SceneDetector.frame_skip` auto-set to 1 for >35fps sources. For DJI 4K 60fps, create a 720p proxy first:
+```bash
+ffmpeg -i source.MP4 -vf scale=1280:720 -r 30 -c:v libx264 -preset ultrafast -crf 26 -an proxy.mp4
+```
+Then run `split` on the proxy (~11 min vs 40+ min on raw 4K HEVC).
 
-## Workflow Guidelines
+## Performance
 
-- Store project plans and progress in `.claude_plans/` directory
-- Write all tests to `tests/` folder
-- Always run tests after significant changes: `pytest -x`
-- Never use mock data or workarounds - implement complete working code
-- No partial implementations, stubs, TODOs, or placeholder functions
+- Stabilizer streams frames on demand — no frame cache (removed to prevent 30 GB+ at 4K)
+- FFmpeg threads: `min(cpu_count - 1, cpu_count // 2)`
+- `resource_guard.py` checks RAM/disk before rendering (fail-open)
+- `gc.collect()` between pipeline stages
+
+## Workflow
+
+- Plans and progress in `.claude_plans/`, tests in `tests/`
+- `max_scene_length` on `SceneDetector` must match `--max-duration` on `split` — both default to 10s; the CLI passes `max_duration` through to the detector

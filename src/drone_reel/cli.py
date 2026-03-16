@@ -8,33 +8,33 @@ Usage:
 
 import os
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
-from rich.table import Table
 from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.table import Table
 
 from drone_reel import __version__
 from drone_reel.core.beat_sync import BeatSync
 from drone_reel.core.color_grader import ColorGrader, ColorPreset, get_preset_names
 from drone_reel.core.duration_adjuster import DurationAdjuster
-from drone_reel.core.reframe_selector import ReframeSelector, KenBurnsConfig
+from drone_reel.core.export_presets import Platform, PlatformExporter
+from drone_reel.core.reframe_selector import KenBurnsConfig, ReframeSelector
 from drone_reel.core.scene_analyzer import analyze_scenes_batch
 from drone_reel.core.scene_detector import SceneDetector
-from drone_reel.core.scene_filter import SceneFilter, FilterThresholds
+from drone_reel.core.scene_filter import SceneFilter
 from drone_reel.core.scene_sequencer import SceneSequencer
 from drone_reel.core.sequence_optimizer import DiversitySelector
-from drone_reel.core.video_processor import VideoProcessor, TransitionType
-from drone_reel.core.export_presets import Platform, PlatformExporter, PLATFORM_PRESETS
+from drone_reel.core.speed_ramper import SpeedRamp, SpeedRamper, auto_pan_speed_ramp
+from drone_reel.core.video_processor import TransitionType, VideoProcessor
 from drone_reel.presets.transitions import get_transitions_for_energy
-from drone_reel.utils.config import Config, load_config, merge_cli_args
+from drone_reel.utils.config import load_config, merge_cli_args
 from drone_reel.utils.file_utils import (
+    ensure_output_dir,
     find_video_files,
     format_duration,
     get_unique_output_path,
-    ensure_output_dir,
 )
 
 console = Console()
@@ -60,33 +60,38 @@ def main(ctx, version):
 
 @main.command()
 @click.option(
-    "--input", "-i",
+    "--input",
+    "-i",
     "input_path",
     type=click.Path(exists=True, path_type=Path),
     required=True,
     help="Input directory with video files or single video file",
 )
 @click.option(
-    "--music", "-m",
+    "--music",
+    "-m",
     "music_path",
     type=click.Path(exists=True, path_type=Path),
     help="Music track for beat synchronization",
 )
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     "output_path",
     type=click.Path(path_type=Path),
     default="./output/reel.mp4",
     help="Output video file path",
 )
 @click.option(
-    "--duration", "-d",
+    "--duration",
+    "-d",
     type=click.FloatRange(0.5, 600),
     default=45.0,
     help="Target duration in seconds (0.5-600, default: 45)",
 )
 @click.option(
-    "--color", "-c",
+    "--color",
+    "-c",
     type=click.Choice(get_preset_names()),
     default="drone_aerial",
     help="Color grading preset",
@@ -111,12 +116,27 @@ def main(ctx, version):
 )
 @click.option(
     "--transition",
-    type=click.Choice([
-        "cut", "crossfade", "fade_black", "zoom_in", "whip_pan", "glitch_rgb",
-        "iris_in", "iris_out", "flash_white", "light_leak", "hyperlapse_zoom",
-        "parallax_left", "parallax_right", "wipe_diagonal", "wipe_diamond",
-        "fog_pass", "vortex_zoom",
-    ]),
+    type=click.Choice(
+        [
+            "cut",
+            "crossfade",
+            "fade_black",
+            "zoom_in",
+            "whip_pan",
+            "glitch_rgb",
+            "iris_in",
+            "iris_out",
+            "flash_white",
+            "light_leak",
+            "hyperlapse_zoom",
+            "parallax_left",
+            "parallax_right",
+            "wipe_diagonal",
+            "wipe_diamond",
+            "fog_pass",
+            "vortex_zoom",
+        ]
+    ),
     default="crossfade",
     help="Default transition type",
 )
@@ -310,15 +330,15 @@ def main(ctx, version):
 )
 def create(
     input_path: Path,
-    music_path: Optional[Path],
+    music_path: Path | None,
     output_path: Path,
     duration: float,
     color: str,
     reframe: str,
     aspect: str,
-    platform: Optional[str],
+    platform: str | None,
     transition: str,
-    clips: Optional[int],
+    clips: int | None,
     no_reframe: bool,
     no_color: bool,
     color_intensity: float,
@@ -329,17 +349,17 @@ def create(
     stabilize_all: bool,
     stable_threshold: float,
     speed_ramp: bool,
-    caption: Optional[str],
+    caption: str | None,
     beat_mode: str,
     viral: bool,
     ken_burns_style: str,
-    kb_zoom_end: Optional[float],
-    kb_pan_x: Optional[float],
-    kb_pan_y: Optional[float],
+    kb_zoom_end: float | None,
+    kb_pan_x: float | None,
+    kb_pan_y: float | None,
     vignette: float,
     halation: float,
     chromatic_aberration: float,
-    lut_path: Optional[str],
+    lut_path: str | None,
     letterbox: str,
     duck_outro: bool,
     input_colorspace: str,
@@ -420,13 +440,13 @@ def create(
 
             validation = exporter.validate_for_platform(duration, platform_enum)
             if validation["errors"]:
-                console.print(f"[red]Platform validation errors:[/red]")
+                console.print("[red]Platform validation errors:[/red]")
                 for error in validation["errors"]:
                     console.print(f"  - {error}")
                 raise SystemExit(1)
 
             if validation["warnings"]:
-                console.print(f"[yellow]Platform warnings:[/yellow]")
+                console.print("[yellow]Platform warnings:[/yellow]")
                 for warning in validation["warnings"]:
                     console.print(f"  - {warning}")
                 console.print()
@@ -462,9 +482,9 @@ def create(
 
     # Resolution presets (width in pixels)
     resolution_presets = {
-        "hd": 1080,   # 1080x1920 vertical, 1920x1080 landscape
-        "2k": 1440,   # 1440x2560 vertical, 2560x1440 landscape
-        "4k": 2160,   # 2160x3840 vertical, 3840x2160 landscape
+        "hd": 1080,  # 1080x1920 vertical, 1920x1080 landscape
+        "2k": 1440,  # 1440x2560 vertical, 2560x1440 landscape
+        "4k": 2160,  # 2160x3840 vertical, 3840x2160 landscape
     }
     output_width = resolution_presets.get(resolution, 1080)
     config.output_width = output_width
@@ -480,11 +500,13 @@ def create(
     platform_info = f" for {preset.name}" if preset else ""
     resolution_label = {"hd": "1080p", "2k": "1440p", "4k": "2160p"}.get(resolution, "1080p")
     quality_info = f" ({resolution_label} {quality}, {video_bitrate} bitrate)"
-    console.print(Panel.fit(
-        "[bold blue]Drone Reel Creator[/bold blue]\n"
-        f"Creating {duration}s reel{platform_info} with {color} color grade{quality_info}",
-        border_style="blue",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]Drone Reel Creator[/bold blue]\n"
+            f"Creating {duration}s reel{platform_info} with {color} color grade{quality_info}",
+            border_style="blue",
+        )
+    )
 
     # Find video files
     if input_path.is_file():
@@ -494,8 +516,9 @@ def create(
 
     if not video_files:
         from drone_reel.utils.file_utils import VIDEO_EXTENSIONS
+
         formats = ", ".join(sorted(VIDEO_EXTENSIONS))
-        console.print(f"[red]Error:[/red] No video files found in input path")
+        console.print("[red]Error:[/red] No video files found in input path")
         console.print(f"[dim]Supported formats: {formats}[/dim]")
         raise SystemExit(1)
 
@@ -515,6 +538,7 @@ def create(
 
     # Resource preflight check
     from drone_reel.utils.resource_guard import preflight_check
+
     preflight_results = preflight_check(
         output_path=output_path,
         resolution_height=output_width,  # output_width is the larger dimension (height in vertical)
@@ -560,7 +584,9 @@ def create(
 
         if not all_scenes:
             console.print("[red]Error:[/red] No valid scenes detected from any video file")
-            console.print("[dim]Tip: Check that video files are not corrupted and are at least 1 second long.[/dim]")
+            console.print(
+                "[dim]Tip: Check that video files are not corrupted and are at least 1 second long.[/dim]"
+            )
             raise SystemExit(1)
 
         console.print(f"[green]Detected {len(all_scenes)} scenes[/green]")
@@ -619,9 +645,11 @@ def create(
         candidate_count = min(len(all_detected_scenes), num_clips_needed * 3)  # 3x candidates
 
         # Sort by score and get top candidates
-        sorted_candidates = sorted(all_detected_scenes, key=lambda s: s.score, reverse=True)[:candidate_count]
+        sorted_candidates = sorted(all_detected_scenes, key=lambda s: s.score, reverse=True)[
+            :candidate_count
+        ]
 
-        from drone_reel.core.scene_detector import EnhancedSceneInfo, MotionType
+        from drone_reel.core.scene_detector import EnhancedSceneInfo
 
         # Analyze motion energy, brightness, shake, motion type, and sharpness in single pass
         progress.add_task("[cyan]Analyzing motion energy...", total=len(sorted_candidates))
@@ -643,12 +671,17 @@ def create(
         # Filter scenes using SceneFilter
         scene_filter = SceneFilter()
         filter_result = scene_filter.filter_scenes(
-            sorted_candidates, scene_motion_map, scene_brightness_map, scene_shake_map,
+            sorted_candidates,
+            scene_motion_map,
+            scene_brightness_map,
+            scene_shake_map,
         )
 
         # Report subject scenes found
         if filter_result.high_subject_scenes:
-            console.print(f"[cyan]Subject detection:[/cyan] {len(filter_result.high_subject_scenes)} scenes with interesting subjects preserved")
+            console.print(
+                f"[cyan]Subject detection:[/cyan] {len(filter_result.high_subject_scenes)} scenes with interesting subjects preserved"
+            )
 
         # Get prioritized scenes, adding low-motion if needed
         prioritized_scenes = filter_result.with_low_motion_if_needed(num_clips_needed)
@@ -665,7 +698,9 @@ def create(
                 filter_msg += f", [red]{filter_result.shaky_scenes_filtered} shaky[/red]"
             console.print(filter_msg)
         elif filter_result.low_motion_scenes:
-            console.print(f"[yellow]Warning:[/yellow] Including {len(filter_result.low_motion_scenes)} low-motion scenes to meet clip count")
+            console.print(
+                f"[yellow]Warning:[/yellow] Including {len(filter_result.low_motion_scenes)} low-motion scenes to meet clip count"
+            )
 
         # Use diversity-aware selection on prioritized scenes, enforcing minimum scene count
         selected_scenes = diversity_selector.select_with_minimum(
@@ -679,7 +714,9 @@ def create(
                 sorted_candidates, count=num_clips_needed, target_duration=duration
             )
             if selected_scenes:
-                console.print(f"[green]Recovered {len(selected_scenes)} scenes after relaxing filters[/green]")
+                console.print(
+                    f"[green]Recovered {len(selected_scenes)} scenes after relaxing filters[/green]"
+                )
 
         if not selected_scenes:
             console.print("[red]Error:[/red] No usable scenes found in video files")
@@ -694,10 +731,12 @@ def create(
             )
             # Scale up clip durations to fill target duration with fewer clips
             original_total = sum(clip_durations)
-            clip_durations = clip_durations[:len(selected_scenes)]
+            clip_durations = clip_durations[: len(selected_scenes)]
             current_total = sum(clip_durations)
             if current_total > 0 and original_total > current_total:
-                scale_factor = min(original_total / current_total, 2.5)  # Allow up to 2.5x to avoid short reels
+                scale_factor = min(
+                    original_total / current_total, 2.5
+                )  # Allow up to 2.5x to avoid short reels
                 clip_durations = [d * scale_factor for d in clip_durations]
                 achieved = sum(clip_durations)
                 shortfall = (1 - achieved / duration) * 100
@@ -727,12 +766,17 @@ def create(
             auto_scale = None
         else:
             clip_durations, auto_scale = duration_adjuster.adjust_durations(
-                selected_scenes, clip_durations, scene_sharpness_map, duration,
+                selected_scenes,
+                clip_durations,
+                scene_sharpness_map,
+                duration,
             )
 
         actual_duration = sum(clip_durations)
         if auto_scale:
-            console.print(f"[cyan]Duration adjustment:[/cyan] Scaled clips by {auto_scale:.2f}x → {actual_duration:.0f}s")
+            console.print(
+                f"[cyan]Duration adjustment:[/cyan] Scaled clips by {auto_scale:.2f}x → {actual_duration:.0f}s"
+            )
 
         # Preview mode - show plan and exit
         if preview:
@@ -742,6 +786,7 @@ def create(
         # Step 4: Generate transitions
         # Map CLI transition choice to TransitionType
         import random
+
         transition_map = {
             "cut": TransitionType.CUT,
             "crossfade": TransitionType.CROSSFADE,
@@ -752,8 +797,7 @@ def create(
 
         if beat_info and cut_points:
             energy_levels = [
-                beat_sync.get_energy_at_time(beat_info, cp.time)
-                for cp in cut_points[:-1]
+                beat_sync.get_energy_at_time(beat_info, cp.time) for cp in cut_points[:-1]
             ]
             avg_energy = sum(energy_levels) / len(energy_levels) if energy_levels else 0.5
             transitions = get_transitions_for_energy(
@@ -777,12 +821,16 @@ def create(
                     elif i == len(selected_scenes) - 1:
                         transitions.append(TransitionType.FADE_BLACK)  # End with fade out
                     else:
-                        transitions.append(random.choice([
-                            TransitionType.CROSSFADE,
-                            TransitionType.CROSSFADE,
-                            TransitionType.ZOOM_IN,
-                            TransitionType.ZOOM_OUT,
-                        ]))
+                        transitions.append(
+                            random.choice(
+                                [
+                                    TransitionType.CROSSFADE,
+                                    TransitionType.CROSSFADE,
+                                    TransitionType.ZOOM_IN,
+                                    TransitionType.ZOOM_OUT,
+                                ]
+                            )
+                        )
 
         # Step 5: Create clip segments with motion-matched transitions
         processor_kwargs = {
@@ -798,7 +846,9 @@ def create(
             if stabilize_all:
                 console.print("[cyan]Stabilization:[/cyan] Full mode - stabilizing ALL clips")
             else:
-                console.print(f"[cyan]Stabilization:[/cyan] Adaptive mode (stable threshold: {stable_threshold:.0f})")
+                console.print(
+                    f"[cyan]Stabilization:[/cyan] Adaptive mode (stable threshold: {stable_threshold:.0f})"
+                )
 
         # Display Ken Burns settings
         if kb_settings:
@@ -842,7 +892,8 @@ def create(
                 kb_config=kb_cfg,
             )
             clip_reframers, clip_reframe_modes = reframe_selector.select_reframers(
-                selected_scenes, clip_durations,
+                selected_scenes,
+                clip_durations,
             )
 
         # Step 7: Stitch video
@@ -855,9 +906,7 @@ def create(
         output_path = get_unique_output_path(output_path)
 
         # Extract shake scores for selected scenes (for adaptive stabilization)
-        selected_shake_scores = [
-            scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes
-        ]
+        selected_shake_scores = [scene_shake_map.get(id(scene), 50.0) for scene in selected_scenes]
 
         # OPTION A FIX: Force FULL stabilization for non-CENTER reframe modes
         # Reframing with KEN_BURNS or SMART can introduce micro-jitter even on stable footage
@@ -878,14 +927,22 @@ def create(
             console.print("\n[bold]Clip Shake Analysis:[/bold]")
             clips_to_stabilize = 0
             clips_to_skip = 0
-            for i, (scene, shake_score) in enumerate(zip(selected_scenes, selected_shake_scores), 1):
+            for i, (scene, shake_score) in enumerate(
+                zip(selected_scenes, selected_shake_scores), 1
+            ):
                 source_name = scene.source_file.name[:25]
                 # Check if this clip was boosted due to reframe mode
-                reframe_mode = clip_reframe_modes[i-1] if clip_reframe_modes and i-1 < len(clip_reframe_modes) else "CENTER"
+                reframe_mode = (
+                    clip_reframe_modes[i - 1]
+                    if clip_reframe_modes and i - 1 < len(clip_reframe_modes)
+                    else "CENTER"
+                )
                 original_score = scene_shake_map.get(id(scene), 50.0)
-                was_boosted = (reframe_mode in ("SMART", "KEN_BURNS") and
-                              original_score < stable_threshold and
-                              shake_score >= REFRAME_JITTER_BOOST)
+                was_boosted = (
+                    reframe_mode in ("SMART", "KEN_BURNS")
+                    and original_score < stable_threshold
+                    and shake_score >= REFRAME_JITTER_BOOST
+                )
 
                 if stabilize_all:
                     status = "[yellow]FULL[/yellow]"
@@ -904,7 +961,9 @@ def create(
                 console.print(f"  {i:2d}. {source_name:<25} shake: {shake_score:5.1f} → {status}")
 
             if stabilize_all:
-                console.print(f"\n[cyan]Summary:[/cyan] Stabilizing all {len(selected_scenes)} clips (--stabilize-all)")
+                console.print(
+                    f"\n[cyan]Summary:[/cyan] Stabilizing all {len(selected_scenes)} clips (--stabilize-all)"
+                )
             else:
                 summary = f"[cyan]Summary:[/cyan] {clips_to_stabilize} to stabilize, {clips_to_skip} stable (threshold: {stable_threshold:.0f})"
                 if reframe_boosted_clips > 0:
@@ -928,7 +987,9 @@ def create(
             for score in selected_shake_scores:
                 if score < stable_threshold:
                     # Map to below 15 (stabilizer's skip threshold)
-                    adjusted_shake_scores.append(score * (14.9 / stable_threshold) if stable_threshold > 0 else 0)
+                    adjusted_shake_scores.append(
+                        score * (14.9 / stable_threshold) if stable_threshold > 0 else 0
+                    )
                 else:
                     # Keep original score
                     adjusted_shake_scores.append(score)
@@ -937,20 +998,24 @@ def create(
         # Step 7b: Generate speed ramps if enabled
         clip_speed_ramps = None
         if speed_ramp:
-            from drone_reel.core.speed_ramper import SpeedRamper
             speed_ramper = SpeedRamper()
             clip_speed_ramps = []
             ramped_count = 0
             for scene in selected_scenes:
-                ramps = speed_ramper.auto_detect_ramp_points(
-                    scene, beat_info=beat_info
-                )
+                ramps = speed_ramper.auto_detect_ramp_points(scene, beat_info=beat_info)
+                # Merge auto-pan correction (motion_type/energy already set on scene)
+                pan_ramps = auto_pan_speed_ramp(scene, clip_duration=scene.duration)
+                for pr in pan_ramps:
+                    if not any(
+                        not (pr.end_time <= r.start_time or pr.start_time >= r.end_time)
+                        for r in ramps
+                    ):
+                        ramps.append(pr)
                 clip_speed_ramps.append(ramps)
                 if ramps:
                     ramped_count += 1
             # Hook enhancement: add slow-mo opener to first clip for dramatic hook
             if clip_speed_ramps and selected_scenes:
-                from drone_reel.core.speed_ramper import SpeedRamp
                 first_scene = selected_scenes[0]
                 opener_duration = min(1.0, first_scene.duration * 0.3)
                 if opener_duration > 0.2:
@@ -967,7 +1032,9 @@ def create(
                         clip_speed_ramps[0] = [opener_ramp] + existing
                         if not existing:
                             ramped_count += 1
-            console.print(f"[cyan]Speed ramping:[/cyan] {ramped_count} of {len(selected_scenes)} clips ramped")
+            console.print(
+                f"[cyan]Speed ramping:[/cyan] {ramped_count} of {len(selected_scenes)} clips ramped"
+            )
 
         # Determine if post-processing is needed (caption, color grading, effects, or silent audio)
         # Also force return_clip path when no music so we can inject a silent audio stream
@@ -1026,8 +1093,15 @@ def create(
 
                 # Apply text caption overlay as in-memory transform
                 if caption:
-                    from drone_reel.core.text_overlay import TextOverlay as TextOverlayConfig, TextRenderer, TextAnimation
-                    console.print(f"[cyan]Caption:[/cyan] \"{caption}\"")
+                    from drone_reel.core.text_overlay import (
+                        TextAnimation,
+                        TextRenderer,
+                    )
+                    from drone_reel.core.text_overlay import (
+                        TextOverlay as TextOverlayConfig,
+                    )
+
+                    console.print(f'[cyan]Caption:[/cyan] "{caption}"')
 
                     renderer = TextRenderer()
                     overlay_config = TextOverlayConfig(
@@ -1043,15 +1117,26 @@ def create(
                 # Apply color grading as in-memory transform (with optional effects)
                 has_color = not no_color and color != "none"
                 has_effects = (
-                    vignette > 0 or halation > 0 or chromatic_aberration > 0
-                    or lut_path or input_colorspace != "rec709" or auto_wb
-                    or denoise > 0 or haze > 0 or gnd_sky > 0 or auto_color_match
+                    vignette > 0
+                    or halation > 0
+                    or chromatic_aberration > 0
+                    or lut_path
+                    or input_colorspace != "rec709"
+                    or auto_wb
+                    or denoise > 0
+                    or haze > 0
+                    or gnd_sky > 0
+                    or auto_color_match
                 )
                 if has_color or has_effects:
-                    import cv2
                     from pathlib import Path as _Path
+
+                    import cv2
+
                     if has_color:
-                        console.print(f"[cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity")
+                        console.print(
+                            f"[cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity"
+                        )
                     effects_desc = []
                     if input_colorspace != "rec709":
                         effects_desc.append(f"colorspace: {input_colorspace}")
@@ -1085,7 +1170,9 @@ def create(
                             sample_bgr = cv2.cvtColor(sample_frame, cv2.COLOR_RGB2BGR)
                             _colorspace = ColorGrader.detect_log_footage(sample_bgr)
                             if _colorspace != "rec709":
-                                console.print(f"[yellow]Detected log footage:[/yellow] {_colorspace}")
+                                console.print(
+                                    f"[yellow]Detected log footage:[/yellow] {_colorspace}"
+                                )
                         except Exception:
                             _colorspace = "rec709"
 
@@ -1111,7 +1198,9 @@ def create(
                             color_grader.set_reference_frame(ref_bgr)
                             console.print("[cyan]Auto color match:[/cyan] reference frame captured")
                         except Exception:
-                            console.print("[yellow]Warning:[/yellow] Could not capture reference frame for color matching")
+                            console.print(
+                                "[yellow]Warning:[/yellow] Could not capture reference frame for color matching"
+                            )
 
                     def grade_transform(get_frame, t):
                         frame = get_frame(t)
@@ -1123,7 +1212,8 @@ def create(
 
                 # Apply cinematic letterbox bars
                 if letterbox != "off":
-                    from moviepy import CompositeVideoClip, ColorClip
+                    from moviepy import ColorClip, CompositeVideoClip
+
                     ratio = float(letterbox)  # 2.35, 1.85, or 2.39
                     clip_w, clip_h = final_clip.w, final_clip.h
                     # Calculate bar height for the target aspect ratio
@@ -1131,12 +1221,16 @@ def create(
                     if target_h < clip_h:
                         bar_h = (clip_h - target_h) // 2
                         console.print(f"[cyan]Letterbox:[/cyan] {letterbox}:1 ({bar_h}px bars)")
-                        top_bar = ColorClip(
-                            size=(clip_w, bar_h), color=(0, 0, 0)
-                        ).with_duration(final_clip.duration).with_position(("center", "top"))
-                        bottom_bar = ColorClip(
-                            size=(clip_w, bar_h), color=(0, 0, 0)
-                        ).with_duration(final_clip.duration).with_position(("center", "bottom"))
+                        top_bar = (
+                            ColorClip(size=(clip_w, bar_h), color=(0, 0, 0))
+                            .with_duration(final_clip.duration)
+                            .with_position(("center", "top"))
+                        )
+                        bottom_bar = (
+                            ColorClip(size=(clip_w, bar_h), color=(0, 0, 0))
+                            .with_duration(final_clip.duration)
+                            .with_position(("center", "bottom"))
+                        )
                         final_clip = CompositeVideoClip(
                             [final_clip, top_bar, bottom_bar],
                             size=(clip_w, clip_h),
@@ -1145,6 +1239,7 @@ def create(
                 # Apply audio ducking (outro fade)
                 if duck_outro and final_clip.audio is not None:
                     from moviepy import afx
+
                     fade_dur = min(2.0, final_clip.duration * 0.15)
                     console.print(f"[cyan]Audio duck:[/cyan] {fade_dur:.1f}s outro fade")
                     final_clip = final_clip.with_audio(
@@ -1156,21 +1251,28 @@ def create(
 
                 # Build ffmpeg_params matching video_processor.py: BT.709 + faststart + VBV caps
                 manual_ffmpeg_params = [
-                    "-pix_fmt", "yuv420p",
-                    "-colorspace", "bt709",
-                    "-color_primaries", "bt709",
-                    "-color_trc", "bt709",
-                    "-movflags", "+faststart",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-colorspace",
+                    "bt709",
+                    "-color_primaries",
+                    "bt709",
+                    "-color_trc",
+                    "bt709",
+                    "-movflags",
+                    "+faststart",
                 ]
                 _bitrate_for_caps = video_bitrate or video_processor.video_bitrate
                 if _bitrate_for_caps:
                     _numeric_str = _bitrate_for_caps.rstrip("MmKk")
                     try:
                         _numeric_val = float(_numeric_str)
-                        _unit = _bitrate_for_caps[len(_numeric_str):].upper()
+                        _unit = _bitrate_for_caps[len(_numeric_str) :].upper()
                         manual_ffmpeg_params += [
-                            "-maxrate", f"{_numeric_val * 1.5:.0f}{_unit}",
-                            "-bufsize", f"{_numeric_val * 2:.0f}{_unit}",
+                            "-maxrate",
+                            f"{_numeric_val * 1.5:.0f}{_unit}",
+                            "-bufsize",
+                            f"{_numeric_val * 2:.0f}{_unit}",
                         ]
                     except (ValueError, IndexError):
                         pass
@@ -1189,15 +1291,15 @@ def create(
                 )
             finally:
                 # Clean up all clip resources
-                if hasattr(final_clip, '_stitch_source_clips'):
+                if hasattr(final_clip, "_stitch_source_clips"):
                     for clip in final_clip._stitch_source_clips:
                         try:
-                            if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                            if hasattr(clip, "_source_clip_ref") and clip._source_clip_ref:
                                 clip._source_clip_ref.close()
                             clip.close()
                         except Exception:
                             pass
-                if hasattr(final_clip, '_stitch_audio') and final_clip._stitch_audio:
+                if hasattr(final_clip, "_stitch_audio") and final_clip._stitch_audio:
                     try:
                         final_clip._stitch_audio.close()
                     except Exception:
@@ -1227,10 +1329,11 @@ def create(
     # Get actual output dimensions
     if no_reframe:
         from moviepy import VideoFileClip
+
         with VideoFileClip(str(output_path)) as final_clip:
             output_w, output_h = final_clip.w, final_clip.h
 
-    success_message = f"[bold green]Reel created successfully![/bold green]\n\n"
+    success_message = "[bold green]Reel created successfully![/bold green]\n\n"
     success_message += f"Output: [cyan]{output_path}[/cyan]\n"
     success_message += f"Duration: {duration_info}\n"
     success_message += f"Resolution: {output_w}x{output_h}\n"
@@ -1248,7 +1351,8 @@ def create(
 
 @main.command()
 @click.option(
-    "--input", "-i",
+    "--input",
+    "-i",
     "input_path",
     type=click.Path(exists=True, path_type=Path),
     required=True,
@@ -1283,21 +1387,24 @@ def analyze(input_path: Path):
 
 @main.command(name="extract-clips")
 @click.option(
-    "--input", "-i",
+    "--input",
+    "-i",
     "input_path",
     type=click.Path(exists=True, path_type=Path),
     required=True,
     help="Video file or directory of videos to extract clips from",
 )
 @click.option(
-    "--output-dir", "-o",
+    "--output-dir",
+    "-o",
     "output_dir",
     type=click.Path(path_type=Path),
     default="./clips",
     help="Directory for extracted clip files",
 )
 @click.option(
-    "--count", "-n",
+    "--count",
+    "-n",
     type=click.IntRange(1, 100),
     default=10,
     help="Maximum number of clips to extract (1-100)",
@@ -1321,7 +1428,8 @@ def analyze(input_path: Path):
     help="Maximum clip duration in seconds",
 )
 @click.option(
-    "--quality", "-q",
+    "--quality",
+    "-q",
     type=click.Choice(["low", "medium", "high", "ultra"]),
     default="high",
     help="Output quality (low=5M, medium=10M, high=15M, ultra=25M bitrate)",
@@ -1333,7 +1441,8 @@ def analyze(input_path: Path):
     help="Output resolution (source=keep original)",
 )
 @click.option(
-    "--sort", "-s",
+    "--sort",
+    "-s",
     type=click.Choice(["score", "chronological", "duration"]),
     default="score",
     help="Output ordering / naming order",
@@ -1351,7 +1460,8 @@ def analyze(input_path: Path):
     help="Run enhanced analysis (subject detection, hook potential) for better ranking. Slower.",
 )
 @click.option(
-    "--json", "write_json",
+    "--json",
+    "write_json",
     is_flag=True,
     default=False,
     help="Write a sidecar manifest.json with scene metadata",
@@ -1381,9 +1491,9 @@ def extract_clips(
     import gc
     import json as json_module
 
+    from drone_reel.core.video_processor import ClipSegment
     from drone_reel.utils.file_utils import VIDEO_EXTENSIONS, is_video_file
     from drone_reel.utils.resource_guard import preflight_check
-    from drone_reel.core.video_processor import ClipSegment
 
     # --- Validate parameters ---
     if min_duration >= max_duration:
@@ -1406,7 +1516,7 @@ def extract_clips(
 
     if not video_files:
         formats = ", ".join(sorted(VIDEO_EXTENSIONS))
-        console.print(f"[red]Error:[/red] No video files found in input path")
+        console.print("[red]Error:[/red] No video files found in input path")
         console.print(f"[dim]Supported formats: {formats}[/dim]")
         raise SystemExit(1)
 
@@ -1466,11 +1576,13 @@ def extract_clips(
 
     # --- Header ---
     file_label = input_path.name if input_path.is_file() else f"{len(video_files)} files"
-    console.print(Panel.fit(
-        f"[bold blue]Clip Extractor[/bold blue]\n"
-        f"Source: {file_label} | Top {count} clips | {quality} quality",
-        border_style="blue",
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold blue]Clip Extractor[/bold blue]\n"
+            f"Source: {file_label} | Top {count} clips | {quality} quality",
+            border_style="blue",
+        )
+    )
 
     # --- Scene detection ---
     scene_detector = SceneDetector()
@@ -1493,15 +1605,11 @@ def extract_clips(
                     scenes = scene_detector.detect_scenes(video_path)
                 all_scenes.extend(scenes)
             except Exception as e:
-                console.print(
-                    f"  [yellow]Warning:[/yellow] Skipping {video_path.name}: {e}"
-                )
+                console.print(f"  [yellow]Warning:[/yellow] Skipping {video_path.name}: {e}")
             progress.advance(task)
 
     if not all_scenes:
-        console.print(
-            "\n[yellow]Warning:[/yellow] Detected 0 scenes."
-        )
+        console.print("\n[yellow]Warning:[/yellow] Detected 0 scenes.")
         console.print(
             "[dim]Tip: The video may have no distinct scene changes. "
             "Try a lower scene threshold or use a video editing tool "
@@ -1560,9 +1668,7 @@ def extract_clips(
 
     # --- Check for empty candidates ---
     if not candidates:
-        console.print(
-            f"\n[yellow]Warning:[/yellow] No scenes passed quality filters."
-        )
+        console.print("\n[yellow]Warning:[/yellow] No scenes passed quality filters.")
         console.print(
             f"[dim]Tip: Try --no-filter to extract all scenes, "
             f"or lower --min-score (currently {min_score})[/dim]"
@@ -1614,9 +1720,7 @@ def extract_clips(
 
             # Check for existing file
             if output_file.exists() and not overwrite:
-                console.print(
-                    f"  [yellow]Skipping[/yellow] {filename} (already exists)"
-                )
+                console.print(f"  [yellow]Skipping[/yellow] {filename} (already exists)")
                 skipped_count += 1
                 progress.advance(task)
                 continue
@@ -1677,14 +1781,12 @@ def extract_clips(
                 manifest_clips.append(manifest_entry)
 
             except Exception as e:
-                console.print(
-                    f"  [red]Failed[/red] {filename}: {e}"
-                )
+                console.print(f"  [red]Failed[/red] {filename}: {e}")
                 failed_count += 1
             finally:
                 if clip is not None:
                     try:
-                        if hasattr(clip, '_source_clip_ref') and clip._source_clip_ref:
+                        if hasattr(clip, "_source_clip_ref") and clip._source_clip_ref:
                             clip._source_clip_ref.close()
                         clip.close()
                     except Exception:
@@ -1697,9 +1799,7 @@ def extract_clips(
     total_size_mb = total_size_bytes / (1024 * 1024)
 
     if extracted_count == 0 and skipped_count > 0:
-        console.print(
-            f"\n  All {skipped_count} clips already exist in {output_dir}/"
-        )
+        console.print(f"\n  All {skipped_count} clips already exist in {output_dir}/")
         console.print("  Use --overwrite to replace existing files.")
     elif failed_count > 0:
         console.print(
@@ -1739,9 +1839,11 @@ def extract_clips(
                 "total_clips": extracted_count,
                 "total_duration": round(total_duration, 1),
                 "total_size_mb": round(total_size_mb, 1),
-                "avg_score": round(
-                    sum(c["score"] for c in manifest_clips) / len(manifest_clips), 1
-                ) if manifest_clips else 0,
+                "avg_score": (
+                    round(sum(c["score"] for c in manifest_clips) / len(manifest_clips), 1)
+                    if manifest_clips
+                    else 0
+                ),
                 "scenes_detected": len(all_scenes),
                 "scenes_filtered": scenes_filtered,
             },
@@ -1755,7 +1857,834 @@ def extract_clips(
 
 @main.command()
 @click.option(
-    "--input", "-i",
+    "--input",
+    "-i",
+    "input_path",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Single video file to split into highlights",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    "output_dir",
+    type=click.Path(path_type=Path),
+    default="./highlights",
+    help="Directory for extracted highlight clips",
+)
+@click.option(
+    "--min-score",
+    type=click.FloatRange(0, 100),
+    default=40.0,
+    help="Minimum scene score threshold (0-100, default 40)",
+)
+@click.option(
+    "--min-duration",
+    type=click.FloatRange(0.5, 300),
+    default=2.0,
+    help="Minimum clip duration in seconds",
+)
+@click.option(
+    "--max-duration",
+    type=click.FloatRange(1.0, 300),
+    default=15.0,
+    help="Maximum clip duration in seconds",
+)
+@click.option(
+    "--count",
+    "-n",
+    type=click.IntRange(1, 100),
+    default=None,
+    help="Maximum number of clips (default: export all passing)",
+)
+@click.option(
+    "--sort",
+    "-s",
+    type=click.Choice(["score", "chronological", "duration"]),
+    default="score",
+    help="Output ordering / naming order",
+)
+@click.option(
+    "--no-filter",
+    is_flag=True,
+    default=False,
+    help="Skip quality filtering (export all detected scenes)",
+)
+@click.option(
+    "--quality",
+    "-q",
+    type=click.Choice(["low", "medium", "high", "ultra"]),
+    default="high",
+    help="Output quality (low=5M, medium=10M, high=15M, ultra=25M bitrate)",
+)
+@click.option(
+    "--resolution",
+    type=click.Choice(["source", "hd", "2k", "4k"]),
+    default="source",
+    help="Output resolution (source=keep original)",
+)
+@click.option(
+    "--json",
+    "write_json",
+    is_flag=True,
+    default=False,
+    help="Write a sidecar manifest.json with scene metadata",
+)
+@click.option(
+    "--preview",
+    is_flag=True,
+    default=False,
+    help="Dry-run: show detected scenes without exporting",
+)
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    default=False,
+    help="Overwrite existing clips in output directory",
+)
+@click.option(
+    "--color",
+    "-c",
+    type=click.Choice(get_preset_names()),
+    default="none",
+    help="Color grading preset (default: none)",
+)
+@click.option(
+    "--color-intensity",
+    "color_intensity",
+    type=click.FloatRange(0.0, 1.0),
+    default=1.0,
+    help="Color grading intensity (0.0-1.0, default: 1.0)",
+)
+@click.option(
+    "--vignette",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Vignette edge darkening intensity (0.0=off, 0.3=subtle, 0.6=cinematic, 1.0=heavy)",
+)
+@click.option(
+    "--halation",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Halation bloom: warm glow around highlights (0.0=off, 0.3=subtle, 0.7=cinematic)",
+)
+@click.option(
+    "--chromatic-aberration",
+    "chromatic_aberration",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Chromatic aberration: RGB edge fringing (0.0=off, 0.3=subtle, 0.7=strong)",
+)
+@click.option(
+    "--lut",
+    "lut_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to .cube 3D LUT file for professional color grading",
+)
+@click.option(
+    "--input-colorspace",
+    "input_colorspace",
+    type=click.Choice(["rec709", "dlog", "dlog_m", "slog3", "auto"]),
+    default="rec709",
+    help="Input footage colorspace (auto-detect or specify DJI D-Log, Sony S-Log3)",
+)
+@click.option(
+    "--auto-wb",
+    "auto_wb",
+    is_flag=True,
+    help="Auto white balance using gray world algorithm",
+)
+@click.option(
+    "--denoise",
+    "denoise",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Noise reduction strength (0.0=off, 0.3=subtle, 0.8=strong)",
+)
+@click.option(
+    "--haze",
+    "haze",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Atmospheric haze / depth fog (0.0=off, 0.3=subtle, 0.7=heavy)",
+)
+@click.option(
+    "--gnd-sky",
+    "gnd_sky",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help="Graduated ND sky darkening (0.0=off, 0.5=moderate, 1.0=strong)",
+)
+@click.option(
+    "--stabilize",
+    is_flag=True,
+    help="Apply adaptive video stabilization (skips stable clips)",
+)
+@click.option(
+    "--stabilize-all",
+    "stabilize_all",
+    is_flag=True,
+    help="Apply full stabilization to ALL clips (ignores shake scores)",
+)
+@click.option(
+    "--letterbox",
+    type=click.Choice(["off", "2.35", "1.85", "2.39"]),
+    default="off",
+    help="Cinematic letterbox bars (2.35:1 anamorphic, 1.85:1 flat, 2.39:1 scope)",
+)
+@click.option(
+    "--scene-threshold",
+    "scene_threshold",
+    type=click.FloatRange(1.0, 100.0),
+    default=27.0,
+    help="Scene detection sensitivity (1-100, lower=more scenes, default: 27)",
+)
+@click.option(
+    "--enhanced",
+    is_flag=True,
+    help="Use enhanced scene detection with subject tracking and hook scoring",
+)
+@click.option(
+    "--auto-speed",
+    "auto_speed",
+    is_flag=True,
+    help="Auto-correct pan/tilt speed (slow down fast pans, speed up sluggish ones)",
+)
+def split(
+    input_path,
+    output_dir,
+    min_score,
+    min_duration,
+    max_duration,
+    count,
+    sort,
+    no_filter,
+    quality,
+    resolution,
+    write_json,
+    preview,
+    overwrite,
+    color,
+    color_intensity,
+    vignette,
+    halation,
+    chromatic_aberration,
+    lut_path,
+    input_colorspace,
+    auto_wb,
+    denoise,
+    haze,
+    gnd_sky,
+    stabilize,
+    stabilize_all,
+    letterbox,
+    scene_threshold,
+    enhanced,
+    auto_speed,
+):
+    """Split a single video into highlight clips based on scene detection and scoring."""
+    import gc
+    import json as json_module
+
+    from drone_reel.core.video_processor import ClipSegment
+    from drone_reel.utils.file_utils import VIDEO_EXTENSIONS, is_video_file
+    import cv2
+    from drone_reel.utils.resource_guard import preflight_check
+
+    # --stabilize-all implies --stabilize
+    if stabilize_all:
+        stabilize = True
+
+    # --- Validate: must be a single file ---
+    if not input_path.is_file():
+        console.print(
+            f"[red]Error:[/red] --input must be a single video file, "
+            f"not a directory: {input_path}"
+        )
+        console.print("[dim]Tip: Use 'extract-clips' for batch directory processing[/dim]")
+        raise SystemExit(1)
+
+    if not is_video_file(input_path):
+        formats = ", ".join(sorted(VIDEO_EXTENSIONS))
+        console.print(f"[red]Error:[/red] Not a supported video file: {input_path.name}")
+        console.print(f"[dim]Supported formats: {formats}[/dim]")
+        raise SystemExit(1)
+
+    # --- Validate parameters ---
+    if min_duration >= max_duration:
+        console.print(
+            f"[red]Error:[/red] --min-duration ({min_duration}s) must be less than "
+            f"--max-duration ({max_duration}s)"
+        )
+        raise SystemExit(1)
+
+    # --- Verify output directory is writable ---
+    output_dir = Path(output_dir)
+    if not preview:
+        if not output_dir.exists():
+            try:
+                output_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                console.print(f"[red]Error:[/red] Cannot create output directory: {e}")
+                raise SystemExit(1) from None
+        elif not os.access(output_dir, os.W_OK):
+            console.print(f"[red]Error:[/red] Output directory is not writable: {output_dir}")
+            raise SystemExit(1)
+
+    # --- Quality and resolution presets ---
+    quality_presets = {
+        "low": ("5M", "128k"),
+        "medium": ("10M", "192k"),
+        "high": ("15M", "192k"),
+        "ultra": ("25M", "320k"),
+    }
+    video_bitrate, audio_bitrate = quality_presets.get(quality, ("15M", "192k"))
+
+    resolution_heights = {"hd": 1080, "2k": 1440, "4k": 2160}
+    resolution_height = resolution_heights.get(resolution, 1080)
+
+    if resolution == "4k":
+        bitrate_map = {"low": "15M", "medium": "25M", "high": "40M", "ultra": "80M"}
+        video_bitrate = bitrate_map.get(quality, "40M")
+    elif resolution == "2k":
+        bitrate_map = {"low": "8M", "medium": "15M", "high": "25M", "ultra": "45M"}
+        video_bitrate = bitrate_map.get(quality, "25M")
+
+    # --- Resource preflight check (skip in preview mode) ---
+    if not preview:
+        issues = preflight_check(
+            output_path=output_dir / "split_001.mp4",
+            resolution_height=resolution_height,
+            fps=30,
+            clip_count=count or 20,
+            stabilize=stabilize,
+            video_bitrate=video_bitrate,
+            duration=(count or 20) * 5.0,
+        )
+
+        for issue in issues:
+            level = issue["level"]
+            msg = issue["message"]
+            if level == "error":
+                console.print(f"[red]Error:[/red] {msg}")
+            else:
+                console.print(f"[yellow]Warning:[/yellow] {msg}")
+
+        if any(issue["level"] == "error" for issue in issues):
+            raise SystemExit(1)
+
+    # --- Header ---
+    console.print(
+        Panel.fit(
+            f"[bold blue]Highlight Splitter[/bold blue]\n"
+            f"Source: {input_path.name} | min score: {min_score} | {quality} quality",
+            border_style="blue",
+        )
+    )
+
+    # --- Scene detection ---
+    # Auto frame-skip for high-fps footage (60fps → skip=1, >90fps → skip=2)
+    _probe_cap = cv2.VideoCapture(str(input_path))
+    _source_fps = _probe_cap.get(cv2.CAP_PROP_FPS) or 30.0
+    _probe_cap.release()
+    _auto_frame_skip = 2 if _source_fps > 90 else (1 if _source_fps > 35 else 0)
+
+    scene_detector = SceneDetector(
+        threshold=scene_threshold,
+        max_scene_length=max_duration,
+        frame_skip=_auto_frame_skip,
+    )
+    if _auto_frame_skip:
+        console.print(
+            f"[dim]High-fps source ({_source_fps:.0f}fps) — "
+            f"scene detection using frame_skip={_auto_frame_skip}[/dim]"
+        )
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        detect_label = "Detecting scenes (enhanced)..." if enhanced else "Detecting scenes..."
+        task = progress.add_task(detect_label, total=1)
+
+        try:
+            if enhanced:
+                all_scenes = scene_detector.detect_scenes_enhanced(input_path)
+            else:
+                all_scenes = scene_detector.detect_scenes(input_path)
+        except Exception as e:
+            console.print(f"[red]Error:[/red] Scene detection failed: {e}")
+            raise SystemExit(1) from None
+
+        progress.advance(task)
+
+    if not all_scenes:
+        console.print("\n[yellow]Warning:[/yellow] Detected 0 scenes.")
+        console.print(
+            "[dim]Tip: The video may have no distinct scene changes. "
+            "Try a lower scene threshold or use a video editing tool "
+            "to manually mark segments.[/dim]"
+        )
+        raise SystemExit(1)
+
+    console.print(f"  Detected {len(all_scenes)} scenes")
+
+    # --- Motion analysis (for filtering and auto-speed correction) ---
+    analysis = analyze_scenes_batch(all_scenes, include_sharpness=True)
+
+    motion_map = {id(s): analysis[id(s)]["motion_energy"] for s in all_scenes}
+    brightness_map = {id(s): analysis[id(s)]["brightness"] for s in all_scenes}
+    shake_map = {id(s): analysis[id(s)]["shake_score"] for s in all_scenes}
+
+    # Write motion analysis results back to scene objects so that
+    # auto_pan_speed_ramp() (and manifest output) can read motion_type /
+    # motion_energy / motion_direction directly from the scene.
+    for scene in all_scenes:
+        r = analysis.get(id(scene))
+        if r:
+            scene.motion_type = r.get("motion_type")
+            scene.motion_direction = r.get("motion_direction")
+            scene.motion_energy = r.get("motion_energy", 0.0)
+
+    # --- Filtering ---
+    if no_filter:
+        candidates = list(all_scenes)
+        scenes_filtered = 0
+        dark_filtered = 0
+        shaky_filtered = 0
+    else:
+        sf = SceneFilter()
+        result = sf.filter_scenes(all_scenes, motion_map, brightness_map, shake_map)
+        candidates = result.all_passing
+        scenes_filtered = result.dark_scenes_filtered + result.shaky_scenes_filtered
+        dark_filtered = result.dark_scenes_filtered
+        shaky_filtered = result.shaky_scenes_filtered
+
+    # --- Apply min-score threshold ---
+    candidates = [s for s in candidates if s.score >= min_score]
+
+    # --- Apply duration constraints ---
+    candidates = [s for s in candidates if s.duration >= min_duration]
+
+    duration_too_short = len(all_scenes) - len(candidates) - scenes_filtered
+
+    # --- Report filtering ---
+    filter_details = []
+    if dark_filtered > 0:
+        filter_details.append(f"{dark_filtered} too dark")
+    if shaky_filtered > 0:
+        filter_details.append(f"{shaky_filtered} too shaky")
+    if duration_too_short > 0:
+        filter_details.append(f"{duration_too_short} too short/low score")
+
+    if filter_details:
+        console.print(
+            f"  Passed filter: {len(candidates)} scenes "
+            f"({sum([dark_filtered, shaky_filtered, duration_too_short])} filtered: "
+            f"{', '.join(filter_details)})"
+        )
+    else:
+        console.print(f"  Passed filter: {len(candidates)} scenes")
+
+    # --- Check for empty candidates ---
+    if not candidates:
+        console.print("\n[yellow]Warning:[/yellow] No scenes passed quality filters.")
+        console.print(
+            f"[dim]Tip: Try --no-filter to export all scenes, "
+            f"or lower --min-score (currently {min_score})[/dim]"
+        )
+        raise SystemExit(1)
+
+    # --- Sort ---
+    if sort == "score":
+        candidates.sort(key=lambda s: s.score, reverse=True)
+    elif sort == "chronological":
+        candidates.sort(key=lambda s: s.start_time)
+    elif sort == "duration":
+        candidates.sort(key=lambda s: s.duration, reverse=True)
+
+    # --- Limit by count ---
+    if count is not None:
+        candidates = candidates[:count]
+
+    # --- Preview mode: show table and exit ---
+    if preview:
+        console.print()
+        table = Table(title="Detected Highlights")
+        table.add_column("#", style="cyan", justify="right")
+        table.add_column("Start", style="green")
+        table.add_column("End", style="green")
+        table.add_column("Duration", style="yellow", justify="right")
+        table.add_column("Score", style="magenta", justify="right")
+
+        preview_row = 1
+        total_dur = 0.0
+        for scene in candidates:
+            remaining = scene.duration
+            offset = 0.0
+            while remaining >= min_duration:
+                chunk = min(remaining, max_duration)
+                chunk_start = scene.start_time + offset
+                table.add_row(
+                    str(preview_row),
+                    format_duration(chunk_start),
+                    format_duration(chunk_start + chunk),
+                    f"{chunk:.1f}s",
+                    f"{int(scene.score)}",
+                )
+                preview_row += 1
+                total_dur += chunk
+                offset += chunk
+                remaining -= chunk
+
+        console.print(table)
+        console.print(
+            f"\n  {preview_row - 1} highlights found " f"(total: {format_duration(total_dur)})"
+        )
+        console.print("[dim]Remove --preview to export clips[/dim]")
+        return
+
+    # --- Post-processing setup ---
+    has_color = color != "none"
+    has_effects = (
+        vignette > 0
+        or halation > 0
+        or chromatic_aberration > 0
+        or lut_path
+        or input_colorspace != "rec709"
+        or auto_wb
+        or denoise > 0
+        or haze > 0
+        or gnd_sky > 0
+    )
+    has_post_processing = has_color or has_effects or stabilize or letterbox != "off"
+
+    color_grader = None
+    grade_transform = None
+
+    if has_color or has_effects:
+        from pathlib import Path as _Path
+
+        import cv2
+
+        if has_color:
+            console.print(f"  [cyan]Color grade:[/cyan] {color} @ {color_intensity:.0%} intensity")
+
+        effects_desc = []
+        if input_colorspace != "rec709":
+            effects_desc.append(f"colorspace: {input_colorspace}")
+        if auto_wb:
+            effects_desc.append("auto-WB")
+        if denoise > 0:
+            effects_desc.append(f"denoise {denoise:.0%}")
+        if vignette > 0:
+            effects_desc.append(f"vignette {vignette:.0%}")
+        if halation > 0:
+            effects_desc.append(f"halation {halation:.0%}")
+        if chromatic_aberration > 0:
+            effects_desc.append(f"CA {chromatic_aberration:.0%}")
+        if haze > 0:
+            effects_desc.append(f"haze {haze:.0%}")
+        if gnd_sky > 0:
+            effects_desc.append(f"GND sky {gnd_sky:.0%}")
+        if lut_path:
+            effects_desc.append(f"LUT {_Path(lut_path).name}")
+        if effects_desc:
+            console.print(f"  [cyan]Effects:[/cyan] {', '.join(effects_desc)}")
+
+        # Auto-detect D-Log if requested — done once on first frame during export
+        _colorspace = input_colorspace
+        _colorspace_detected = False
+
+        color_grader = ColorGrader(
+            preset=ColorPreset(color) if has_color else ColorPreset.NONE,
+            intensity=color_intensity if has_color else 1.0,
+            vignette_strength=vignette,
+            halation_strength=halation,
+            chromatic_aberration_strength=chromatic_aberration,
+            lut_path=_Path(lut_path) if lut_path else None,
+            input_colorspace=_colorspace if _colorspace != "auto" else "rec709",
+            auto_wb=auto_wb,
+            denoise_strength=denoise,
+            haze_strength=haze,
+            gnd_sky_strength=gnd_sky,
+        )
+
+        def grade_transform(get_frame, t):
+            frame = get_frame(t)
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            graded_bgr = color_grader.grade_frame(frame_bgr)
+            return cv2.cvtColor(graded_bgr, cv2.COLOR_BGR2RGB)
+
+    if stabilize:
+        mode_desc = "all clips" if stabilize_all else "adaptive (shaky clips only)"
+        console.print(f"  [cyan]Stabilization:[/cyan] {mode_desc}")
+
+    if letterbox != "off":
+        console.print(f"  [cyan]Letterbox:[/cyan] {letterbox}:1")
+
+    # --- Extract and write clips ---
+    processor = VideoProcessor(
+        output_fps=30,
+        video_bitrate=video_bitrate,
+        audio_bitrate=audio_bitrate,
+    )
+
+    extracted_count = 0
+    skipped_count = 0
+    failed_count = 0
+    total_duration = 0.0
+    total_size_bytes = 0
+    manifest_clips = []
+
+    console.print()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("{task.completed}/{task.total}"),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        # Expand scenes into chunks: long scenes produce multiple clips
+        import math as _math
+
+        clip_jobs: list[tuple] = []  # (scene, start_offset, chunk_dur)
+        for scene in candidates:
+            remaining = scene.duration
+            offset = 0.0
+            while remaining >= min_duration:
+                chunk = min(remaining, max_duration)
+                clip_jobs.append((scene, offset, chunk))
+                offset += chunk
+                remaining -= chunk
+
+        task = progress.add_task("Exporting highlights...", total=len(clip_jobs))
+
+        for i, (scene, start_offset, clip_duration) in enumerate(clip_jobs):
+            score_int = int(scene.score)
+            filename = f"split_{i + 1:03d}_s{score_int}.mp4"
+            output_file = output_dir / filename
+
+            # Check for existing file
+            if output_file.exists() and not overwrite:
+                console.print(f"  [yellow]Skipping[/yellow] {filename} (already exists)")
+                skipped_count += 1
+                progress.advance(task)
+                continue
+
+            segment = ClipSegment(
+                scene=scene,
+                start_offset=start_offset,
+                duration=clip_duration,
+            )
+
+            clip = None
+            try:
+                clip = processor.extract_clip(segment)
+
+                # Resize if resolution is not 'source'
+                if resolution != "source":
+                    target_height = resolution_heights[resolution]
+                    aspect = clip.w / clip.h
+                    target_width = int(target_height * aspect)
+                    target_width = target_width + (target_width % 2)
+                    target_height = target_height + (target_height % 2)
+                    clip = clip.resized((target_width, target_height))
+
+                # --- Per-clip post-processing ---
+
+                # Stabilization
+                if stabilize:
+                    from drone_reel.core.stabilizer import stabilize_clip
+
+                    shake = shake_map.get(id(scene), 50.0)
+                    if stabilize_all:
+                        shake = 100.0  # Force full stabilization
+                    clip = stabilize_clip(clip, shake_score=shake)
+
+                # Auto pan/tilt speed correction
+                if auto_speed:
+                    pan_ramps = auto_pan_speed_ramp(scene, clip_duration=clip.duration)
+                    if pan_ramps:
+                        clip = SpeedRamper().apply_multiple_ramps(clip, pan_ramps)
+
+                # Auto-detect colorspace on first clip (lazy)
+                if color_grader and input_colorspace == "auto" and not _colorspace_detected:
+                    _colorspace_detected = True
+                    try:
+                        sample_frame = clip.get_frame(0)
+                        import cv2 as _cv2
+
+                        sample_bgr = _cv2.cvtColor(sample_frame, _cv2.COLOR_RGB2BGR)
+                        detected_cs = ColorGrader.detect_log_footage(sample_bgr)
+                        if detected_cs != "rec709":
+                            console.print(f"  [yellow]Detected log footage:[/yellow] {detected_cs}")
+                            color_grader.input_colorspace = detected_cs
+                    except Exception:
+                        pass
+
+                # Color grading + effects
+                if grade_transform is not None:
+                    clip = clip.transform(grade_transform)
+
+                # Letterbox
+                if letterbox != "off":
+                    from moviepy import ColorClip, CompositeVideoClip
+
+                    ratio = float(letterbox)
+                    clip_w, clip_h = clip.w, clip.h
+                    target_h = int(clip_w / ratio)
+                    if target_h < clip_h:
+                        bar_h = (clip_h - target_h) // 2
+                        top_bar = (
+                            ColorClip(size=(clip_w, bar_h), color=(0, 0, 0))
+                            .with_duration(clip.duration)
+                            .with_position(("center", "top"))
+                        )
+                        bottom_bar = (
+                            ColorClip(size=(clip_w, bar_h), color=(0, 0, 0))
+                            .with_duration(clip.duration)
+                            .with_position(("center", "bottom"))
+                        )
+                        clip = CompositeVideoClip(
+                            [clip, top_bar, bottom_bar],
+                            size=(clip_w, clip_h),
+                        )
+
+                processor.write_clip(clip, output_file)
+
+                file_size = output_file.stat().st_size
+                total_size_bytes += file_size
+                total_duration += clip_duration
+                extracted_count += 1
+
+                post_tags = []
+                if has_color or has_effects:
+                    post_tags.append("[cyan]+graded[/cyan]")
+                if stabilize:
+                    post_tags.append("[cyan]+stabilized[/cyan]")
+                if auto_speed:
+                    post_tags.append("[cyan]+speed[/cyan]")
+                post_tag = " " + " ".join(post_tags) if post_tags else ""
+                chunk_start = scene.start_time + start_offset
+                console.print(
+                    f"  {i + 1:>3}/{len(clip_jobs)}  {filename}   "
+                    f"{format_duration(chunk_start)}-"
+                    f"{format_duration(chunk_start + clip_duration)}  "
+                    f"{clip_duration:.1f}s  score: {score_int}{post_tag}"
+                )
+
+                # Build manifest entry
+                manifest_entry = {
+                    "filename": filename,
+                    "source_file": str(input_path.name),
+                    "start_time": round(chunk_start, 2),
+                    "end_time": round(chunk_start + clip_duration, 2),
+                    "duration": round(clip_duration, 2),
+                    "score": round(scene.score, 1),
+                }
+                _mr = analysis.get(id(scene))
+                if _mr:
+                    manifest_entry["motion_energy"] = round(_mr.get("motion_energy", 0.0), 1)
+                    if _mr.get("motion_type"):
+                        manifest_entry["motion_type"] = _mr["motion_type"].name
+                if has_post_processing or auto_speed:
+                    manifest_entry["post_processing"] = {
+                        "color": color if has_color else None,
+                        "stabilized": stabilize,
+                        "letterbox": letterbox if letterbox != "off" else None,
+                        "auto_speed": auto_speed,
+                    }
+                manifest_clips.append(manifest_entry)
+
+            except Exception as e:
+                console.print(f"  [red]Failed[/red] {filename}: {e}")
+                failed_count += 1
+            finally:
+                if clip is not None:
+                    try:
+                        if hasattr(clip, "_source_clip_ref") and clip._source_clip_ref:
+                            clip._source_clip_ref.close()
+                        clip.close()
+                    except Exception:
+                        pass
+                gc.collect()
+
+            progress.advance(task)
+
+    # --- Summary ---
+    total_size_mb = total_size_bytes / (1024 * 1024)
+
+    if extracted_count == 0 and skipped_count > 0:
+        console.print(f"\n  All {skipped_count} clips already exist in {output_dir}/")
+        console.print("  Use --overwrite to replace existing files.")
+    elif failed_count > 0:
+        console.print(
+            f"\n  Exported {extracted_count} of {len(candidates)} highlights "
+            f"({failed_count} failed). Check disk space."
+        )
+    else:
+        console.print(
+            f"\n  Exported {extracted_count} highlights to {output_dir}/ "
+            f"(total: {total_duration:.1f}s, {total_size_mb:.1f} MB)"
+        )
+
+    # --- Write JSON manifest ---
+    if write_json and manifest_clips:
+        manifest = {
+            "version": 1,
+            "source_file": {
+                "path": str(input_path.resolve()),
+                "name": input_path.name,
+            },
+            "split_params": {
+                "min_score": min_score,
+                "min_duration": min_duration,
+                "max_duration": max_duration,
+                "count": count,
+                "quality": quality,
+                "resolution": resolution,
+                "sort": sort,
+                "filtered": not no_filter,
+                "scene_threshold": scene_threshold,
+                "enhanced": enhanced,
+                "color": color if has_color else None,
+                "color_intensity": color_intensity if has_color else None,
+                "stabilize": stabilize,
+                "letterbox": letterbox if letterbox != "off" else None,
+                "auto_speed": auto_speed,
+            },
+            "clips": manifest_clips,
+            "summary": {
+                "total_clips": extracted_count,
+                "total_duration": round(total_duration, 1),
+                "total_size_mb": round(total_size_mb, 1),
+                "avg_score": (
+                    round(sum(c["score"] for c in manifest_clips) / len(manifest_clips), 1)
+                    if manifest_clips
+                    else 0
+                ),
+                "scenes_detected": len(all_scenes),
+                "scenes_filtered": scenes_filtered + duration_too_short,
+            },
+        }
+
+        manifest_path = output_dir / "manifest.json"
+        with open(manifest_path, "w") as f:
+            json_module.dump(manifest, f, indent=2)
+        console.print(f"  Manifest written to {manifest_path}")
+
+
+@main.command()
+@click.option(
+    "--input",
+    "-i",
     "input_path",
     type=click.Path(exists=True, path_type=Path),
     required=True,
@@ -1846,8 +2775,12 @@ def platforms():
 
     console.print(table)
 
-    console.print("\n[dim]Use --platform flag with 'create' command to export for specific platform[/dim]")
-    console.print("[dim]Example: drone-reel create --input ./clips --platform instagram_reels[/dim]")
+    console.print(
+        "\n[dim]Use --platform flag with 'create' command to export for specific platform[/dim]"
+    )
+    console.print(
+        "[dim]Example: drone-reel create --input ./clips --platform instagram_reels[/dim]"
+    )
 
 
 def _show_preview(scenes, durations, config, beat_info):

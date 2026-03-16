@@ -2,12 +2,16 @@
 
 The `drone-reel` command-line tool provides commands for creating reels and analyzing media files.
 
+> **New user?** See [QUICKSTART.md](QUICKSTART.md) for a single-page reference with all parameters and recipes.
+
 ## Global Options
 
 ```bash
 drone-reel --version  # Show version
 drone-reel --help     # Show help
 ```
+
+Commands: `create` · `split` · `extract-clips` · `analyze` · `beats` · `presets` · `platforms`
 
 ---
 
@@ -148,6 +152,95 @@ drone-reel create -i ./clips/ --no-reframe --color warm_sunset
 
 # Custom LUT with chromatic aberration
 drone-reel create -i ./clips/ --lut my_grade.cube --chromatic-aberration 0.3
+```
+
+---
+
+## split
+
+Detect scenes in a single video and export graded highlight clips.
+
+```bash
+drone-reel split [OPTIONS]
+```
+
+### Scene Selection Options
+
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--input PATH` | `-i` | required | Single video file |
+| `--output-dir PATH` | `-o` | `./highlights` | Output folder |
+| `--min-score FLOAT` | | `40.0` | Minimum scene quality score (0–100) |
+| `--min-duration FLOAT` | | `2.0` | Shortest clip to export in seconds |
+| `--max-duration FLOAT` | | `15.0` | Longest clip. Scenes exceeding this are chunked into multiple clips |
+| `--count INT` | `-n` | unlimited | Cap total clips exported |
+| `--sort CHOICE` | `-s` | `score` | Output order: `score`, `chronological`, `duration` |
+| `--no-filter` | | off | Skip quality filtering — export all detected scenes |
+| `--scene-threshold FLOAT` | | `27.0` | Detection sensitivity (1–100, lower = more boundaries) |
+| `--enhanced` | | off | Enhanced detection with subject tracking. Slower. |
+| `--preview` | | off | Print scene table without exporting |
+| `--json` | | off | Write `manifest.json` with per-clip metadata |
+| `--overwrite` | | off | Overwrite existing clips |
+
+> **Tip for long clips:** Use `--scene-threshold 7–12` when targeting `--min-duration 11+`. The default threshold produces many short scenes; a higher threshold merges them into longer coherent segments.
+
+### Motion Correction Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--auto-speed` | off | Auto-correct pan/tilt speed — slows fast pans (0.65–0.80×), speeds up sluggish ones (1.25×), corrects tilts/flyovers/FPV |
+| `--stabilize` | off | Adaptive optical-flow stabilization (skips stable clips) |
+| `--stabilize-all` | off | Force full stabilization on every clip |
+
+### Post-Processing Options
+
+All color/effects flags from `create` are available:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--color PRESET` | `none` | Color grading preset |
+| `--color-intensity FLOAT` | `1.0` | Scale preset strength 0.0–1.0 |
+| `--input-colorspace CHOICE` | `rec709` | `rec709`, `dlog`, `dlog_m`, `slog3`, `auto` |
+| `--auto-wb` | off | Gray world auto white balance |
+| `--denoise FLOAT` | `0.0` | Noise reduction 0.0–1.0 |
+| `--lut PATH` | — | `.cube` 3D LUT file |
+| `--vignette FLOAT` | `0.0` | Edge darkening 0.0–1.0 |
+| `--halation FLOAT` | `0.0` | Highlight bloom 0.0–1.0 |
+| `--chromatic-aberration FLOAT` | `0.0` | RGB fringing 0.0–1.0 |
+| `--haze FLOAT` | `0.0` | Atmospheric haze 0.0–1.0 |
+| `--gnd-sky FLOAT` | `0.0` | Sky darkening 0.0–1.0 |
+| `--letterbox CHOICE` | `off` | `off`, `2.35`, `1.85`, `2.39` |
+| `--quality CHOICE` | `high` | `low`, `medium`, `high`, `ultra` |
+| `--resolution CHOICE` | `source` | `source`, `hd`, `2k`, `4k` |
+
+### Output Naming
+
+`split_NNN_sSCORE.mp4` — e.g. `split_001_s72.mp4` = clip #1, scene score 72.
+
+### Examples
+
+```bash
+# Preview scenes before exporting
+drone-reel split -i clip.mp4 -o ./out --preview
+
+# Best 5–15s highlights with cinematic grade
+drone-reel split -i clip.mp4 -o ./out \
+  --min-duration 5 --max-duration 15 --min-score 0 --no-filter \
+  --color drone_aerial --color-intensity 0.65 --vignette 0.3 \
+  --auto-speed --letterbox 2.35 --quality high --json
+
+# Long highlights 11–17s chunked from long scenes
+drone-reel split -i clip.mp4 -o ./out \
+  --min-duration 11 --max-duration 17 --min-score 0 --no-filter \
+  --scene-threshold 7 \
+  --color drone_aerial --color-intensity 0.65 --vignette 0.3 \
+  --auto-speed --letterbox 2.35 --quality high --json
+
+# DJI 4K HEVC — proxy required for practical runtimes
+ffmpeg -i DJI_SOURCE.MP4 -vf scale=1280:720 -r 30 -c:v libx264 -preset ultrafast -crf 26 -an proxy.mp4
+drone-reel split -i proxy.mp4 -o ./out \
+  --min-duration 5 --max-duration 15 \
+  --input-colorspace dlog --color drone_aerial --auto-speed --letterbox 2.35 --json
 ```
 
 ---

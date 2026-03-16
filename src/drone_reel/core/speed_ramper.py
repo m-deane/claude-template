@@ -5,14 +5,14 @@ Provides smooth speed transitions using cubic bezier interpolation
 for professional-looking time remapping effects.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 import numpy as np
 from moviepy import VideoFileClip
 
 from drone_reel.core.beat_sync import BeatInfo
-from drone_reel.core.scene_detector import SceneInfo
+from drone_reel.core.scene_detector import MotionType, SceneInfo
 from drone_reel.core.video_processor import ClipSegment
 
 
@@ -327,7 +327,7 @@ class SpeedRamper:
     def auto_detect_ramp_points(
         self,
         scene: SceneInfo,
-        beat_info: Optional[BeatInfo] = None,
+        beat_info: BeatInfo | None = None,
         motion_threshold: float = 0.7,
     ) -> list[SpeedRamp]:
         """
@@ -529,3 +529,98 @@ class SpeedRamper:
             t += dt
 
         return new_duration
+
+
+def auto_pan_speed_ramp(
+    scene: SceneInfo,
+    clip_duration: float,
+    motion_energy: float | None = None,
+    motion_type: MotionType | None = None,
+) -> list[SpeedRamp]:
+    """
+    Design a full-clip constant-speed ramp to correct panning speed issues.
+
+    Slows down uncomfortably fast pans/tilts/FPV moves and gently speeds up
+    sluggish pans so every clip plays at a cinematically comfortable pace.
+    Returns a single full-clip SpeedRamp, or an empty list when no adjustment
+    is needed (STATIC, ORBIT, REVEAL, UNKNOWN, or short clips).
+
+    Speed correction matrix:
+        PAN_LEFT / PAN_RIGHT:
+            energy > 70  →  0.65× (too fast — strong slow-down)
+            55 < energy ≤ 70  →  0.80× (fast — light slow-down)
+            5 < energy < 20  →  1.25× (sluggish — gentle speed-up)
+            otherwise  →  no change
+        TILT_UP / TILT_DOWN:
+            energy > 65  →  0.70×
+        FLYOVER:
+            energy > 70  →  0.70×
+        APPROACH:
+            energy > 70  →  0.70×
+        FPV:
+            energy > 50  →  0.75×
+        STATIC, ORBIT_CW, ORBIT_CCW, REVEAL, UNKNOWN  →  no change
+
+    Args:
+        scene: Scene whose motion_type / score may inform the decision.
+        clip_duration: Duration of the clip in seconds.
+        motion_energy: Optical-flow energy (0–100).  When None, falls back to
+            ``scene.score`` as a rough proxy (not ideal, but safe).
+        motion_type: Detected camera motion type.  When None the function
+            inspects ``scene`` for a ``motion_type`` attribute; if still
+            unavailable it returns an empty list.
+
+    Returns:
+        List with a single full-clip SpeedRamp, or [] when no adjustment needed.
+    """
+    if clip_duration < 1.0:
+        return []
+
+    # Resolve motion_type: parameter → scene attribute → give up
+    if motion_type is None:
+        motion_type = getattr(scene, "motion_type", None)
+    if motion_type is None:
+        return []
+
+    # Resolve motion_energy: parameter → scene attribute → scene.score proxy
+    if motion_energy is None:
+        motion_energy = getattr(scene, "motion_energy", None)
+    if motion_energy is None:
+        motion_energy = scene.score  # rough proxy
+
+    # Determine speed multiplier based on motion type + energy
+    speed: float | None = None
+
+    if motion_type in (MotionType.PAN_LEFT, MotionType.PAN_RIGHT):
+        if motion_energy > 70:
+            speed = 0.65
+        elif motion_energy > 55:
+            speed = 0.80
+        elif 5 < motion_energy < 20:
+            speed = 1.25
+    elif motion_type in (MotionType.TILT_UP, MotionType.TILT_DOWN):
+        if motion_energy > 65:
+            speed = 0.70
+    elif motion_type is MotionType.FLYOVER:
+        if motion_energy > 70:
+            speed = 0.70
+    elif motion_type is MotionType.APPROACH:
+        if motion_energy > 70:
+            speed = 0.70
+    elif motion_type is MotionType.FPV:
+        if motion_energy > 50:
+            speed = 0.75
+    # STATIC, ORBIT_CW, ORBIT_CCW, REVEAL, UNKNOWN → no adjustment
+
+    if speed is None:
+        return []
+
+    return [
+        SpeedRamp(
+            start_time=0.0,
+            end_time=clip_duration,
+            start_speed=speed,
+            end_speed=speed,
+            easing="ease_in_out",
+        )
+    ]

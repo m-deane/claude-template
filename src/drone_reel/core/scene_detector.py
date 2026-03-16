@@ -92,6 +92,7 @@ class SceneDetector:
         min_scene_length: float = 1.0,
         max_scene_length: float = 10.0,
         analysis_scale: float = 0.5,
+        frame_skip: int = 0,
     ):
         """
         Initialize the scene detector.
@@ -101,11 +102,14 @@ class SceneDetector:
             min_scene_length: Minimum scene duration in seconds
             max_scene_length: Maximum scene duration in seconds
             analysis_scale: Scale factor for frame analysis (0.25-1.0, lower=faster)
+            frame_skip: Frames to skip during detection (0=process all, 1=every 2nd, 3=every 4th).
+                Use 1 for 60fps footage, 3 for 120fps. Reduces accuracy slightly.
         """
         self.threshold = threshold
         self.min_scene_length = min_scene_length
         self.max_scene_length = max_scene_length
         self.analysis_scale = max(0.25, min(1.0, analysis_scale))
+        self.frame_skip = max(0, int(frame_skip))
 
     def detect_scenes(self, video_path: Path) -> list[SceneInfo]:
         """
@@ -123,7 +127,7 @@ class SceneDetector:
         scene_manager = SceneManager()
         scene_manager.add_detector(ContentDetector(threshold=self.threshold))
 
-        scene_manager.detect_scenes(video)
+        scene_manager.detect_scenes(video, frame_skip=self.frame_skip)
         scene_list = scene_manager.get_scene_list()
 
         scenes = []

@@ -8,14 +8,14 @@ AI-powered CLI tool to create Instagram-style vertical reels from drone footage.
 - **Beat-synced editing** with librosa-powered music analysis
 - **Intelligent reframing** from landscape to vertical (9:16, 1:1, 4:5)
 - **Video stabilization** with adaptive shake detection
+- **Auto pan/speed correction** — slows fast pans, speeds up sluggish movement
 - **Color grading** with 30 presets including drone-optimized, film emulation, and terrain-aware grades
-- **Visual effects** - vignette, halation/bloom, chromatic aberration, atmospheric haze, letterbox
-- **Color science** - D-Log/S-Log3 normalization, auto white balance, auto color match, noise reduction
+- **Visual effects** — vignette, halation/bloom, chromatic aberration, atmospheric haze, letterbox
+- **Color science** — D-Log/S-Log3 normalization, auto white balance, auto color match, noise reduction
 - **23 transition types** including parallax, diamond wipe, fog pass, vortex zoom
 - **Speed ramping** with slow-motion at scenic moments
 - **Text overlays** with animated lower thirds
-- **Audio ducking** with automatic intro/outro volume fades
-- **Clip extraction** from long raw footage with quality-ranked scene selection
+- **Highlight extraction** — split one long video into graded, motion-corrected clips
 - **Platform export presets** for Instagram, TikTok, YouTube Shorts
 
 ## Quick Start
@@ -24,33 +24,34 @@ AI-powered CLI tool to create Instagram-style vertical reels from drone footage.
 pip install -e ".[dev]"
 
 # Basic reel from a clips folder
-drone-reel create --input ./clips/ --output reel.mp4 --duration 30
+drone-reel create -i ./clips/ -o reel.mp4 -d 30
 
 # Viral preset (15s, Instagram Reels, speed ramp, 60% color)
-drone-reel create --input ./clips/ --viral -c drone_aerial
+drone-reel create -i ./clips/ --viral -c drone_aerial
 
-# With music and beat sync
-drone-reel create --input ./clips/ -m track.mp3 --beat-mode downbeat
+# Beat-synced with cinematic look
+drone-reel create -i ./clips/ -m track.mp3 --beat-mode downbeat \
+  --color drone_aerial --color-intensity 0.7 --vignette 0.4 --letterbox 2.35
 
-# 4K with full stabilization and film look
-drone-reel create --input ./clips/ --resolution 4k --quality ultra --stabilize-all --color kodak_2383
+# Split a single video into 5–15s graded highlights
+drone-reel split -i footage.mp4 -o ./highlights \
+  --min-duration 5 --max-duration 15 --no-filter \
+  --color drone_aerial --auto-speed --letterbox 2.35 --json
 
-# D-Log footage with auto white balance and aerial haze
-drone-reel create --input ./clips/ --input-colorspace dlog_m --auto-wb --haze 0.3 --color drone_aerial
-
-# Extract best clips from a long raw video, then build a reel
+# Extract best clips, then build a reel
 drone-reel extract-clips -i raw_footage.mp4 -o ./clips -n 15
 drone-reel create -i ./clips/ -m music.mp3 -o reel.mp4
 ```
 
 ## Documentation
 
-- [CLI Reference](cli-reference.md) - All commands and options
-- [Python API Reference](api-reference.md) - Using drone-reel as a library
-- [Color Presets](presets/color-presets.md) - 30 available color grades
-- [Transitions](presets/transitions.md) - 23 transition types and effects
-- [Advanced Color Grader](color_grader_advanced_features.md) - LUTs, tone curves, selective color, visual effects
-- [Examples](examples/README.md) - Code examples and workflows
+- **[Quick Start Reference](QUICKSTART.md)** — All parameters, defaults, and recipes on one page
+- [CLI Reference](cli-reference.md) — Full command documentation
+- [Python API Reference](api-reference.md) — Using drone-reel as a library
+- [Color Presets](presets/color-presets.md) — 30 available color grades
+- [Transitions](presets/transitions.md) — 23 transition types and effects
+- [Advanced Color Grader](color_grader_advanced_features.md) — LUTs, tone curves, selective color, visual effects
+- [Examples](examples/README.md) — Code examples and workflows
 
 ## Requirements
 
