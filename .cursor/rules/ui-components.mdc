@@ -1,0 +1,22 @@
+---
+description: UI component conventions for React and shadcn/ui
+globs: ["src/components/**", "src/app/**/*.tsx"]
+---
+
+# UI Component Conventions
+
+## Component Structure
+- Use "use client" directive for client components
+- Import from `@/lib/trpc` for API hooks
+- Import from `@/components/ui/` for shadcn components
+
+## State Handling
+- Handle all states: loading, error, empty, success
+- Use tRPC + React Query for server state
+- Use React hooks for local UI state
+- Invalidate queries on successful mutations
+
+## Styling
+- Use Tailwind CSS utility classes
+- Follow shadcn/ui patterns for consistency
+- Use `cn()` utility for conditional classes

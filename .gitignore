@@ -45,3 +45,10 @@ next-env.d.ts
 
 # Prisma
 prisma/migrations/
+
+# Claude Code local overrides (personal, not committed)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Cursor local settings (keep .cursor/rules/ committed)
+.cursor/settings/

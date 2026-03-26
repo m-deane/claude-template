@@ -1,0 +1,22 @@
+---
+description: Testing standards and practices
+globs: ["tests/**"]
+---
+
+# Testing Standards
+
+## Organization
+- All tests in `tests/` directory
+- Mirror source directory structure
+- Name: `[feature].test.ts` or `test_[feature].py`
+
+## Quality
+- Test real behavior, not implementation details
+- Cover happy path, error cases, and edge cases
+- No mock data that masks real integration issues
+- Tests must be deterministic and repeatable
+
+## Workflow
+- Run tests after every significant change
+- All tests must pass before marking complete
+- Fix broken tests immediately
