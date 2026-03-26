@@ -2,6 +2,7 @@
 
 ## WORKFLOW - Core Guidelines
 
+### Implementation Standards
 - Never use mock data, results, or workarounds
 - Generate complete, working code - no stubs, TODOs, or placeholder functions
 - Implement tests after every checkpoint and verify all tests pass
@@ -9,16 +10,48 @@
 - Only update progress and create planning documents in `.claude_plans/`
 - Do not leave files in the root directory - sort into appropriate folders
 - Always run `npm run lint` and `npm run build` to verify changes before completing
+
+### Verification (Anti-Hallucination)
+- Verify files exist before importing from them - do not invent import paths
+- Verify functions, methods, and properties exist and check their actual signatures before calling them
+- Verify package dependencies are installed in package.json before using them in code
+- Verify database models and fields match `prisma/schema.prisma` before writing queries
+- When referencing code, cite actual file paths - do not reference files you have not read
+- Run build/lint after each logical change, not just at the end
+- If a library's API is unclear, search the codebase for existing usage patterns before guessing
+- Do not invent CLI flags, configuration options, or API parameters - verify they exist first
+
+### Grounding (Stay Anchored to Reality)
+- Read the actual source file before modifying or referencing it - never assume file contents
+- Use existing project patterns as templates - copy and adapt working code, do not invent new patterns
+- When uncertain about an API or method, search the codebase for existing usage before writing new code
+- State assumptions explicitly rather than proceeding silently on uncertain ground
+- When facing ambiguity in requirements, ask for clarification rather than guessing intent
+- Reference concrete code (file paths, function names) rather than abstract descriptions
+
+### Scope Control
+- Restate the specific task before starting implementation to confirm understanding
+- Only change what is necessary to fulfill the stated task
+- Do not refactor, optimize, or "improve" adjacent code unless asked
+- If the task requires changes to shared interfaces, flag the downstream impact before proceeding
+- Do not add features, abstractions, or configurability beyond what was requested
+
+### Change Management
 - Read and understand existing code before modifying it
 - Match the style and patterns of surrounding code
 - Make atomic, focused changes - one logical change per unit of work
-- Never commit secrets, credentials, API keys, or .env files
-- Handle all UI states: loading, error, empty, and success
-- Validate at system boundaries; trust internal code and framework guarantees
 - Prefer editing existing files over creating new ones
 - Verify changes compile and pass linting before marking complete
+
+### Security
+- Never commit secrets, credentials, API keys, or .env files
+- Validate at system boundaries; trust internal code and framework guarantees
+- Do not add error handling for impossible scenarios
+
+### Code Quality
 - Write self-documenting code with clear naming over excessive comments
 - Delete dead code completely - no commented-out blocks or unused imports
+- Keep functions focused with single responsibility
 
 ## Analysis Framework
 
@@ -37,6 +70,9 @@ When encountering complex requirements:
 - Direct database access outside tRPC routers
 - Using `any` type when proper types exist in `src/types/`
 - Console.log statements in committed code
+- Importing from files that do not exist in the project
+- Using API methods or function signatures without verifying them first
+- Inventing package names, CLI flags, or configuration options
 
 ### Communication
 - Social validation: "You're absolutely right!", "Great question!"
@@ -56,3 +92,5 @@ When encountering complex requirements:
 - No TypeScript errors or console.log statements
 - All tests pass
 - Changes are atomic and focused
+- All imports reference files that actually exist
+- All function calls use verified signatures

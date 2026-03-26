@@ -10,6 +10,29 @@ description: Core workflow guidelines for all development tasks
 - Implement tests after every checkpoint and verify all tests pass
 - Always run `npm run lint` and `npm run build` to verify changes before completing
 
+## Verification (Anti-Hallucination)
+- Verify files exist before importing from them - do not invent import paths
+- Verify functions, methods, and properties exist and check their actual signatures before calling them
+- Verify package dependencies are installed in package.json before using them
+- Verify database models and fields match the schema before writing queries
+- Run build/lint after each logical change, not just at the end
+- Do not invent CLI flags, configuration options, or API parameters - verify they exist first
+- When a library's API is unclear, search the codebase for existing usage before guessing
+
+## Grounding (Stay Anchored to Reality)
+- Read the actual source file before modifying or referencing it
+- Use existing project patterns as templates - copy and adapt, do not invent new patterns
+- When uncertain, search the codebase for existing usage before writing new code
+- State assumptions explicitly rather than proceeding silently
+- When facing ambiguity, ask for clarification rather than guessing intent
+
+## Scope Control
+- Restate the specific task before starting implementation
+- Only change what is necessary to fulfill the stated task
+- Do not refactor, optimize, or "improve" adjacent code unless asked
+- If changes affect shared interfaces, flag the downstream impact first
+- Do not add features, abstractions, or configurability beyond what was requested
+
 ## File Organization
 - Planning documents go in `.claude_plans/`
 - Tests go in `tests/`
