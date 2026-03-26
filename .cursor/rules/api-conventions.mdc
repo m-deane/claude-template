@@ -1,0 +1,19 @@
+---
+description: API and backend conventions for tRPC routers
+globs: ["src/server/**", "src/app/api/**"]
+---
+
+# API Conventions
+
+## tRPC Router Standards
+- All data queries must be user-scoped via `ctx.session.user.id`
+- Use `protectedProcedure` for all authenticated endpoints
+- Use Zod schemas for input validation
+- Include related data with `include` to avoid N+1 queries
+- Use `orderBy` for consistent ordering
+- Use transactions for multi-model operations
+
+## Data Access
+- Never access the database directly outside tRPC routers
+- Always filter by userId for user-scoped data
+- Invalidate relevant caches on mutations

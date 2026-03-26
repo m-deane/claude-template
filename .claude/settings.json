@@ -1,0 +1,30 @@
+{
+  "$schema": "https://claude.ai/code/settings.schema.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(npx prisma *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git branch *)",
+      "Bash(git show *)",
+      "Bash(ls *)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(cat .env*)",
+      "Bash(echo * > .env*)",
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)"
+    ]
+  }
+}
