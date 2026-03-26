@@ -118,22 +118,22 @@ For each guideline, construct a scenario where an LLM would typically hallucinat
 "Add a notifications system." Would the rules prevent the LLM from inventing a `@/lib/notifications` module that doesn't exist?
 
 **Scenario 2: Bug fix in unfamiliar code**
-"Fix the habit tracking calculation." Would the rules force the LLM to read the actual habit router before making assumptions about the data model?
+"Fix the calculation in the analytics module." Would the rules force the LLM to read the actual module before making assumptions about the data model?
 
 **Scenario 3: Package integration**
 "Add email sending with Resend." Would the rules prevent the LLM from using a made-up API method like `resend.emails.sendBatch()` without verifying it exists?
 
 **Scenario 4: Database query**
-"Show all tasks with their subtask count." Would the rules prevent the LLM from referencing a `_count` relation that may not be configured in the Prisma schema?
+"Show all records with their child count." Would the rules prevent the LLM from referencing a relation or column that may not exist in the actual schema?
 
 **Scenario 5: Scope creep**
-"Fix the date formatting on the calendar page." Would the rules prevent the LLM from also refactoring the calendar component's state management?
+"Fix the date formatting on the dashboard." Would the rules prevent the LLM from also refactoring the component's state management?
 
 **Scenario 6: New dependency recommendation (Slopsquatting)**
 "Add CSV export for tasks." Would the rules prevent the LLM from recommending `npm install csv-export-helper` (a fabricated package name)? Research shows 19.7% of LLM-recommended packages are non-existent, and 58% of fabricated names repeat consistently, making them supply-chain attack vectors.
 
 **Scenario 7: Version confusion**
-"Add a server action for form submission." Would the rules prevent the LLM from using Next.js 13 Pages Router patterns instead of Next.js 15 App Router patterns?
+"Add a server action for form submission." Would the rules prevent the LLM from using patterns from an older version of the framework instead of the version actually installed?
 
 **Scenario 8: Ambiguous requirement**
 "Make the dashboard faster." Would the rules force the LLM to state its interpretation (e.g., "I interpret this as: optimize the dashboard page's initial load time by reducing database queries") before implementing?

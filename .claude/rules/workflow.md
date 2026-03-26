@@ -52,7 +52,7 @@ description: Core workflow guidelines for all development tasks
 - Never commit secrets, credentials, API keys, or .env files
 - Validate at system boundaries; trust internal code and framework guarantees
 - Do not add error handling for impossible scenarios
-- All tRPC procedures that accept user input must validate with a complete Zod schema - do not use `.passthrough()`
+- All API endpoints that accept user input must validate inputs with a schema
 
 ## Code Quality
 - Write self-documenting code with clear naming over excessive comments

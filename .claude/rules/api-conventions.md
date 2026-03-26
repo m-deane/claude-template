@@ -1,21 +1,22 @@
 ---
 paths:
+  - "src/api/**"
   - "src/server/**"
-  - "src/app/api/**"
-description: API and backend conventions for tRPC routers and server code
+  - "src/routes/**"
+  - "app/api/**"
+description: API and backend conventions for server-side code
 ---
 
 # API Conventions
 
-## tRPC Router Standards
-- All data queries must be user-scoped via `ctx.session.user.id`
-- Use `protectedProcedure` for all authenticated endpoints
-- Use Zod schemas for input validation
-- Include related data with `include` to avoid N+1 queries
-- Use `orderBy` for consistent ordering
-- Use transactions for multi-model operations
+## Endpoint Standards
+- All data queries must be scoped to the authenticated user where applicable
+- Use schema validation (Zod, Pydantic, etc.) for all input parameters
+- Include related data in queries to avoid N+1 problems
+- Use consistent ordering for list endpoints
+- Use transactions for multi-step write operations
 
 ## Data Access
-- Never access the database directly outside tRPC routers
-- Always filter by userId for user-scoped data
+- Access the database through a defined data access layer - not directly from route handlers
+- Always filter by user/tenant scope for multi-user applications
 - Invalidate relevant caches on mutations

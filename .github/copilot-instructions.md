@@ -1,18 +1,19 @@
 # GitHub Copilot Instructions
 
+<!-- CUSTOMIZE: Replace with your project details -->
 ## Project Overview
-Personal Organization App - A web-based personal organization system for managing tasks, habits, calendar events, memos, and ideas.
+**Project Name** - Brief description of what this project does.
 
-**Stack**: Next.js 15 (App Router) + TypeScript + tRPC + Prisma + NextAuth + Tailwind/shadcn + PostgreSQL (Supabase)
+**Stack**: [Your tech stack here]
 
 ## Development Commands
+<!-- CUSTOMIZE: Replace with your project's actual commands -->
 ```
-npm run dev          # Start dev server (localhost:3000)
-npm run build        # Production build
-npm run lint         # ESLint check
-npm run db:generate  # Generate Prisma client after schema changes
-npm run db:push      # Push schema to database
-npm run db:seed      # Seed database
+# Adjust for your stack
+# npm run dev / python manage.py runserver    # Dev server
+# npm run build / python -m build             # Build
+# npm run lint / ruff check .                 # Lint
+# npm run test / pytest                       # Test
 ```
 
 ## WORKFLOW - Core Guidelines
@@ -21,17 +22,17 @@ npm run db:seed      # Seed database
 - Never use mock data, results, or workarounds
 - Generate complete, working code - no stubs, TODOs, or placeholder functions
 - Implement tests after every checkpoint and verify all tests pass
-- Always run `npm run lint` and `npm run build` to verify changes before completing
+- Always run lint and build commands to verify changes before completing
 
 ### Verification (Anti-Hallucination)
 - Verify files exist before importing from them - do not invent import paths
 - Verify functions, methods, and properties exist and check their actual signatures before calling them
-- Verify package dependencies are installed in package.json before using them
-- Verify database models and fields match `prisma/schema.prisma` before writing queries
+- Verify package dependencies are installed before using them
+- Verify database models and fields match the schema before writing queries
 - Run build/lint after each logical change, not just at the end
 - Do not invent CLI flags, configuration options, or API parameters - verify they exist first
-- Do not recommend installing new packages without verifying the exact package name exists in the npm registry
-- When a library's API has changed across major versions (Next.js, Prisma, tRPC), prefer codebase patterns over training knowledge - the codebase reflects the installed version
+- Do not recommend installing new packages without verifying the exact package name exists in the registry
+- When a library's API has changed across major versions, prefer codebase patterns over training knowledge - the codebase reflects the installed version
 - When a library's API is unclear, search the codebase for existing usage before guessing
 
 ### Grounding (Stay Anchored to Reality)
@@ -63,7 +64,7 @@ npm run db:seed      # Seed database
 ### Security
 - Never commit secrets, credentials, API keys, or .env files
 - Validate at system boundaries; trust internal code and framework guarantees
-- All tRPC procedures that accept user input must validate with a complete Zod schema - do not use `.passthrough()`
+- All API endpoints that accept user input must validate inputs with a schema
 
 ### Code Quality
 - Write self-documenting code with clear naming over excessive comments
@@ -73,80 +74,27 @@ npm run db:seed      # Seed database
 
 ## Architecture
 
-### Data Flow
-```
-React Components → tRPC hooks → tRPC routers → Prisma → PostgreSQL
-```
-
+<!-- CUSTOMIZE: Replace with your project's architecture -->
 ### Key Directories
-- `src/app/` - Next.js App Router pages and API routes
-- `src/app/dashboard/` - Protected dashboard routes
-- `src/components/ui/` - shadcn/ui components
-- `src/server/api/routers/` - tRPC routers
-- `src/server/auth.ts` - NextAuth configuration
-- `src/lib/trpc.ts` - tRPC React hooks
-- `src/types/` - Shared TypeScript types and Zod schemas
-- `prisma/schema.prisma` - Database schema
+- `src/` - Source code
+- `tests/` - Test files
+- `docs/` - Documentation
 
-### tRPC Patterns
-When generating tRPC router code:
-- Always scope queries with `userId: ctx.session.user.id`
-- Use `protectedProcedure` for authenticated endpoints
-- Use Zod for input validation
-- Include related data to avoid N+1 queries
-- Invalidate caches on mutations
-
-```typescript
-// Router pattern
-export const exampleRouter = createTRPCRouter({
-  getAll: protectedProcedure
-    .input(z.object({ /* filters */ }).optional())
-    .query(async ({ ctx, input }) => {
-      return ctx.db.model.findMany({
-        where: { userId: ctx.session.user.id, ...input },
-        include: { /* related models */ },
-        orderBy: { createdAt: "desc" },
-      });
-    }),
-});
-
-// Component pattern
-const { data, isLoading } = api.router.procedure.useQuery();
-const utils = api.useUtils();
-const mutation = api.router.create.useMutation({
-  onSuccess: () => utils.router.getAll.invalidate(),
-});
-```
-
-## TypeScript Conventions
-- Variables/functions: camelCase
+## Naming Conventions
+<!-- CUSTOMIZE: Adjust for your language -->
+- Variables/functions: camelCase (JS/TS) or snake_case (Python)
 - Types/interfaces/classes: PascalCase
 - Constants: SCREAMING_SNAKE_CASE
-- Files: kebab-case.ts or camelCase.ts
-- Use `@/` path alias for imports from `src/`
 
 ## Prohibited Patterns
 - Mock functions or placeholder data
-- Using `any` type when proper types exist
-- Queries without user scoping
-- Direct database access outside tRPC routers
-- Console.log in committed code
+- Using loosely-typed constructs when proper types exist
+- Debug print/log statements in committed code
 - Importing from files that do not exist in the project
 - Using API methods without verifying their signatures
 - Inventing package names, CLI flags, or configuration options
-
-## UI Components
-- Use shadcn/ui from `src/components/ui/`
-- Handle all states: loading, error, empty, success
-- Use `"use client"` directive for client components
-- Use `cn()` utility for conditional Tailwind classes
 
 ## Testing
 - All tests in `tests/` directory
 - Test real behavior, not implementation details
 - All tests must pass before completing work
-
-## Authentication
-- All data user-scoped via `ctx.session.user.id`
-- `protectedProcedure` ensures authentication
-- Dev bypass: `DEV_AUTH_BYPASS=true`

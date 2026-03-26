@@ -9,19 +9,19 @@
 - Write all tests to the `tests/` folder
 - Only update progress and create planning documents in `.claude_plans/`
 - Do not leave files in the root directory - sort into appropriate folders
-- Always run `npm run lint` and `npm run build` to verify changes before completing
+- Always run lint and build commands to verify changes before completing
 
 ### Verification (Anti-Hallucination)
 - Verify files exist before importing from them - do not invent import paths
 - Verify functions, methods, and properties exist and check their actual signatures before calling them
-- Verify package dependencies are installed in package.json before using them in code
-- Verify database models and fields match `prisma/schema.prisma` before writing queries
+- Verify package dependencies are installed before using them in code
+- Verify database models and fields match the schema before writing queries
 - When referencing code, cite actual file paths - do not reference files you have not read
 - Run build/lint after each logical change, not just at the end
 - If a library's API is unclear, search the codebase for existing usage patterns before guessing
 - Do not invent CLI flags, configuration options, or API parameters - verify they exist first
-- Do not recommend installing new packages without verifying the exact package name exists in the npm registry
-- When a library's API has changed across major versions (Next.js, Prisma, tRPC), prefer codebase patterns over training knowledge - the codebase reflects the installed version
+- Do not recommend installing new packages without verifying the exact package name exists in the registry
+- When a library's API has changed across major versions, prefer codebase patterns over training knowledge - the codebase reflects the installed version
 
 ### Grounding (Stay Anchored to Reality)
 - Read the actual source file before modifying or referencing it - never assume file contents
@@ -50,7 +50,7 @@
 - Never commit secrets, credentials, API keys, or .env files
 - Validate at system boundaries; trust internal code and framework guarantees
 - Do not add error handling for impossible scenarios
-- All tRPC procedures that accept user input must validate with a complete Zod schema - do not use `.passthrough()`
+- All API endpoints that accept user input must validate inputs with a schema
 
 ### Code Quality
 - Write self-documenting code with clear naming over excessive comments
@@ -61,19 +61,17 @@
 
 When encountering complex requirements:
 1. **Technical feasibility**: Can this be done with the current stack patterns?
-2. **Edge cases**: What happens if any input is null, undefined, or empty? Handle explicitly in both UI and server logic
-3. **Performance**: N+1 queries? Missing includes/relations?
-4. **Integration**: Does this affect existing routers or components?
+2. **Edge cases**: What happens if any input is null, undefined, or empty? Handle explicitly
+3. **Performance**: Are there N+1 queries, missing indexes, or unnecessary data loading?
+4. **Integration**: Does this affect existing modules or interfaces?
 
 ## Prohibited Patterns
 
 ### Implementation
 - Mock functions or placeholder data structures
 - Incomplete error handling or validation
-- Queries without user scoping (`userId: ctx.session.user.id`)
-- Direct database access outside tRPC routers
-- Using `any` type when proper types exist in `src/types/`
-- Console.log statements in committed code
+- Using loosely-typed constructs when proper types exist
+- Console.log / print statements in committed code
 - Importing from files that do not exist in the project
 - Using API methods or function signatures without verifying them first
 - Inventing package names, CLI flags, or configuration options
@@ -85,15 +83,16 @@ When encountering complex requirements:
 
 ## File Boundaries
 
-**SAFE TO MODIFY**: `src/`, `prisma/schema.prisma`, `tests/`
-**NEVER MODIFY**: `node_modules/`, `.git/`, `.next/`, `.env` files
+<!-- CUSTOMIZE: Update these paths for your project -->
+**SAFE TO MODIFY**: `src/`, `tests/`
+**NEVER MODIFY**: `node_modules/`, `.git/`, `.env` files
 
 ## Pre-Completion Checklist
 
-- `npm run lint` passes
-- `npm run build` succeeds
-- All tRPC procedures are user-scoped
-- No TypeScript errors or console.log statements
+- Lint passes
+- Build succeeds
+- No type errors
+- No debug print/log statements
 - All tests pass
 - Changes are atomic and focused
 - All imports reference files that actually exist

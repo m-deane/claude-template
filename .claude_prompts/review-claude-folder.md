@@ -49,7 +49,7 @@ Read every `CLAUDE.md` file in the project (root-level and `.claude/CLAUDE.md`).
 - [ ] Includes workflow guidelines that are actionable, not aspirational
 - [ ] Avoids tutorial-style explanations of obvious concepts
 - [ ] Avoids duplicating information that exists in README.md or package.json
-- [ ] Uses concrete examples for patterns the LLM should follow (tRPC routers, component structure)
+- [ ] Uses concrete examples for patterns the LLM should follow (API routes, component structure)
 - [ ] Does not contain environment-specific paths, secrets, or personal preferences (those belong in CLAUDE.local.md)
 
 ### Duplication Check
