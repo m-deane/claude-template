@@ -30,6 +30,8 @@ npm run db:seed      # Seed database
 - Verify database models and fields match `prisma/schema.prisma` before writing queries
 - Run build/lint after each logical change, not just at the end
 - Do not invent CLI flags, configuration options, or API parameters - verify they exist first
+- Do not recommend installing new packages without verifying the exact package name exists in the npm registry
+- When a library's API has changed across major versions (Next.js, Prisma, tRPC), prefer codebase patterns over training knowledge - the codebase reflects the installed version
 - When a library's API is unclear, search the codebase for existing usage before guessing
 
 ### Grounding (Stay Anchored to Reality)
@@ -38,6 +40,7 @@ npm run db:seed      # Seed database
 - When uncertain, search the codebase for existing usage before writing new code
 - State assumptions explicitly rather than proceeding silently
 - When facing ambiguity, ask for clarification rather than guessing intent
+- Before implementing a feature with ambiguous requirements, state your interpretation of the expected behavior in one sentence before writing code
 
 ### Scope Control
 - Restate the specific task before starting implementation
@@ -60,6 +63,7 @@ npm run db:seed      # Seed database
 ### Security
 - Never commit secrets, credentials, API keys, or .env files
 - Validate at system boundaries; trust internal code and framework guarantees
+- All tRPC procedures that accept user input must validate with a complete Zod schema - do not use `.passthrough()`
 
 ### Code Quality
 - Write self-documenting code with clear naming over excessive comments

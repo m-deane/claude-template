@@ -20,6 +20,8 @@
 - Run build/lint after each logical change, not just at the end
 - If a library's API is unclear, search the codebase for existing usage patterns before guessing
 - Do not invent CLI flags, configuration options, or API parameters - verify they exist first
+- Do not recommend installing new packages without verifying the exact package name exists in the npm registry
+- When a library's API has changed across major versions (Next.js, Prisma, tRPC), prefer codebase patterns over training knowledge - the codebase reflects the installed version
 
 ### Grounding (Stay Anchored to Reality)
 - Read the actual source file before modifying or referencing it - never assume file contents
@@ -27,6 +29,7 @@
 - When uncertain about an API or method, search the codebase for existing usage before writing new code
 - State assumptions explicitly rather than proceeding silently on uncertain ground
 - When facing ambiguity in requirements, ask for clarification rather than guessing intent
+- Before implementing a feature with ambiguous requirements, state your interpretation of the expected behavior in one sentence before writing code
 - Reference concrete code (file paths, function names) rather than abstract descriptions
 
 ### Scope Control
@@ -47,6 +50,7 @@
 - Never commit secrets, credentials, API keys, or .env files
 - Validate at system boundaries; trust internal code and framework guarantees
 - Do not add error handling for impossible scenarios
+- All tRPC procedures that accept user input must validate with a complete Zod schema - do not use `.passthrough()`
 
 ### Code Quality
 - Write self-documenting code with clear naming over excessive comments
@@ -57,7 +61,7 @@
 
 When encountering complex requirements:
 1. **Technical feasibility**: Can this be done with the current stack patterns?
-2. **Edge cases**: Empty data, invalid inputs, unauthorized access?
+2. **Edge cases**: What happens if any input is null, undefined, or empty? Handle explicitly in both UI and server logic
 3. **Performance**: N+1 queries? Missing includes/relations?
 4. **Integration**: Does this affect existing routers or components?
 

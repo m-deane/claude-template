@@ -72,6 +72,8 @@ The guidelines should cover these four categories. Flag any that are missing or 
 - Schema verification before database queries
 - CLI flag/option verification before command construction
 - Incremental build verification (after each change, not just at end)
+- New dependency verification (do not recommend packages without verifying they exist in the registry - 19.7% of LLM-recommended packages are fabricated)
+- Version currency awareness (prefer codebase patterns over training knowledge for fast-moving libraries)
 
 **2. Grounding Rules** (Anchoring to reality)
 - Read actual source before modifying
@@ -79,6 +81,7 @@ The guidelines should cover these four categories. Flag any that are missing or 
 - Search codebase for usage examples before writing new code
 - State assumptions explicitly
 - Ask for clarification rather than guessing
+- Surface interpretation of ambiguous requirements before implementing (28% intent misuse rate without this)
 - Reference concrete code (file paths, function names) not abstractions
 
 **3. Scope Control Rules** (Preventing drift)
@@ -94,6 +97,11 @@ The guidelines should cover these four categories. Flag any that are missing or 
 - Tests after every checkpoint
 - Lint/build verification
 - File organization standards
+
+**5. Security Rules** (Input validation)
+- All procedures accepting user input must validate with complete schemas
+- No `.passthrough()` or open-ended input acceptance
+- Null/undefined/empty handling required in both UI and server logic (not just UI layer)
 
 ### Step 5: Check Cross-Tool Consistency
 
@@ -120,6 +128,15 @@ For each guideline, construct a scenario where an LLM would typically hallucinat
 
 **Scenario 5: Scope creep**
 "Fix the date formatting on the calendar page." Would the rules prevent the LLM from also refactoring the calendar component's state management?
+
+**Scenario 6: New dependency recommendation (Slopsquatting)**
+"Add CSV export for tasks." Would the rules prevent the LLM from recommending `npm install csv-export-helper` (a fabricated package name)? Research shows 19.7% of LLM-recommended packages are non-existent, and 58% of fabricated names repeat consistently, making them supply-chain attack vectors.
+
+**Scenario 7: Version confusion**
+"Add a server action for form submission." Would the rules prevent the LLM from using Next.js 13 Pages Router patterns instead of Next.js 15 App Router patterns?
+
+**Scenario 8: Ambiguous requirement**
+"Make the dashboard faster." Would the rules force the LLM to state its interpretation (e.g., "I interpret this as: optimize the dashboard page's initial load time by reducing database queries") before implementing?
 
 ## Output Format
 
