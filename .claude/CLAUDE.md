@@ -55,6 +55,7 @@
 ### Code Quality
 - Write self-documenting code with clear naming over excessive comments
 - Delete dead code completely - no commented-out blocks or unused imports
+- Do not add features, refactoring, or improvements beyond what was asked
 - Keep functions focused with single responsibility
 
 ## Analysis Framework

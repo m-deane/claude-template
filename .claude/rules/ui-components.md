@@ -1,0 +1,24 @@
+---
+paths:
+  - "src/components/**"
+  - "src/app/**"
+  - "src/pages/**"
+description: UI component conventions for frontend code
+---
+
+# UI Component Conventions
+
+## Component Structure
+- Use framework-appropriate patterns for client vs. server components
+- Keep components focused on a single responsibility
+- Extract reusable logic into custom hooks or utilities
+
+## State Handling
+- Handle all states: loading, error, empty, success
+- Use the project's established state management pattern for server state
+- Use framework hooks for local UI state
+- Invalidate queries on successful mutations
+
+## Styling
+- Follow the project's established styling approach (Tailwind, CSS modules, etc.)
+- Use utility functions for conditional class composition
