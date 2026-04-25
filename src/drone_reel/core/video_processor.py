@@ -304,6 +304,11 @@ class VideoProcessor:
             "bt709",
             "-color_trc",
             "bt709",
+            # h264_videotoolbox does not write the H.264 SPS VUI for color_primaries
+            # or transfer_characteristics, so platforms read those as "unknown" even
+            # though we set them on the muxer. h264_metadata bsf rewrites the SPS.
+            "-bsf:v",
+            "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1",
             "-movflags",
             "+faststart",
         ]
@@ -573,6 +578,11 @@ class VideoProcessor:
                 "bt709",
                 "-color_trc",
                 "bt709",
+                # h264_videotoolbox does not write the H.264 SPS VUI for color_primaries
+                # or transfer_characteristics, so platforms read those as "unknown" even
+                # though we set them on the muxer. h264_metadata bsf rewrites the SPS.
+                "-bsf:v",
+                "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1",
                 "-movflags",
                 "+faststart",
             ]

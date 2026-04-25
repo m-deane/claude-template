@@ -67,7 +67,7 @@ clip.set_audio(a)          clip.with_audio(a)
 
 ## Encoding Standards
 
-All outputs: `-colorspace bt709 -color_primaries bt709 -color_trc bt709`, `-movflags +faststart`, `-maxrate` (1.5× target) + `-bufsize` (2× target), `audio_codec="aac"`, `yuv420p`.
+All outputs: `-colorspace bt709 -color_primaries bt709 -color_trc bt709`, `-bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1` (rewrites the H.264 SPS VUI — `h264_videotoolbox` does not write those fields, so without the bsf platforms read them as "unknown"), `-movflags +faststart`, `-maxrate` (1.5× target) + `-bufsize` (2× target), `audio_codec="aac"`, `yuv420p`.
 
 ## `split` Post-Processing Pipeline
 

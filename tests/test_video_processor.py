@@ -1623,6 +1623,28 @@ class TestFfmpegParamsEncoding:
         assert "-color_trc" in ffmpeg_params
 
     @patch("drone_reel.core.video_processor.VideoFileClip")
+    def test_write_videofile_called_with_h264_metadata_bsf(
+        self, mock_clip_class, processor, sample_segments
+    ):
+        """ffmpeg_params include h264_metadata bsf so SPS VUI carries BT.709."""
+        mock_clip = self._make_mock_clip()
+        mock_clip_class.return_value = mock_clip
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "output.mp4"
+            processor.stitch_clips(sample_segments, output_path, parallel_extraction=False)
+
+        kwargs = self._get_write_call_kwargs(mock_clip)
+        ffmpeg_params = kwargs["ffmpeg_params"]
+        assert "-bsf:v" in ffmpeg_params
+        idx = ffmpeg_params.index("-bsf:v")
+        bsf_value = ffmpeg_params[idx + 1]
+        assert bsf_value.startswith("h264_metadata=")
+        assert "colour_primaries=1" in bsf_value
+        assert "transfer_characteristics=1" in bsf_value
+        assert "matrix_coefficients=1" in bsf_value
+
+    @patch("drone_reel.core.video_processor.VideoFileClip")
     def test_write_videofile_called_with_faststart(
         self, mock_clip_class, processor, sample_segments
     ):
