@@ -87,13 +87,8 @@ Platform options: `instagram_reels` `instagram_feed` `tiktok` `youtube_shorts` `
 | `--gnd-sky FLOAT` | `0.0` | 0–1 | Graduated sky darkening |
 | `--letterbox` | `off` | `off` `2.35` `1.85` `2.39` | Cinematic black bars |
 
-#### Stabilization
+#### Stabilization tuning
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--stabilize` | off | Adaptive stabilization (auto-detects shaky clips) |
-| `--stabilize-all` | off | Force stabilization on every clip |
-| `--stable-threshold FLOAT` | `15.0` | Shake score threshold — lower stabilizes more clips |
 | `--stab-strength` | `adaptive` | `off` `light` `adaptive` `full` — off skips entirely, light always applies mild correction, full always applies full correction |
 | `--smooth-radius INT` | `50` | 5–120 · Optical-flow smoothing window (larger = smoother, slower) |
 | `--border-crop FLOAT` | `0.05` | 0.0–0.15 · Border crop fraction after stabilization |

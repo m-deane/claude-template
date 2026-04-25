@@ -27,6 +27,12 @@ node_modules/
 # Media files (large)
 .drone_clips/
 output/
+highlights/
+*.mp4
+!demos/**/*.mp4
+!demo/**/*.mp4
+!tests/**/*.mp4
+!examples/**/*.mp4
 
 # IDE / tool config
 .serena/
