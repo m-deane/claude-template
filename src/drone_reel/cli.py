@@ -40,6 +40,51 @@ from drone_reel.utils.file_utils import (
 console = Console()
 
 
+def _parse_weighted_kv(
+    value: str,
+    expected_keys: list[str],
+    sum_to_one: bool = True,
+    param_name: str = "option",
+) -> dict[str, float]:
+    """
+    Parse a ``key=value,...`` string into a float dict.
+
+    Validates that exactly the expected keys are present and, when
+    ``sum_to_one=True``, that the values sum to 1.0 ± 0.01.
+
+    Raises :class:`click.BadParameter` on any validation failure.
+    """
+    try:
+        pairs = [part.strip() for part in value.split(",") if part.strip()]
+        parsed: dict[str, float] = {}
+        for pair in pairs:
+            k, v = pair.split("=", 1)
+            parsed[k.strip()] = float(v.strip())
+    except Exception as exc:
+        raise click.BadParameter(
+            f"Expected format 'key=value,...', got: {value!r}",
+            param_hint=f"--{param_name}",
+        ) from exc
+
+    missing = set(expected_keys) - set(parsed)
+    extra = set(parsed) - set(expected_keys)
+    if missing or extra:
+        raise click.BadParameter(
+            f"Expected keys {expected_keys}. Missing: {sorted(missing)}, Extra: {sorted(extra)}",
+            param_hint=f"--{param_name}",
+        )
+
+    if sum_to_one:
+        total = sum(parsed.values())
+        if abs(total - 1.0) > 0.01:
+            raise click.BadParameter(
+                f"Values must sum to 1.0 ± 0.01, got {total:.4f}",
+                param_hint=f"--{param_name}",
+            )
+
+    return parsed
+
+
 @click.group(invoke_without_command=True)
 @click.option("--version", "-v", is_flag=True, help="Show version and exit")
 @click.pass_context
@@ -2261,9 +2306,13 @@ def extract_clips(
 @click.option(
     "--motion-energy-method",
     "motion_energy_method",
-    type=click.Choice(["mean", "median", "p95"]),
+    type=click.Choice(["mean", "median", "p95", "percentile"]),
     default="mean",
-    help=("How to aggregate per-frame motion energy. " "'p95' catches peak motion in mixed clips."),
+    help=(
+        "How to aggregate per-frame motion energy. "
+        "'p95' catches peak motion in mixed clips. "
+        "'percentile' uses --motion-energy-percentile value."
+    ),
 )
 @click.option(
     "--prefer-motion-type",
@@ -2271,6 +2320,82 @@ def extract_clips(
     type=click.Choice(["none", "pan", "tilt", "orbit", "static", "fpv", "flyover"]),
     default="none",
     help="Bias scene selection toward a preferred motion type.",
+)
+#### Batch A — Scene-scoring tunables
+@click.option(
+    "--score-weights",
+    "score_weights_str",
+    default=None,
+    help=(
+        "Override scene-scoring weights. Format: 'motion=0.30,comp=0.20,color=0.20,"
+        "sharp=0.15,bright=0.15'. Values must sum to 1.0 ±0.01."
+    ),
+)
+@click.option(
+    "--hook-weights",
+    "hook_weights_str",
+    default=None,
+    help=(
+        "Override hook-potential weights. Format: 'subject=0.35,motion=0.25,color=0.20,"
+        "comp=0.10,unique=0.10'. Values must sum to 1.0 ±0.01."
+    ),
+)
+@click.option(
+    "--hook-thresholds",
+    "hook_thresholds_str",
+    default=None,
+    help=(
+        "Override HookPotential tier cutoffs. Format: 'maximum=80,high=65,medium=45,low=25'. "
+        "Values must be in [0,100] and descending."
+    ),
+)
+#### Batch B — Optical-flow tunables
+@click.option(
+    "--flow-winsize",
+    "flow_winsize",
+    type=click.IntRange(5, 31),
+    default=15,
+    help=(
+        "Farneback optical-flow window size (5-31, default 15). "
+        "Larger = smoother but less detail."
+    ),
+)
+@click.option(
+    "--flow-levels",
+    "flow_levels",
+    type=click.IntRange(1, 4),
+    default=2,
+    help="Farneback pyramid levels (1-4, default 2). More levels = better at large motion.",
+)
+@click.option(
+    "--motion-energy-percentile",
+    "motion_energy_percentile",
+    type=click.IntRange(50, 99),
+    default=50,
+    help=(
+        "Percentile for motion energy when --motion-energy-method=percentile (50-99, default 50)."
+    ),
+)
+#### Batch C — Motion-correction additions
+@click.option(
+    "--roll-correction",
+    "roll_correction",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.0,
+    help=(
+        "Apply per-frame roll (rotation) correction derived from optical flow. "
+        "0.0=off, 1.0=full inverse correction. Applied after stabilization."
+    ),
+)
+@click.option(
+    "--gimbal-bounce-recovery",
+    "gimbal_bounce_recovery",
+    is_flag=True,
+    default=False,
+    help=(
+        "Detect gimbal bounce events (motion reversals) and inject 0.95× speed ramps "
+        "of ~0.4s to smooth them out. Only active with --auto-speed."
+    ),
 )
 def split(
     input_path,
@@ -2322,6 +2447,17 @@ def split(
     analysis_scale,
     motion_energy_method,
     prefer_motion_type,
+    # Batch A
+    score_weights_str,
+    hook_weights_str,
+    hook_thresholds_str,
+    # Batch B
+    flow_winsize,
+    flow_levels,
+    motion_energy_percentile,
+    # Batch C
+    roll_correction,
+    gimbal_bounce_recovery,
 ):
     """Split a single video into highlight clips based on scene detection and scoring."""
     import gc
@@ -2332,6 +2468,49 @@ def split(
     from drone_reel.core.video_processor import ClipSegment
     from drone_reel.utils.file_utils import VIDEO_EXTENSIONS, is_video_file
     from drone_reel.utils.resource_guard import preflight_check
+
+    # --- Parse Batch A weight/threshold strings ---
+    _score_weight_keys = ["motion", "comp", "color", "sharp", "bright"]
+    _hook_weight_keys = ["subject", "motion", "color", "comp", "unique"]
+    _hook_threshold_keys = ["maximum", "high", "medium", "low"]
+
+    score_weights: dict[str, float] | None = None
+    if score_weights_str:
+        score_weights = _parse_weighted_kv(
+            score_weights_str, _score_weight_keys, sum_to_one=True, param_name="score-weights"
+        )
+
+    hook_weights: dict[str, float] | None = None
+    if hook_weights_str:
+        hook_weights = _parse_weighted_kv(
+            hook_weights_str, _hook_weight_keys, sum_to_one=True, param_name="hook-weights"
+        )
+
+    hook_thresholds: dict[str, float] | None = None
+    if hook_thresholds_str:
+        hook_thresholds = _parse_weighted_kv(
+            hook_thresholds_str,
+            _hook_threshold_keys,
+            sum_to_one=False,
+            param_name="hook-thresholds",
+        )
+        # Validate range and descending order
+        for _k, _v in hook_thresholds.items():
+            if not (0 <= _v <= 100):
+                raise click.BadParameter(
+                    f"All threshold values must be in [0, 100], got {_k}={_v}",
+                    param_hint="--hook-thresholds",
+                )
+        if not (
+            hook_thresholds["maximum"]
+            > hook_thresholds["high"]
+            > hook_thresholds["medium"]
+            > hook_thresholds["low"]
+        ):
+            raise click.BadParameter(
+                "Thresholds must be strictly descending: maximum > high > medium > low",
+                param_hint="--hook-thresholds",
+            )
 
     # --stabilize-all implies --stabilize
     if stabilize_all:
@@ -2478,6 +2657,9 @@ def split(
         max_scene_length=max_duration,
         frame_skip=_auto_frame_skip,
         analysis_scale=analysis_scale,
+        score_weights=score_weights,
+        hook_weights=hook_weights,
+        hook_thresholds=hook_thresholds,
     )
     if _auto_frame_skip:
         console.print(
@@ -2519,7 +2701,12 @@ def split(
 
     # --- Motion analysis (for filtering and auto-speed correction) ---
     analysis = analyze_scenes_batch(
-        all_scenes, include_sharpness=True, motion_energy_method=motion_energy_method
+        all_scenes,
+        include_sharpness=True,
+        motion_energy_method=motion_energy_method,
+        flow_winsize=flow_winsize,
+        flow_levels=flow_levels,
+        motion_energy_percentile=motion_energy_percentile,
     )
 
     motion_map = {id(s): analysis[id(s)]["motion_energy"] for s in all_scenes}
@@ -2813,6 +3000,12 @@ def split(
                         max_corners=max_corners,
                     )
 
+                # Roll correction (after stabilize, before color grade)
+                if roll_correction > 0.0:
+                    from drone_reel.core.stabilizer import apply_roll_correction
+
+                    clip = apply_roll_correction(clip, strength=roll_correction)
+
                 # Auto pan/tilt speed correction
                 if auto_speed:
                     pan_ramps = auto_pan_speed_ramp(
@@ -2826,6 +3019,7 @@ def split(
                         correct_orbit=correct_orbit,
                         ease_speed_ramps=ease_speed_ramps,
                         vertical_drift_damping=vertical_drift_damping,
+                        gimbal_bounce_recovery=gimbal_bounce_recovery,
                     )
                     if pan_ramps:
                         clip = SpeedRamper().apply_multiple_ramps(clip, pan_ramps)

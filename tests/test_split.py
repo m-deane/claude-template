@@ -1193,9 +1193,12 @@ class TestSplitDetectionTuning:
 
             assert result.exit_code == 0
             # Verify SceneDetector was created with threshold=15
-            mock_sd.assert_called_once_with(
-                threshold=15.0, max_scene_length=15.0, frame_skip=0, analysis_scale=0.5
-            )
+            mock_sd.assert_called_once()
+            call_kwargs = mock_sd.call_args.kwargs
+            assert call_kwargs["threshold"] == 15.0
+            assert call_kwargs["max_scene_length"] == 15.0
+            assert call_kwargs["frame_skip"] == 0
+            assert call_kwargs["analysis_scale"] == pytest.approx(0.5)
 
     def test_enhanced_uses_enhanced_detection(self, tmp_path):
         """--enhanced should call detect_scenes_enhanced() instead of detect_scenes()."""

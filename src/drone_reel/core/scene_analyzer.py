@@ -98,6 +98,10 @@ def analyze_scene_motion(
     scene: SceneInfo,
     include_sharpness: bool = False,
     motion_energy_method: str = "mean",
+    *,
+    flow_winsize: int = 15,
+    flow_levels: int = 2,
+    motion_energy_percentile: int = 50,
 ) -> (
     tuple[float, float, float, MotionType, tuple[float, float]]
     | tuple[float, float, float, MotionType, tuple[float, float], float]
@@ -119,6 +123,11 @@ def analyze_scene_motion(
             "mean" (default): np.mean — standard average energy.
             "median": np.median — robust to outlier frames.
             "p95": np.percentile(scores, 95) — catches peak motion in mixed clips.
+            "percentile": np.percentile(scores, motion_energy_percentile).
+        flow_winsize: Window size for Farneback optical flow (5-31, default 15).
+        flow_levels: Pyramid levels for Farneback optical flow (1-4, default 2).
+        motion_energy_percentile: Percentile to use when motion_energy_method="percentile"
+            (50-99, default 50).
 
     Returns:
         If include_sharpness=False:
@@ -175,8 +184,8 @@ def analyze_scene_motion(
                     gray_small,
                     None,
                     pyr_scale=0.5,
-                    levels=2,
-                    winsize=15,
+                    levels=flow_levels,
+                    winsize=flow_winsize,
                     iterations=2,
                     poly_n=5,
                     poly_sigma=1.1,
@@ -213,6 +222,8 @@ def analyze_scene_motion(
                 motion_energy = float(np.median(motion_scores))
             elif motion_energy_method == "p95":
                 motion_energy = float(np.percentile(motion_scores, 95))
+            elif motion_energy_method == "percentile":
+                motion_energy = float(np.percentile(motion_scores, motion_energy_percentile))
             else:  # "mean" (default)
                 motion_energy = float(np.mean(motion_scores))
         else:
@@ -272,6 +283,10 @@ def _analyze_single_scene(
     scene: SceneInfo,
     include_sharpness: bool,
     motion_energy_method: str = "mean",
+    *,
+    flow_winsize: int = 15,
+    flow_levels: int = 2,
+    motion_energy_percentile: int = 50,
 ) -> tuple[int, dict]:
     """Analyze a single scene and return (id, result_dict). Used by batch processing."""
     scene_id = id(scene)
@@ -279,6 +294,9 @@ def _analyze_single_scene(
         scene,
         include_sharpness=include_sharpness,
         motion_energy_method=motion_energy_method,
+        flow_winsize=flow_winsize,
+        flow_levels=flow_levels,
+        motion_energy_percentile=motion_energy_percentile,
     )
     if include_sharpness:
         motion_energy, brightness, shake_score, motion_type, motion_direction, sharpness = result
@@ -306,6 +324,10 @@ def analyze_scenes_batch(
     include_sharpness: bool = False,
     max_workers: int | None = None,
     motion_energy_method: str = "mean",
+    *,
+    flow_winsize: int = 15,
+    flow_levels: int = 2,
+    motion_energy_percentile: int = 50,
 ) -> dict[int, dict]:
     """
     Analyze a batch of scenes in parallel using ThreadPoolExecutor.
@@ -322,6 +344,11 @@ def analyze_scenes_batch(
             "mean" (default): np.mean — standard average energy.
             "median": np.median — robust to outlier frames.
             "p95": np.percentile(scores, 95) — catches peak motion in mixed clips.
+            "percentile": np.percentile(scores, motion_energy_percentile).
+        flow_winsize: Window size for Farneback optical flow (5-31, default 15).
+        flow_levels: Pyramid levels for Farneback optical flow (1-4, default 2).
+        motion_energy_percentile: Percentile to use when motion_energy_method="percentile"
+            (50-99, default 50).
 
     Returns:
         Dictionary keyed by id(scene) with analysis results:
@@ -341,7 +368,12 @@ def analyze_scenes_batch(
         results = {}
         for scene in scenes:
             scene_id, result_dict = _analyze_single_scene(
-                scene, include_sharpness, motion_energy_method
+                scene,
+                include_sharpness,
+                motion_energy_method,
+                flow_winsize=flow_winsize,
+                flow_levels=flow_levels,
+                motion_energy_percentile=motion_energy_percentile,
             )
             results[scene_id] = result_dict
         return results
@@ -350,7 +382,13 @@ def analyze_scenes_batch(
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {
             executor.submit(
-                _analyze_single_scene, scene, include_sharpness, motion_energy_method
+                _analyze_single_scene,
+                scene,
+                include_sharpness,
+                motion_energy_method,
+                flow_winsize=flow_winsize,
+                flow_levels=flow_levels,
+                motion_energy_percentile=motion_energy_percentile,
             ): scene
             for scene in scenes
         }

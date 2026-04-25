@@ -241,6 +241,102 @@ def stabilize_clip(
     return stabilized_clip
 
 
+def apply_roll_correction(clip: VideoClip, strength: float = 0.0) -> VideoClip:
+    """
+    Apply per-frame inverse roll correction derived from optical flow.
+
+    Estimates the dominant rotational component of motion between consecutive
+    frames using dense optical flow, then applies an inverse rotation scaled by
+    ``strength`` to counteract camera roll.
+
+    Args:
+        clip: MoviePy VideoClip to process.
+        strength: Roll correction strength in [0.0, 1.0].
+            0.0 = off (returns clip unchanged).
+            1.0 = full inverse rotation applied each frame.
+
+    Returns:
+        Corrected VideoClip (or original clip when strength == 0).
+    """
+    if strength == 0.0:
+        return clip
+
+    fps = clip.fps
+    n_frames = int(clip.duration * fps)
+    w, h = clip.size
+
+    if n_frames < 2:
+        return clip
+
+    # Phase 1: estimate per-frame roll angles via dense optical flow
+    roll_angles: list[float] = [0.0]  # first frame has no correction
+    prev_gray: np.ndarray | None = None
+
+    for i in range(n_frames):
+        frame = clip.get_frame(i / fps)
+        is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
+        frame_uint8 = (frame * 255).astype(np.uint8) if is_float else frame.astype(np.uint8)
+        gray = cv2.cvtColor(frame_uint8, cv2.COLOR_RGB2GRAY)
+        gray_small = cv2.resize(gray, (320, 180))
+
+        if prev_gray is not None:
+            flow = cv2.calcOpticalFlowFarneback(
+                prev_gray,
+                gray_small,
+                None,
+                pyr_scale=0.5,
+                levels=2,
+                winsize=15,
+                iterations=2,
+                poly_n=5,
+                poly_sigma=1.1,
+                flags=0,
+            )
+            # Estimate rotation via mean cross-term of the flow field.
+            rows, cols = gray_small.shape
+            ys, xs = np.mgrid[0:rows, 0:cols].astype(np.float32)
+            cx, cy = cols / 2.0, rows / 2.0
+            rx = xs - cx
+            ry = ys - cy
+            dx = flow[..., 0]
+            dy = flow[..., 1]
+            numerator = float(np.mean(rx * dy - ry * dx))
+            denominator = float(np.mean(rx**2 + ry**2)) + 1e-6
+            angle_rad = numerator / denominator
+            roll_angles.append(angle_rad)
+        else:
+            roll_angles.append(0.0)
+
+        prev_gray = gray_small
+
+    # Phase 2: apply inverse rotation per frame
+    def make_frame(t: float) -> np.ndarray:
+        frame_idx = min(int(t * fps), n_frames - 1)
+        frame = clip.get_frame(t)
+        angle = roll_angles[frame_idx]
+        if abs(angle) < 1e-6:
+            return frame
+
+        correction_angle_deg = -np.degrees(angle) * strength
+
+        is_float = frame.dtype in (np.float32, np.float64) and frame.max() <= 1.0
+        frame_uint8 = (frame * 255).astype(np.uint8) if is_float else frame.astype(np.uint8)
+
+        rot_mat = cv2.getRotationMatrix2D((w / 2.0, h / 2.0), correction_angle_deg, 1.0)
+        rotated = cv2.warpAffine(frame_uint8, rot_mat, (w, h), borderMode=cv2.BORDER_REPLICATE)
+
+        if is_float:
+            return rotated.astype(np.float32) / 255.0
+        return rotated
+
+    from moviepy import VideoClip as _VideoClip
+
+    corrected = _VideoClip(make_frame, duration=clip.duration).with_fps(fps)
+    if clip.audio is not None:
+        corrected = corrected.with_audio(clip.audio)
+    return corrected
+
+
 def smooth_trajectory(trajectory: np.ndarray, radius: int) -> np.ndarray:
     """
     Apply moving average smoothing to trajectory.

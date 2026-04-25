@@ -556,6 +556,45 @@ _SPEED_CORRECTION_PROFILES: dict[str, dict[str, float]] = {
 }
 
 
+def detect_gimbal_bounces(
+    motion_data: list[dict],
+    magnitude_threshold: float = 2.0,
+    bounce_duration: float = 0.4,
+) -> list[float]:
+    """
+    Detect sudden motion-reversal events in per-frame motion data.
+
+    A bounce is defined as a sign flip in dx or dy accompanied by a combined
+    magnitude exceeding ``magnitude_threshold``.
+
+    Args:
+        motion_data: List of per-frame dicts with keys "t" (timestamp), "dx", "dy".
+        magnitude_threshold: Minimum combined |dx|+|dy| to count as a bounce.
+        bounce_duration: Duration window (seconds) centred on each bounce event
+            that will receive a speed ramp.  Not used in detection itself.
+
+    Returns:
+        List of timestamps (float seconds) at the centre of each bounce event.
+    """
+    bounces: list[float] = []
+    if len(motion_data) < 2:
+        return bounces
+
+    prev = motion_data[0]
+    for curr in motion_data[1:]:
+        dx_flip = (prev["dx"] * curr["dx"] < 0) and (
+            abs(curr["dx"]) + abs(prev["dx"]) >= magnitude_threshold
+        )
+        dy_flip = (prev["dy"] * curr["dy"] < 0) and (
+            abs(curr["dy"]) + abs(prev["dy"]) >= magnitude_threshold
+        )
+        if dx_flip or dy_flip:
+            bounces.append(float(curr["t"]))
+        prev = curr
+
+    return bounces
+
+
 def auto_pan_speed_ramp(
     scene: SceneInfo,
     clip_duration: float,
@@ -570,6 +609,8 @@ def auto_pan_speed_ramp(
     correct_orbit: bool = False,
     ease_speed_ramps: bool = False,
     vertical_drift_damping: float = 0.0,
+    gimbal_bounce_recovery: bool = False,
+    motion_data: list[dict] | None = None,
 ) -> list[SpeedRamp]:
     """
     Design a full-clip constant-speed ramp to correct panning speed issues.
@@ -618,6 +659,11 @@ def auto_pan_speed_ramp(
         vertical_drift_damping: For TILT_DOWN clips, apply an additional proportional
             speed reduction on top of tilt correction (0.0–1.0 scale).
             new_speed = tilt_speed × (1 - vertical_drift_damping × 0.15).
+        gimbal_bounce_recovery: When True, inject 0.95× speed ramps (0.4s) centred
+            on detected motion-reversal events.  Requires ``motion_data`` to be provided.
+            New ramps do not overlap existing ones — conflicts prefer existing ramps.
+        motion_data: Optional list of per-frame dicts {"t": float, "dx": float, "dy": float}
+            used for gimbal bounce detection when ``gimbal_bounce_recovery=True``.
 
     Returns:
         List with one or three SpeedRamp segments, or [] when no adjustment needed.
@@ -682,10 +728,10 @@ def auto_pan_speed_ramp(
     # STATIC, REVEAL, UNKNOWN → no adjustment
 
     if speed is None:
-        return []
-
-    if not ease_speed_ramps:
-        return [
+        # No motion-based ramp, but may still inject bounce ramps below.
+        base_ramps: list[SpeedRamp] = []
+    elif not ease_speed_ramps:
+        base_ramps = [
             SpeedRamp(
                 start_time=0.0,
                 end_time=clip_duration,
@@ -694,43 +740,76 @@ def auto_pan_speed_ramp(
                 easing="ease_in_out",
             )
         ]
+    else:
+        # ease_speed_ramps=True: split into 3 segments
+        # First 15%: linear ramp 1.0 → target
+        # Middle 70%: constant at target
+        # Final 15%: linear ramp target → 1.0
+        # For very short clips, ensure each segment has a minimum valid duration.
+        ease_fraction = 0.15
+        ease_in_end = max(clip_duration * ease_fraction, 0.01)
+        main_end = max(clip_duration * (1.0 - ease_fraction), ease_in_end + 0.01)
+        # Clamp to clip bounds
+        ease_in_end = min(ease_in_end, clip_duration - 0.02)
+        main_end = min(main_end, clip_duration - 0.01)
 
-    # ease_speed_ramps=True: split into 3 segments
-    # First 15%: linear ramp 1.0 → target
-    # Middle 70%: constant at target
-    # Final 15%: linear ramp target → 1.0
-    # For very short clips, ensure each segment has a minimum valid duration.
-    ease_fraction = 0.15
-    ease_in_end = max(clip_duration * ease_fraction, 0.01)
-    main_end = max(clip_duration * (1.0 - ease_fraction), ease_in_end + 0.01)
-    # Clamp to clip bounds
-    ease_in_end = min(ease_in_end, clip_duration - 0.02)
-    main_end = min(main_end, clip_duration - 0.01)
+        base_ramps = [
+            # Ease-in: ramp from 1.0 to target speed
+            SpeedRamp(
+                start_time=0.0,
+                end_time=ease_in_end,
+                start_speed=1.0,
+                end_speed=speed,
+                easing="linear",
+            ),
+            # Middle: constant at target speed
+            SpeedRamp(
+                start_time=ease_in_end,
+                end_time=main_end,
+                start_speed=speed,
+                end_speed=speed,
+                easing="linear",
+            ),
+            # Ease-out: ramp from target speed to 1.0
+            SpeedRamp(
+                start_time=main_end,
+                end_time=clip_duration,
+                start_speed=speed,
+                end_speed=1.0,
+                easing="linear",
+            ),
+        ]
 
-    ramps = [
-        # Ease-in: ramp from 1.0 to target speed
-        SpeedRamp(
-            start_time=0.0,
-            end_time=ease_in_end,
-            start_speed=1.0,
-            end_speed=speed,
-            easing="linear",
-        ),
-        # Middle: constant at target speed
-        SpeedRamp(
-            start_time=ease_in_end,
-            end_time=main_end,
-            start_speed=speed,
-            end_speed=speed,
-            easing="linear",
-        ),
-        # Ease-out: ramp from target speed to 1.0
-        SpeedRamp(
-            start_time=main_end,
-            end_time=clip_duration,
-            start_speed=speed,
-            end_speed=1.0,
-            easing="linear",
-        ),
-    ]
-    return ramps
+    # Inject gimbal bounce recovery ramps (no overlap with existing ramps)
+    if gimbal_bounce_recovery and motion_data:
+        bounce_half = 0.2  # half of 0.4s bounce window
+        bounce_speed = 0.95
+        bounce_timestamps = detect_gimbal_bounces(motion_data)
+
+        for ts in bounce_timestamps:
+            b_start = max(0.0, ts - bounce_half)
+            b_end = min(clip_duration, ts + bounce_half)
+            if b_end - b_start < 0.05:
+                continue  # too small to be useful
+
+            # Check for overlap with existing ramps — skip if conflict
+            overlap = any(not (b_end <= r.start_time or b_start >= r.end_time) for r in base_ramps)
+            if overlap:
+                continue
+
+            base_ramps.append(
+                SpeedRamp(
+                    start_time=b_start,
+                    end_time=b_end,
+                    start_speed=bounce_speed,
+                    end_speed=bounce_speed,
+                    easing="ease_in_out",
+                )
+            )
+
+    if not base_ramps:
+        return []
+
+    # Sort by start_time for deterministic ordering
+    base_ramps.sort(key=lambda r: r.start_time)
+    return base_ramps
