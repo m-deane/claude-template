@@ -33,6 +33,7 @@ highlights/
 !demo/**/*.mp4
 !tests/**/*.mp4
 !examples/**/*.mp4
+!streamlit_textbook/assets/*.mp4
 
 # IDE / tool config
 .serena/

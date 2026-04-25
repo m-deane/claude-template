@@ -1,0 +1,10 @@
+streamlit>=1.30
+plotly>=5.0
+matplotlib>=3.7
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+# drone-reel is installed as editable from the parent directory.
+# For Streamlit Cloud, replace the line below with:
+# git+https://github.com/YOUR_ORG/drone-reel.git
+# drone-reel  # uncomment for cloud
