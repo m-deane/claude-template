@@ -196,7 +196,10 @@ drone-reel split -i video.mp4 -o ./highlights/
 | `--scene-threshold FLOAT` | `27.0` | 1–100 | Detection sensitivity (lower = more scene boundaries) |
 | `--enhanced` | off | flag | Enhanced detection with subject tracking (slower) |
 | `--analysis-scale FLOAT` | `0.5` | 0.1–1.0 | Frame downscale factor for analysis (lower = faster) |
-| `--motion-energy-method` | `mean` | `mean` `median` `p95` | How to aggregate per-frame motion scores |
+| `--motion-energy-method` | `mean` | `mean` `median` `p95` `percentile` | How to aggregate per-frame motion scores. `percentile` requires `--motion-energy-percentile` |
+| `--motion-energy-percentile INT` | `50` | 50–99 | Percentile to use when `--motion-energy-method=percentile` (95 ≈ peak motion) |
+| `--flow-winsize INT` | `15` | 5–31 | Farneback optical-flow window. Larger = smoother, more lag |
+| `--flow-levels INT` | `3` | 1–4 | Farneback pyramid levels. Larger = bigger displacements; slower |
 | `--prefer-motion-type TEXT` | `none` | | Comma-separated motion types to float to front e.g. `flyover,pan_right` |
 
 > **Tip:** For clips ≥ 11s use `--scene-threshold 7–12` to merge micro-cuts into longer coherent scenes. At the default of 27 most footage produces very short scenes.
@@ -211,6 +214,14 @@ Fine-tune which scenes pass the quality filter:
 | `--motion-threshold FLOAT` | — | 0–100 | Minimum motion energy required |
 | `--shake-tolerance FLOAT` | — | 0–100 | Maximum allowed shake score |
 | `--subject-confidence FLOAT` | — | 0.0–1.0 | Minimum subject detection confidence |
+
+Scoring tuning (each weight string must contain exactly the listed keys; values must sum to 1.0 ± 0.01):
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--score-weights TEXT` | `motion=0.30,comp=0.20,color=0.20,sharp=0.15,bright=0.15` | Weights for the 5-factor scene-scoring formula |
+| `--hook-weights TEXT` | `subject=0.35,motion=0.25,color=0.20,comp=0.10,unique=0.10` | Weights for the hook-potential formula |
+| `--hook-thresholds TEXT` | `maximum=80,high=65,medium=45,low=25` | Hook tier cutoffs (descending). Below `low` → POOR |
 
 #### Motion correction
 
@@ -244,6 +255,7 @@ Auto-speed tuning (`--auto-speed` must be set):
 | `--correct-orbit` | off | flag · Apply gentle 0.85× correction to orbit shots |
 | `--ease-speed-ramps` | off | flag · Ease in/out of speed corrections (15% ramp-in · 70% constant · 15% ramp-out) |
 | `--vertical-drift-damping FLOAT` | `0.0` | 0.0–1.0 · Extra slowdown on tilt-down clips to reduce vertical drift |
+| `--gimbal-bounce-recovery` | off | flag · Detect motion-reversal events and inject a 0.95× ease-in-out ramp at each |
 
 Speed profile comparison:
 
@@ -262,6 +274,7 @@ Stabilization tuning:
 | `--smooth-radius INT` | `50` | 5–120 · Optical-flow smoothing window |
 | `--border-crop FLOAT` | `0.05` | 0.0–0.15 · Border crop fraction after stabilization |
 | `--max-corners INT` | `200` | 50–500 · Feature tracking points |
+| `--roll-correction FLOAT` | `0.0` | 0.0–1.0 · Apply per-frame inverse rotation to correct roll drift (0 = off, 1 = full) |
 
 #### Color grading (same as `create`)
 

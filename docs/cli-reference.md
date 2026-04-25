@@ -183,7 +183,7 @@ drone-reel split [OPTIONS]
 | `--scene-threshold FLOAT` | | `27.0` | Detection sensitivity (1–100, lower = more boundaries) |
 | `--enhanced` | | off | Enhanced detection with subject tracking. Slower. |
 | `--analysis-scale FLOAT` | | `0.5` | Frame downscale factor for analysis (0.1–1.0, lower = faster) |
-| `--motion-energy-method CHOICE` | | `mean` | Aggregate per-frame motion scores: `mean` · `median` · `p95` |
+| `--motion-energy-method CHOICE` | | `mean` | Aggregate per-frame motion scores: `mean` · `median` · `p95` · `percentile` (pair with `--motion-energy-percentile`) |
 | `--prefer-motion-type TEXT` | | `none` | Comma-separated motion types to float to front e.g. `flyover,pan_right` |
 | `--preview` | | off | Print scene table without exporting |
 | `--json` | | off | Write `manifest.json` with per-clip metadata |
@@ -201,6 +201,26 @@ Fine-tune which scenes pass the quality filter (applied before `--no-filter` ove
 | `--subject-confidence FLOAT` | — | Minimum subject detection confidence (0.0–1.0) |
 
 > **Tip for long clips:** Use `--scene-threshold 7–12` when targeting `--min-duration 11+`. The default threshold produces many short scenes; a lower threshold merges them into longer coherent segments.
+
+### Scoring Tuning Options
+
+Tune how scenes are ranked. Each weight string must contain exactly the listed keys, with values summing to 1.0 ± 0.01.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--score-weights TEXT` | `motion=0.30,comp=0.20,color=0.20,sharp=0.15,bright=0.15` | Weights for the 5-factor scene-scoring formula. Lift `motion` for action-heavy reels; lift `comp` for compositional preference. |
+| `--hook-weights TEXT` | `subject=0.35,motion=0.25,color=0.20,comp=0.10,unique=0.10` | Weights for the hook-potential formula used to label scenes MAXIMUM/HIGH/MEDIUM/LOW. |
+| `--hook-thresholds TEXT` | `maximum=80,high=65,medium=45,low=25` | Score cutoffs for the four hook tiers (descending). Values below `low` map to `POOR`. |
+
+### Optical Flow Tuning Options
+
+Lower-level motion-detection knobs. Defaults work for most footage; raise `winsize` for noisy or low-light footage; lower it for sharp, high-detail scenes.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--flow-winsize INT` | `15` | Farneback optical-flow averaging window in pixels (5–31). Larger = smoother, more lag. |
+| `--flow-levels INT` | `3` | Farneback pyramid levels (1–4). Larger = handles bigger displacements; slower. |
+| `--motion-energy-percentile INT` | `50` | Percentile for `--motion-energy-method percentile` (50–99). 50 ≈ median; 95 catches peak motion. |
 
 ### Motion Correction Options
 
@@ -222,6 +242,7 @@ Fine-tune which scenes pass the quality filter (applied before `--no-filter` ove
 | `--correct-orbit` | off | Apply gentle 0.85× correction to orbit shots |
 | `--ease-speed-ramps` | off | Ease in/out of speed corrections (15% ramp-in · 70% constant · 15% ramp-out) |
 | `--vertical-drift-damping FLOAT` | `0.0` | Extra slowdown on tilt-down to reduce vertical drift (0.0–1.0) |
+| `--gimbal-bounce-recovery` | off | Detect motion-reversal events and inject a 0.95× ease-in-out ramp at each bounce |
 
 Speed profile comparison:
 
@@ -241,6 +262,7 @@ Speed profile comparison:
 | `--smooth-radius INT` | `50` | Optical-flow smoothing window radius (5–120) |
 | `--border-crop FLOAT` | `0.05` | Border crop fraction after stabilization (0.0–0.15) |
 | `--max-corners INT` | `200` | Feature tracking points (50–500) |
+| `--roll-correction FLOAT` | `0.0` | Apply per-frame inverse rotation to correct roll drift (0.0 = off, 1.0 = full) |
 
 ### Post-Processing Options
 
@@ -291,6 +313,15 @@ ffmpeg -i DJI_SOURCE.MP4 -vf scale=1280:720 -r 30 -c:v libx264 -preset ultrafast
 drone-reel split -i proxy.mp4 -o ./out \
   --min-duration 5 --max-duration 15 \
   --input-colorspace dlog --color drone_aerial --auto-speed --letterbox 2.35 --json
+
+# Action-heavy bias: weight motion higher, drop sharpness contribution
+drone-reel split -i clip.mp4 -o ./out \
+  --score-weights "motion=0.45,comp=0.20,color=0.15,sharp=0.10,bright=0.10" \
+  --motion-energy-method percentile --motion-energy-percentile 90
+
+# Smooth gimbal cleanup — combine roll correction + bounce recovery
+drone-reel split -i clip.mp4 -o ./out --auto-speed \
+  --roll-correction 0.6 --gimbal-bounce-recovery --ease-speed-ramps
 ```
 
 ---

@@ -4,11 +4,11 @@ AI-powered CLI tool to create Instagram-style vertical reels from drone footage.
 
 ## Features
 
-- **Automatic scene detection** with quality scoring (sharpness, color, motion, hook potential)
+- **Automatic scene detection** with quality scoring (sharpness, color, motion, hook potential) — tunable weights and tier thresholds
 - **Beat-synced editing** with librosa-powered music analysis
 - **Intelligent reframing** from landscape to vertical (9:16, 1:1, 4:5)
 - **Video stabilization** with adaptive shake detection
-- **Auto pan/speed correction** — slows fast pans, speeds up sluggish movement
+- **Auto pan/speed correction** — slows fast pans, speeds up sluggish movement, gimbal-bounce recovery, roll-drift correction
 - **Color grading** with 30 presets including drone-optimized, film emulation, and terrain-aware grades
 - **Visual effects** — vignette, halation/bloom, chromatic aberration, atmospheric haze, letterbox
 - **Color science** — D-Log/S-Log3 normalization, auto white balance, auto color match, noise reduction
